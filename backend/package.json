@@ -1,0 +1,47 @@
+{
+  "name": "warp-sentinel-backend",
+  "version": "1.0.0",
+  "description": "Warp Sentinel Backend API",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src --ext .ts --max-warnings 0",
+    "format": "prettier --write src/**/*.ts",
+    "type-check": "tsc --noEmit",
+    "verify-supabase": "tsx src/scripts/verify-supabase.ts",
+    "test-db-insert": "tsx src/scripts/test-db-insert.ts",
+    "test-raw-sql": "tsx src/scripts/test-raw-sql.ts"
+  },
+  "dependencies": {
+    "fastify": "^4.26.0",
+    "@fastify/cors": "^8.5.0",
+    "@fastify/env": "^4.0.0",
+    "@fastify/swagger": "^8.14.0",
+    "@fastify/swagger-ui": "^1.10.0",
+    "plaid": "^12.0.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "@slack/web-api": "^6.10.0",
+    "dotenv-flow": "^4.0.1",
+    "node-cron": "^3.0.3",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "tsx": "^4.7.1",
+    "@types/node": "^20.11.19",
+    "@types/node-cron": "^3.0.11",
+    "vitest": "^1.5.0",
+    "@vitest/coverage-v8": "^1.5.0",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
+    "@typescript-eslint/parser": "^7.1.0",
+    "prettier": "^3.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
