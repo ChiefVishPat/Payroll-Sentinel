@@ -1,50 +1,93 @@
 /**
- * Base Service Class
+ * Base Service Module
  * 
- * Provides common patterns and error handling for all external service integrations.
- * Implements retry logic, rate limiting awareness, and structured error responses.
+ * Provides foundational classes and types for all external service integrations.
+ * Implements standardized error handling, retry logic, and response formatting.
+ * 
+ * @author Payroll Sentinel Team
+ * @version 1.0.0
  */
 
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
 /**
- * Standard service response wrapper for consistent error handling
+ * Standard service response wrapper for consistent API responses
+ * 
+ * @template T - Type of the response data
  */
 export interface ServiceResponse<T> {
+  /** Whether the operation succeeded */
   success: boolean;
+  /** Response data (present when success is true) */
   data?: T;
+  /** Error information (present when success is false) */
   error?: ServiceError;
-  metadata?: {
-    requestId?: string;
-    timestamp: string;
-    service: string;
-    rateLimitRemaining?: number;
-  };
+  /** Additional metadata about the request */
+  metadata?: ServiceMetadata;
 }
 
 /**
- * Standardized service error structure
+ * Metadata included with all service responses
+ */
+export interface ServiceMetadata {
+  /** Unique identifier for request tracking */
+  requestId: string;
+  /** ISO timestamp of the request */
+  timestamp: string;
+  /** Name of the service that handled the request */
+  service: string;
+  /** Remaining rate limit quota (if applicable) */
+  rateLimitRemaining?: number;
+}
+
+/**
+ * Standardized error structure for all services
  */
 export interface ServiceError {
+  /** Error code for programmatic handling */
   code: string;
+  /** Human-readable error message */
   message: string;
+  /** Additional error context */
   details?: Record<string, unknown>;
+  /** Whether this error can be retried */
   retryable: boolean;
+  /** HTTP status code (if applicable) */
   statusCode?: number;
 }
 
 /**
- * Configuration interface for service clients
+ * Base configuration for all service integrations
  */
 export interface ServiceConfig {
+  /** API key for authentication */
   apiKey?: string;
+  /** Base URL for API endpoints */
   baseUrl?: string;
+  /** Request timeout in milliseconds */
   timeout?: number;
+  /** Maximum retry attempts for failed requests */
   retryAttempts?: number;
+  /** Environment context */
   environment: 'sandbox' | 'production';
 }
 
+// ============================================================================
+// BASE SERVICE CLASS
+// ============================================================================
+
 /**
  * Abstract base class for all external service integrations
- * Provides common functionality like error handling, logging, and retry logic
+ * 
+ * Provides standardized patterns for:
+ * - Error handling and response formatting
+ * - Retry logic with exponential backoff
+ * - Request logging and monitoring
+ * - Configuration validation
+ * 
+ * @abstract
  */
 export abstract class BaseService {
   protected readonly serviceName: string;
@@ -53,71 +96,62 @@ export abstract class BaseService {
 
   constructor(serviceName: string, config: ServiceConfig) {
     this.serviceName = serviceName;
-    this.config = {
-      timeout: 30000, // 30 seconds default
+    this.config = this.buildConfig(config);
+    this.logger = console; // TODO: Replace with Winston in production
+  }
+
+  // ========================================================================
+  // PRIVATE CONFIGURATION METHODS
+  // ========================================================================
+
+  /**
+   * Builds configuration with sensible defaults
+   */
+  private buildConfig(config: ServiceConfig): ServiceConfig {
+    return {
+      timeout: 30000, // 30 seconds
       retryAttempts: 3,
       ...config,
     };
-    this.logger = console; // In production, use proper logger like Winston
   }
 
+  // ========================================================================
+  // PUBLIC EXECUTION METHODS
+  // ========================================================================
+
   /**
-   * Wraps service calls with consistent error handling and response formatting
-   * @param operation - The async operation to execute
-   * @param context - Additional context for logging
+   * Executes operations with standardized error handling and logging
+   * 
+   * @param operation - Async operation to execute
+   * @param context - Description for logging purposes
    * @returns Standardized service response
    */
   protected async executeWithErrorHandling<T>(
     operation: () => Promise<T>,
     context: string
   ): Promise<ServiceResponse<T>> {
-    const startTime = Date.now();
-    const requestId = this.generateRequestId();
+    const { requestId, startTime } = this.initializeRequest(context);
 
     try {
-      this.logger.log(`[${this.serviceName}] Starting ${context} (${requestId})`);
-      
       const data = await operation();
-      
-      const duration = Date.now() - startTime;
-      this.logger.log(`[${this.serviceName}] Completed ${context} in ${duration}ms (${requestId})`);
-      
-      return {
-        success: true,
-        data,
-        metadata: {
-          requestId,
-          timestamp: new Date().toISOString(),
-          service: this.serviceName,
-        },
-      };
+      return this.createSuccessResponse(data, requestId, startTime, context);
     } catch (error) {
-      const duration = Date.now() - startTime;
-      this.logger.error(`[${this.serviceName}] Failed ${context} after ${duration}ms (${requestId}):`, error);
-      
-      return {
-        success: false,
-        error: this.normalizeError(error),
-        metadata: {
-          requestId,
-          timestamp: new Date().toISOString(),
-          service: this.serviceName,
-        },
-      };
+      return this.createErrorResponse(error, requestId, startTime, context);
     }
   }
 
   /**
-   * Retry wrapper for operations that might fail transiently
-   * @param operation - The operation to retry
-   * @param maxAttempts - Maximum number of attempts
-   * @param delayMs - Delay between attempts in milliseconds
-   * @returns Promise with the operation result
+   * Executes operation with retry logic for transient failures
+   * 
+   * @param operation - Operation to retry
+   * @param maxAttempts - Maximum retry attempts (defaults to config)
+   * @param baseDelayMs - Base delay between retries
+   * @returns Operation result
    */
   protected async withRetry<T>(
     operation: () => Promise<T>,
     maxAttempts: number = this.config.retryAttempts || 3,
-    delayMs: number = 1000
+    baseDelayMs: number = 1000
   ): Promise<T> {
     let lastError: Error;
     
@@ -127,69 +161,143 @@ export abstract class BaseService {
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
         
-        // Don't retry on certain error types (e.g., authentication failures)
-        if (!this.isRetryableError(error)) {
+        if (!this.isRetryableError(error) || attempt === maxAttempts) {
           throw lastError;
         }
         
-        if (attempt === maxAttempts) {
-          throw lastError;
-        }
-        
-        // Exponential backoff
-        const backoffDelay = delayMs * Math.pow(2, attempt - 1);
-        this.logger.warn(`[${this.serviceName}] Attempt ${attempt} failed, retrying in ${backoffDelay}ms...`);
-        await this.sleep(backoffDelay);
+        await this.delayBeforeRetry(baseDelayMs, attempt);
       }
     }
     
     throw lastError!;
   }
 
+  // ========================================================================
+  // PRIVATE HELPER METHODS
+  // ========================================================================
+
   /**
-   * Normalize various error types into our standard ServiceError format
-   * @param error - The error to normalize
+   * Initializes request tracking and logging
+   */
+  private initializeRequest(context: string): { requestId: string; startTime: number } {
+    const requestId = this.generateRequestId();
+    const startTime = Date.now();
+    this.logger.log(`[${this.serviceName}] Starting ${context} (${requestId})`);
+    return { requestId, startTime };
+  }
+
+  /**
+   * Creates standardized success response
+   */
+  private createSuccessResponse<T>(
+    data: T,
+    requestId: string,
+    startTime: number,
+    context: string
+  ): ServiceResponse<T> {
+    const duration = Date.now() - startTime;
+    this.logger.log(`[${this.serviceName}] Completed ${context} in ${duration}ms (${requestId})`);
+    
+    return {
+      success: true,
+      data,
+      metadata: {
+        requestId,
+        timestamp: new Date().toISOString(),
+        service: this.serviceName,
+      },
+    };
+  }
+
+  /**
+   * Creates standardized error response
+   */
+  private createErrorResponse(
+    error: unknown,
+    requestId: string,
+    startTime: number,
+    context: string
+  ): ServiceResponse<never> {
+    const duration = Date.now() - startTime;
+    this.logger.error(`[${this.serviceName}] Failed ${context} after ${duration}ms (${requestId}):`, error);
+    
+    return {
+      success: false,
+      error: this.normalizeError(error),
+      metadata: {
+        requestId,
+        timestamp: new Date().toISOString(),
+        service: this.serviceName,
+      },
+    };
+  }
+
+  /**
+   * Implements exponential backoff delay
+   */
+  private async delayBeforeRetry(baseDelayMs: number, attempt: number): Promise<void> {
+    const backoffDelay = baseDelayMs * Math.pow(2, attempt - 1);
+    this.logger.warn(`[${this.serviceName}] Attempt ${attempt} failed, retrying in ${backoffDelay}ms...`);
+    await this.sleep(backoffDelay);
+  }
+
+  // ========================================================================
+  // ERROR HANDLING METHODS
+  // ========================================================================
+
+  /**
+   * Normalizes various error types into standardized ServiceError format
+   * 
+   * @param error - Raw error from operation
    * @returns Standardized ServiceError
    */
   protected normalizeError(error: unknown): ServiceError {
-    // Handle different error types from various APIs
-    if (error && typeof error === 'object') {
-      const err = error as any;
-      
-      // Plaid-style errors
-      if (err.error_code && err.error_message) {
-        return {
-          code: err.error_code,
-          message: err.error_message,
-          details: err,
-          retryable: this.isRetryableError(error),
-          statusCode: err.status_code,
-        };
-      }
-      
-      // HTTP errors
-      if (err.response) {
-        return {
-          code: err.response.status?.toString() || 'HTTP_ERROR',
-          message: err.response.data?.message || err.message || 'HTTP request failed',
-          details: err.response.data,
-          retryable: this.isRetryableError(error),
-          statusCode: err.response.status,
-        };
-      }
-      
-      // Standard Error objects
-      if (err.message) {
-        return {
-          code: err.code || 'UNKNOWN_ERROR',
-          message: err.message,
-          details: err,
-          retryable: this.isRetryableError(error),
-        };
-      }
+    if (!error || typeof error !== 'object') {
+      return this.createFallbackError(error);
     }
-    
-    // Fallback for unknown error types
+
+    const err = error as any;
+    const isRetryable = this.isRetryableError(error);
+
+    // Plaid API errors
+    if (err.error_code && err.error_message) {
+      return {
+        code: err.error_code,
+        message: err.error_message,
+        details: err,
+        retryable: isRetryable,
+        statusCode: err.status_code,
+      };
+    }
+
+    // HTTP response errors
+    if (err.response) {
+      return {
+        code: err.response.status?.toString() || 'HTTP_ERROR',
+        message: err.response.data?.message || err.message || 'HTTP request failed',
+        details: err.response.data,
+        retryable: isRetryable,
+        statusCode: err.response.status,
+      };
+    }
+
+    // Standard Error objects
+    if (err.message) {
+      return {
+        code: err.code || 'UNKNOWN_ERROR',
+        message: err.message,
+        details: err,
+        retryable: isRetryable,
+      };
+    }
+
+    return this.createFallbackError(error);
+  }
+
+  /**
+   * Creates fallback error for unknown error types
+   */
+  private createFallbackError(error: unknown): ServiceError {
     return {
       code: 'UNKNOWN_ERROR',
       message: String(error),
@@ -199,9 +307,10 @@ export abstract class BaseService {
   }
 
   /**
-   * Determine if an error is retryable based on common patterns
-   * @param error - The error to check
-   * @returns Whether the error should be retried
+   * Determines if an error should be retried based on error patterns
+   * 
+   * @param error - Error to evaluate
+   * @returns True if error is retryable
    */
   protected isRetryableError(error: unknown): boolean {
     if (!error || typeof error !== 'object') {
@@ -210,18 +319,18 @@ export abstract class BaseService {
     
     const err = error as any;
     
-    // Network/timeout errors are generally retryable
-    if (err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT' || err.code === 'ENOTFOUND') {
+    // Network errors (connection issues)
+    const networkErrors = ['ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND'];
+    if (networkErrors.includes(err.code)) {
       return true;
     }
     
-    // HTTP 5xx errors are retryable, 4xx generally are not
+    // HTTP 5xx server errors (retryable) vs 4xx client errors (not retryable)
     if (err.response?.status) {
-      const status = err.response.status;
-      return status >= 500 && status < 600;
+      return err.response.status >= 500 && err.response.status < 600;
     }
     
-    // Service-specific retryable errors
+    // Service-specific retryable error codes
     if (err.error_code) {
       const retryableCodes = ['RATE_LIMIT_EXCEEDED', 'INTERNAL_SERVER_ERROR', 'TIMEOUT'];
       return retryableCodes.includes(err.error_code);
@@ -230,39 +339,48 @@ export abstract class BaseService {
     return false;
   }
 
+  // ========================================================================
+  // UTILITY METHODS
+  // ========================================================================
+
   /**
-   * Generate a unique request ID for tracking
-   * @returns Unique request identifier
+   * Generates unique request identifier for tracking
    */
   protected generateRequestId(): string {
     return `${this.serviceName}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
-   * Sleep utility for retry delays
-   * @param ms - Milliseconds to sleep
-   * @returns Promise that resolves after the delay
+   * Sleep utility for implementing delays
    */
   protected sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**
-   * Validate required configuration
-   * @param requiredFields - Array of required configuration field names
-   * @throws Error if required fields are missing
+   * Validates that required configuration fields are present
+   * 
+   * @param requiredFields - Array of required field names
+   * @throws Error if any required fields are missing
    */
   protected validateConfig(requiredFields: string[]): void {
-    const missing = requiredFields.filter(field => !this.config[field as keyof ServiceConfig]);
+    const missing = requiredFields.filter(field => 
+      !this.config[field as keyof ServiceConfig]
+    );
     
     if (missing.length > 0) {
-      throw new Error(`Missing required configuration for ${this.serviceName}: ${missing.join(', ')}`);
+      throw new Error(
+        `Missing required configuration for ${this.serviceName}: ${missing.join(', ')}`
+      );
     }
   }
 
+  // ========================================================================
+  // PUBLIC API
+  // ========================================================================
+
   /**
-   * Get service health status
-   * @returns Basic health information
+   * Returns current service health and configuration status
    */
   public getHealthStatus(): {
     service: string;

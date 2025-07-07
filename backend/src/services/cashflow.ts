@@ -363,60 +363,6 @@ export class CashFlowAnalysisService extends BaseService {
     }, `check alerts for company ${analysis.companyId}`);
   }
 
-  /**
-   * Send alerts for detected risks
-   * @param alerts - Array of alert triggers
-   * @returns Number of alerts sent/failed
-   */
-  async sendAlerts(alerts: AlertTrigger[]): Promise<ServiceResponse<{ sent: number; failed: number }>> {
-    return this.executeWithErrorHandling(async () => {
-      if (!this.slackService) {
-        throw new Error('Slack service not configured for alerts');
-      }
-
-      let sent = 0;
-      let failed = 0;
-
-      for (const alert of alerts.filter(a => a.shouldNotify)) {
-        try {
-          // Map risk level to Slack expected format
-          const mapRiskLevel = (level: string): 'safe' | 'at_risk' | 'critical' => {
-            switch (level) {
-              case 'warning': return 'at_risk';
-              case 'critical': return 'critical';
-              default: return 'safe';
-            }
-          };
-
-          const alertData = {
-            companyName: `Company ${alert.companyId}`,
-            riskLevel: mapRiskLevel(alert.severity),
-            currentBalance: 0, // Would get from analysis
-            requiredFloat: 0, // Would get from analysis
-            daysUntilPayroll: 0, // Would get from analysis
-            payrollDate: new Date().toISOString(),
-            payrollAmount: 0,
-          };
-
-          const slackResult = await this.slackService.sendRiskAlert(alertData, {
-            severity: alert.severity as any,
-            mentionUsers: alert.severity === 'critical' ? ['@channel'] : [],
-          });
-
-          if (slackResult.success) {
-            sent++;
-          } else {
-            failed++;
-          }
-        } catch (error) {
-          failed++;
-          this.logger.error(`Failed to send alert for ${alert.companyId}:`, error);
-        }
-      }
-
-      return { sent, failed };
-    }, 'send alerts via Slack');
-  }
 
   /**
    * Get a quick risk summary for a company

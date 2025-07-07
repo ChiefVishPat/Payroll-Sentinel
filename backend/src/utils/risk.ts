@@ -1,54 +1,109 @@
 /**
  * Risk Calculation Utilities
  * 
- * Provides functions for calculating cash flow risk, required floats,
- * and generating projections for payroll sentinel operations.
+ * Comprehensive toolkit for analyzing cash flow risk and generating
+ * actionable insights for payroll management. Provides risk scoring,
+ * projection modeling, and automated recommendation generation.
+ * 
+ * @author Payroll Sentinel Team
+ * @version 1.0.0
  */
 
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+/** Risk levels for cash flow analysis */
 export type RiskLevel = 'safe' | 'warning' | 'critical';
 
+/** Confidence levels for data quality assessment */
+export type ConfidenceLevel = 'low' | 'medium' | 'high';
+
+/**
+ * Cash flow projection for a specific date
+ */
 export interface CashFlowProjection {
+  /** ISO date string for the projection */
   date: string;
+  /** Expected money coming in */
   expectedInflow: number;
+  /** Expected money going out */
   expectedOutflow: number;
+  /** Net change (inflow - outflow) */
   netFlow: number;
+  /** Account balance after this transaction */
   runningBalance: number;
+  /** Risk level at this point in time */
   riskLevel: RiskLevel;
+  /** Human-readable description of the event */
   description?: string;
-}
-
-export interface RiskAssessment {
-  companyId: string;
-  currentBalance: number;
-  requiredFloat: number;
-  riskLevel: RiskLevel;
-  daysUntilRisk: number;
-  recommendations: string[];
-  projections: CashFlowProjection[];
-  assessmentDate: string;
-  nextPayrollDate?: string;
-  nextPayrollAmount?: number;
-}
-
-export interface PayrollObligation {
-  amount: number;
-  date: string;
-  description?: string;
-  employeeCount?: number;
-}
-
-export interface CashInflow {
-  amount: number;
-  date: string;
-  description?: string;
-  confidence?: 'low' | 'medium' | 'high';
 }
 
 /**
- * Calculate required cash float based on payroll amount
+ * Comprehensive risk assessment for a company
+ */
+export interface RiskAssessment {
+  /** Company identifier */
+  companyId: string;
+  /** Current account balance */
+  currentBalance: number;
+  /** Required cash float for safety */
+  requiredFloat: number;
+  /** Overall risk level */
+  riskLevel: RiskLevel;
+  /** Days until next risk event */
+  daysUntilRisk: number;
+  /** Actionable recommendations */
+  recommendations: string[];
+  /** Future cash flow projections */
+  projections: CashFlowProjection[];
+  /** When this assessment was performed */
+  assessmentDate: string;
+  /** Next payroll date (if any) */
+  nextPayrollDate?: string;
+  /** Next payroll amount (if any) */
+  nextPayrollAmount?: number;
+}
+
+/**
+ * Upcoming payroll obligation
+ */
+export interface PayrollObligation {
+  /** Payroll amount */
+  amount: number;
+  /** ISO date string for payroll date */
+  date: string;
+  /** Description of the payroll */
+  description?: string;
+  /** Number of employees in this payroll */
+  employeeCount?: number;
+}
+
+/**
+ * Expected cash inflow
+ */
+export interface CashInflow {
+  /** Expected amount */
+  amount: number;
+  /** ISO date string for expected receipt */
+  date: string;
+  /** Description of the income source */
+  description?: string;
+  /** Confidence level in receiving this amount */
+  confidence?: ConfidenceLevel;
+}
+
+// ============================================================================
+// CORE CALCULATION FUNCTIONS
+// ============================================================================
+
+/**
+ * Calculates required cash float with safety buffer
+ * 
  * @param payrollAmount - Total payroll amount
- * @param safetyMultiplier - Safety margin multiplier (default 1.1 = 10% buffer)
- * @returns Required float amount
+ * @param safetyMultiplier - Safety margin (default 1.1 = 10% buffer)
+ * @returns Required float amount rounded to 2 decimal places
+ * @throws Error if payrollAmount is negative
  */
 export function calculateRequiredFloat(
   payrollAmount: number,
@@ -57,37 +112,34 @@ export function calculateRequiredFloat(
   if (payrollAmount < 0) {
     throw new Error('Payroll amount cannot be negative');
   }
-  return Math.round(payrollAmount * safetyMultiplier * 100) / 100; // Round to 2 decimal places
+  return Math.round(payrollAmount * safetyMultiplier * 100) / 100;
 }
 
 /**
- * Determine risk level based on current balance and requirements
+ * Determines risk level based on balance vs requirements
+ * 
  * @param currentBalance - Current account balance
  * @param requiredFloat - Required cash float
- * @returns Risk level assessment
+ * @returns Risk level (safe: >=100%, warning: 80-99%, critical: <80%)
  */
 export function determineRiskLevel(
   currentBalance: number,
   requiredFloat: number
 ): RiskLevel {
-  // If no requirement, any balance is safe
-  if (requiredFloat === 0) {
-    return 'safe';
-  }
+  if (requiredFloat === 0) return 'safe';
   
-  if (currentBalance >= requiredFloat) {
-    return 'safe';
-  } else if (currentBalance >= requiredFloat * 0.8) {
-    return 'warning';
-  } else {
-    return 'critical';
-  }
+  const coverage = currentBalance / requiredFloat;
+  
+  if (coverage >= 1.0) return 'safe';
+  if (coverage >= 0.8) return 'warning';
+  return 'critical';
 }
 
 /**
- * Calculate days until a specific date
+ * Calculates days until target date
+ * 
  * @param targetDate - Target date (ISO string)
- * @returns Number of days until target date
+ * @returns Number of days until target (positive for future, negative for past)
  */
 export function calculateDaysUntil(targetDate: string): number {
   const today = new Date();
@@ -96,12 +148,20 @@ export function calculateDaysUntil(targetDate: string): number {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
+// ============================================================================
+// PROJECTION AND MODELING FUNCTIONS
+// ============================================================================
+
 /**
- * Generate cash flow projections for upcoming periods
- * @param currentBalance - Current account balance
- * @param payrollObligations - Array of upcoming payroll obligations
- * @param expectedInflows - Expected incoming cash flows
- * @returns Array of cash flow projections
+ * Generates cash flow projections for future periods
+ * 
+ * Combines payroll obligations and expected inflows to create
+ * a timeline of account balance changes and associated risks.
+ * 
+ * @param currentBalance - Starting account balance
+ * @param payrollObligations - Upcoming payroll obligations
+ * @param expectedInflows - Expected cash inflows
+ * @returns Chronologically sorted array of cash flow projections
  */
 export function generateCashFlowProjections(
   currentBalance: number,
@@ -111,25 +171,11 @@ export function generateCashFlowProjections(
   const projections: CashFlowProjection[] = [];
   let runningBalance = currentBalance;
 
-  // Combine and sort all cash flow events
-  const allEvents = [
-    ...payrollObligations.map(p => ({ 
-      ...p, 
-      type: 'outflow' as const,
-      description: p.description || `Payroll - ${p.employeeCount || 'N/A'} employees`
-    })),
-    ...expectedInflows.map(i => ({ 
-      ...i, 
-      type: 'inflow' as const,
-      description: i.description || 'Expected income'
-    })),
-  ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  // Combine and sort all cash flow events chronologically
+  const events = createCashFlowEvents(payrollObligations, expectedInflows);
 
-  allEvents.forEach(event => {
-    const inflow = event.type === 'inflow' ? event.amount : 0;
-    const outflow = event.type === 'outflow' ? event.amount : 0;
-    const netFlow = inflow - outflow;
-    
+  events.forEach(event => {
+    const { inflow, outflow, netFlow } = calculateEventFlow(event);
     runningBalance += netFlow;
     
     const requiredFloat = event.type === 'outflow' 
@@ -151,12 +197,50 @@ export function generateCashFlowProjections(
 }
 
 /**
- * Perform comprehensive risk assessment
+ * Creates unified cash flow events from obligations and inflows
+ */
+function createCashFlowEvents(
+  payrollObligations: PayrollObligation[],
+  expectedInflows: CashInflow[]
+) {
+  const outflows = payrollObligations.map(p => ({
+    ...p,
+    type: 'outflow' as const,
+    description: p.description || `Payroll - ${p.employeeCount || 'N/A'} employees`
+  }));
+
+  const inflows = expectedInflows.map(i => ({
+    ...i,
+    type: 'inflow' as const,
+    description: i.description || 'Expected income'
+  }));
+
+  return [...outflows, ...inflows]
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+}
+
+/**
+ * Calculates inflow, outflow, and net flow for an event
+ */
+function calculateEventFlow(event: { type: 'inflow' | 'outflow'; amount: number }) {
+  const inflow = event.type === 'inflow' ? event.amount : 0;
+  const outflow = event.type === 'outflow' ? event.amount : 0;
+  const netFlow = inflow - outflow;
+  
+  return { inflow, outflow, netFlow };
+}
+
+/**
+ * Performs comprehensive risk assessment for a company
+ * 
+ * Analyzes current balance against upcoming obligations to determine
+ * risk level and generate actionable recommendations.
+ * 
  * @param companyId - Company identifier
  * @param currentBalance - Current account balance
  * @param payrollObligations - Upcoming payroll obligations
  * @param expectedInflows - Expected cash inflows
- * @returns Complete risk assessment
+ * @returns Complete risk assessment with projections and recommendations
  */
 export function performRiskAssessment(
   companyId: string,
@@ -164,46 +248,23 @@ export function performRiskAssessment(
   payrollObligations: PayrollObligation[],
   expectedInflows: CashInflow[] = []
 ): RiskAssessment {
-  const nextPayroll = payrollObligations.length > 0 ? payrollObligations[0] : null;
+  // Analyze immediate risk from next payroll
+  const nextPayroll = payrollObligations[0] || null;
   const requiredFloat = nextPayroll ? calculateRequiredFloat(nextPayroll.amount) : 0;
   const riskLevel = determineRiskLevel(currentBalance, requiredFloat);
   const daysUntilRisk = nextPayroll ? calculateDaysUntil(nextPayroll.date) : 0;
   
+  // Generate future projections
   const projections = generateCashFlowProjections(
     currentBalance,
     payrollObligations,
     expectedInflows
   );
 
-  const recommendations: string[] = [];
-  
-  if (riskLevel === 'critical') {
-    recommendations.push('🚨 IMMEDIATE ACTION REQUIRED: Insufficient funds for upcoming payroll');
-    recommendations.push('💳 Consider emergency credit line or business loan');
-    recommendations.push('⏸️ Delay non-essential payments until after cash flow improves');
-    recommendations.push('📞 Contact banking partner for expedited credit options');
-  } else if (riskLevel === 'warning') {
-    recommendations.push('⚠️ Monitor cash flow closely over the next few days');
-    recommendations.push('🔄 Prepare backup funding options (credit line, etc.)');
-    recommendations.push('📈 Consider accelerating receivables collection');
-    recommendations.push('📋 Review and postpone non-critical expenses');
-  } else {
-    recommendations.push('✅ Cash flow is currently healthy');
-    recommendations.push('📊 Continue monitoring for any changes');
-  }
+  // Generate risk-appropriate recommendations
+  const recommendations = generateRecommendations(riskLevel, projections);
 
-  // Check for future risks in projections
-  const futureRisks = projections.filter(p => p.riskLevel !== 'safe');
-  if (futureRisks.length > 0) {
-    recommendations.push(`⚡ ${futureRisks.length} potential future cash flow issues detected`);
-    
-    const criticalRisks = futureRisks.filter(p => p.riskLevel === 'critical');
-    if (criticalRisks.length > 0) {
-      recommendations.push(`🔴 ${criticalRisks.length} CRITICAL cash flow issues in projections`);
-    }
-  }
-
-  const result: RiskAssessment = {
+  return {
     companyId,
     currentBalance,
     requiredFloat,
@@ -215,70 +276,140 @@ export function performRiskAssessment(
     ...(nextPayroll?.date && { nextPayrollDate: nextPayroll.date }),
     ...(nextPayroll?.amount && { nextPayrollAmount: nextPayroll.amount }),
   };
-  return result;
 }
 
 /**
- * Calculate risk score (0-100, where 100 is highest risk)
- * @param assessment - Risk assessment object
+ * Generates contextual recommendations based on risk level and projections
+ */
+function generateRecommendations(
+  riskLevel: RiskLevel,
+  projections: CashFlowProjection[]
+): string[] {
+  const recommendations: string[] = [];
+  
+  // Risk-level specific recommendations
+  switch (riskLevel) {
+    case 'critical':
+      recommendations.push(
+        '🚨 IMMEDIATE ACTION REQUIRED: Insufficient funds for upcoming payroll',
+        '💳 Consider emergency credit line or business loan',
+        '⏸️ Delay non-essential payments until after cash flow improves',
+        '📞 Contact banking partner for expedited credit options'
+      );
+      break;
+    case 'warning':
+      recommendations.push(
+        '⚠️ Monitor cash flow closely over the next few days',
+        '🔄 Prepare backup funding options (credit line, etc.)',
+        '📈 Consider accelerating receivables collection',
+        '📋 Review and postpone non-critical expenses'
+      );
+      break;
+    case 'safe':
+      recommendations.push(
+        '✅ Cash flow is currently healthy',
+        '📊 Continue monitoring for any changes'
+      );
+      break;
+  }
+
+  // Add future risk warnings
+  const futureRisks = projections.filter(p => p.riskLevel !== 'safe');
+  if (futureRisks.length > 0) {
+    recommendations.push(`⚡ ${futureRisks.length} potential future cash flow issues detected`);
+    
+    const criticalRisks = futureRisks.filter(p => p.riskLevel === 'critical');
+    if (criticalRisks.length > 0) {
+      recommendations.push(`🔴 ${criticalRisks.length} CRITICAL cash flow issues in projections`);
+    }
+  }
+
+  return recommendations;
+}
+
+// ============================================================================
+// SCORING AND ANALYSIS FUNCTIONS
+// ============================================================================
+
+/**
+ * Calculates numerical risk score from 0-100 (higher = more risk)
+ * 
+ * Combines base risk level with timing and future risk factors
+ * to provide a quantitative risk measure for comparison and trending.
+ * 
+ * @param assessment - Complete risk assessment
  * @returns Risk score from 0-100
  */
 export function calculateRiskScore(assessment: RiskAssessment): number {
-  let score = 0;
+  let score = getRiskLevelBaseScore(assessment.riskLevel);
+  
+  // Add urgency points based on timing
+  score += getUrgencyScore(assessment.daysUntilRisk);
+  
+  // Add points for future risks (capped to prevent score inflation)
+  score += getFutureRiskScore(assessment.projections);
 
-  // Base score from risk level
-  switch (assessment.riskLevel) {
-    case 'critical':
-      score += 70;
-      break;
-    case 'warning':
-      score += 40;
-      break;
-    case 'safe':
-      score += 10;
-      break;
-  }
-
-  // Adjust based on days until risk
-  if (assessment.daysUntilRisk <= 1) {
-    score += 20;
-  } else if (assessment.daysUntilRisk <= 3) {
-    score += 10;
-  } else if (assessment.daysUntilRisk <= 7) {
-    score += 5;
-  }
-
-  // Adjust based on future risks
-  const futureRisks = assessment.projections.filter(p => p.riskLevel !== 'safe');
-  score += Math.min(futureRisks.length * 2, 10); // Cap at 10 points
-
-  return Math.min(score, 100); // Cap at 100
+  return Math.min(score, 100); // Ensure maximum of 100
 }
 
 /**
- * Generate human-readable risk summary
- * @param assessment - Risk assessment object
- * @returns Human-readable summary string
+ * Gets base score for risk level
+ */
+function getRiskLevelBaseScore(riskLevel: RiskLevel): number {
+  const baseScores = {
+    critical: 70,
+    warning: 40,
+    safe: 10,
+  };
+  return baseScores[riskLevel];
+}
+
+/**
+ * Gets urgency score based on days until risk
+ */
+function getUrgencyScore(daysUntilRisk: number): number {
+  if (daysUntilRisk <= 1) return 20;
+  if (daysUntilRisk <= 3) return 10;
+  if (daysUntilRisk <= 7) return 5;
+  return 0;
+}
+
+/**
+ * Gets score adjustment for future risks
+ */
+function getFutureRiskScore(projections: CashFlowProjection[]): number {
+  const futureRisks = projections.filter(p => p.riskLevel !== 'safe');
+  return Math.min(futureRisks.length * 2, 10); // Cap at 10 points
+}
+
+// ============================================================================
+// FORMATTING AND DISPLAY UTILITIES
+// ============================================================================
+
+/**
+ * Generates human-readable risk summary
+ * 
+ * @param assessment - Risk assessment to summarize
+ * @returns Formatted summary string with emoji and context
  */
 export function generateRiskSummary(assessment: RiskAssessment): string {
-  const balance = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(assessment.currentBalance);
+  const balance = formatCurrency(assessment.currentBalance);
+  const emoji = getRiskLevelEmoji(assessment.riskLevel);
 
-  if (assessment.riskLevel === 'critical') {
-    return `🚨 CRITICAL: Current balance ${balance} is insufficient for upcoming payroll. Immediate action required.`;
-  } else if (assessment.riskLevel === 'warning') {
-    return `⚠️ WARNING: Current balance ${balance} is approaching minimum requirements. Monitor closely.`;
-  } else {
-    return `✅ HEALTHY: Current balance ${balance} meets payroll requirements. Continue monitoring.`;
-  }
+  const messages = {
+    critical: `${emoji} CRITICAL: Current balance ${balance} is insufficient for upcoming payroll. Immediate action required.`,
+    warning: `${emoji} WARNING: Current balance ${balance} is approaching minimum requirements. Monitor closely.`,
+    safe: `${emoji} HEALTHY: Current balance ${balance} meets payroll requirements. Continue monitoring.`,
+  };
+
+  return messages[assessment.riskLevel];
 }
 
 /**
- * Format currency for display
+ * Formats numbers as currency
+ * 
  * @param amount - Amount to format
- * @returns Formatted currency string
+ * @returns USD formatted currency string
  */
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-US', {
@@ -288,37 +419,31 @@ export function formatCurrency(amount: number): string {
 }
 
 /**
- * Get risk level color for UI display
+ * Gets color code for risk level (for UI components)
+ * 
  * @param riskLevel - Risk level
- * @returns Color code for UI
+ * @returns Hex color code
  */
 export function getRiskLevelColor(riskLevel: RiskLevel): string {
-  switch (riskLevel) {
-    case 'critical':
-      return '#FF4444'; // Red
-    case 'warning':
-      return '#FFA500'; // Orange
-    case 'safe':
-      return '#00AA00'; // Green
-    default:
-      return '#808080'; // Gray
-  }
+  const colors = {
+    critical: '#FF4444', // Red
+    warning: '#FFA500',  // Orange
+    safe: '#00AA00',     // Green
+  };
+  return colors[riskLevel] || '#808080'; // Gray fallback
 }
 
 /**
- * Get risk level emoji for notifications
+ * Gets emoji representation for risk level
+ * 
  * @param riskLevel - Risk level
- * @returns Emoji representation
+ * @returns Emoji string
  */
 export function getRiskLevelEmoji(riskLevel: RiskLevel): string {
-  switch (riskLevel) {
-    case 'critical':
-      return '🚨';
-    case 'warning':
-      return '⚠️';
-    case 'safe':
-      return '✅';
-    default:
-      return '❓';
-  }
+  const emojis = {
+    critical: '🚨',
+    warning: '⚠️',
+    safe: '✅',
+  };
+  return emojis[riskLevel] || '❓';
 }

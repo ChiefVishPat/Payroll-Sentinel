@@ -3,6 +3,9 @@ import {
   createPlaidService,
   createCheckService,
   createSlackService,
+  createPlaidServiceWithConfig,
+  createCheckServiceWithConfig,
+  createSlackServiceWithConfig,
   getServiceConfigFromEnv,
   initializeServices,
   PlaidService,
@@ -54,7 +57,7 @@ describe('Service Factory Functions', () => {
         environment: 'production' as const,
       };
 
-      const service = createPlaidService(config);
+      const service = createPlaidServiceWithConfig(config);
 
       expect(service.getHealthStatus()).toMatchObject({
         service: 'plaid',
@@ -87,7 +90,7 @@ describe('Service Factory Functions', () => {
         environment: 'production' as const,
       };
 
-      const service = createCheckService(config);
+      const service = createCheckServiceWithConfig(config);
 
       expect(service.getHealthStatus()).toMatchObject({
         service: 'check',
@@ -122,7 +125,7 @@ describe('Service Factory Functions', () => {
         environment: 'production' as const,
       };
 
-      const service = createSlackService(config);
+      const service = createSlackServiceWithConfig(config);
 
       expect(service.getHealthStatus()).toMatchObject({
         service: 'slack',

@@ -150,17 +150,17 @@ export class RiskDetectionService extends BaseService {
             // Step 4: Filter alerts based on cooldown and limits
             const filteredAlerts = this.filterAlerts(companyId, alerts);
             
-          // Step 3: Send filtered alerts
-          if (filteredAlerts.length > 0) {
-            const alertResults = await this.sendFilteredAlerts(companyId, filteredAlerts, analysisResult);
-            alertsSent = alertResults.sent;
-            
-            if (alertResults.failed > 0) {
-              errors.push(`${alertResults.failed} alerts failed to send`);
+            // Step 5: Send filtered alerts
+            if (filteredAlerts.length > 0) {
+              const alertResults = await this.sendFilteredAlerts(companyId, filteredAlerts, analysisResult);
+              alertsSent = alertResults.sent;
+              
+              if (alertResults.failed > 0) {
+                errors.push(`${alertResults.failed} alerts failed to send`);
+              }
             }
           } else {
             errors.push('Failed to check for alert triggers');
-          }
           }
         }
 
