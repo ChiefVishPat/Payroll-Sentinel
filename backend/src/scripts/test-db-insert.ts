@@ -14,7 +14,7 @@ async function testDatabaseInsert(): Promise<void> {
   
   try {
     console.log('1. Testing basic connection...');
-    const { data: testData, error: testError } = await supabase
+    const { error: testError } = await supabase
       .from('companies')
       .select('count', { count: 'exact', head: true });
     
@@ -25,7 +25,7 @@ async function testDatabaseInsert(): Promise<void> {
     console.log('✅ Connection test passed\n');
     
     console.log('2. Testing current user context...');
-    const { data: user, error: userError } = await supabase.auth.getUser();
+    const { data: user } = await supabase.auth.getUser();
     console.log('Current user:', user?.user ? 'Authenticated' : 'Service role (no user)');
     
     console.log('\n3. Attempting to insert a test company...');
