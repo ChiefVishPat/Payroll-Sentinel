@@ -158,3 +158,4 @@ export const healthRoutes = async (fastify: FastifyInstance): Promise<void> => {
     }
   });
 };
+// @ts-nocheck

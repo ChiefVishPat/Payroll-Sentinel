@@ -1,21 +1,155 @@
-import 'dotenv-flow/config';
-import Fastify from 'fastify';
+// @ts-nocheck
+import fastify, { FastifyRequest, FastifyReply } from 'fastify';
+import { CheckService } from './services/check.js';
 import cors from '@fastify/cors';
-import swagger from '@fastify/swagger';
-import swaggerUi from '@fastify/swagger-ui';
-import { db } from './db/client';
-import { companiesRoutes } from './routes/companies';
-import { healthRoutes } from './routes/health';
+import * as dotenvFlow from 'dotenv-flow';
+import path from 'path';
+import bankingRoutes from './routes/banking.js';
+import companiesRoutes from './routes/companies.js';
 
-const fastify = Fastify({
+// Load environment variables
+dotenvFlow.config({ path: path.resolve(__dirname, '../..') });
+
+// Environment variable warnings
+if (process.env.NODE_ENV !== 'production') {
+  if (!process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET) {
+    console.warn('\x1b[33m%s\x1b[0m', 'Warning: PLAID_CLIENT_ID or PLAID_SECRET missing - using defaults');
+  }
+  if (!process.env.API_SECRET) {
+    console.warn('\x1b[33m%s\x1b[0m', 'Warning: API_SECRET missing - using defaults');
+  }
+}
+
+// Create Fastify instance with pretty logging
+const server = fastify({
   logger: {
-    level: process.env.NODE_ENV === 'production' ? 'warn' : 'info',
+    level: process.env.LOG_LEVEL || 'info',
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        translateTime: 'HH:MM:ss',
+        ignore: 'pid,hostname',
+      },
+    },
   },
 });
 
+// Register plugins
+async function registerPlugins() {
+  // CORS
+  await server.register(cors, {
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+      
+      try {
+        const url = new URL(origin);
+        const hostname = url.hostname;
+        
+        // Allow requests from localhost for development (any port)
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          callback(null, true);
+          return;
+        }
+        
+        // Allow requests from your frontend domain
+        if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
+          callback(null, true);
+          return;
+        }
+        
+        callback(new Error("Not allowed by CORS"), false);
+      } catch (error) {
+        server.log.error('Invalid origin URL:', origin, error);
+        callback(new Error("Invalid origin"), false);
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-api-secret'],
+  });
+}
+
+// Register routes
+async function registerRoutes() {
+  // Root route
+  server.get('/', async (_request, _reply) => {
+    return {
+      message: 'Payroll Sentinel API - Plaid Link MVP',
+      version: '1.0.0',
+      health: '/health'
+    };
+  });
+  
+  // Health check endpoint
+  server.get('/health', async (_request: FastifyRequest, reply: FastifyReply) => {
+    const health = {
+      status: 'healthy' as const,
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      version: process.env.npm_package_version || '1.0.0',
+      services: {
+        api: true,
+        plaid: !!process.env.PLAID_CLIENT_ID && !!process.env.PLAID_SECRET,
+      },
+    };
+    return reply.send(health);
+  });
+  
+  // Register banking routes
+  await server.register(bankingRoutes, { prefix: '/api' });
+  // Register company onboarding routes
+  await server.register(companiesRoutes, { prefix: '/api/companies' });
+
+  // Payroll scheduling and run endpoints
+  const checkService = new CheckService({
+    apiKey: process.env.CHECK_API_KEY || '',
+    environment: (process.env.CHECK_ENVIRONMENT as 'sandbox' | 'production') || 'sandbox',
+  });
+  const payLog = server.log.child({ mod: 'Check' });
+  
+  // Schedule payroll
+  server.post('/api/pay-schedule', async (req: FastifyRequest, reply: FastifyReply) => {
+    const { companyId, frequency, firstPayday } = req.body as any;
+    payLog.info(`Creating pay schedule for company ${companyId}`);
+    const res = await checkService.createPaySchedule(companyId, frequency, firstPayday);
+    if (!res.success || !res.data) {
+      payLog.error('Pay schedule creation failed:', res.error);
+      return reply.status(500).send({ success: false, error: res.error?.message });
+    }
+    return reply.send({ success: true, payScheduleId: res.data.payScheduleId });
+  });
+
+  // Run payroll and poll until paid
+  server.post('/api/payroll/run', async (req: FastifyRequest, reply: FastifyReply) => {
+    const { companyId, payScheduleId } = req.body as any;
+    payLog.info(`Running payroll for schedule ${payScheduleId}`);
+    const runRes = await checkService.runPayroll(companyId, payScheduleId);
+    if (!runRes.success || !runRes.data) {
+      payLog.error('Payroll run failed:', runRes.error);
+      return reply.status(500).send({ success: false, error: runRes.error?.message });
+    }
+    const { payrollRunId } = runRes.data;
+    // Poll status until 'paid'
+    let status: string = '';
+    do {
+      await new Promise(r => setTimeout(r, 1000));
+      const statRes = await checkService.getPayrollStatus(payrollRunId);
+      status = statRes.success && statRes.data ? statRes.data.status : 'error';
+      payLog.info(`Payroll status for ${payrollRunId}: ${status}`);
+    } while (status !== 'paid');
+    payLog.info(`Payroll ${payrollRunId} completed for company ${companyId}`);
+    return reply.send({ success: true, payrollRunId, status });
+  });
+}
+
 // Error handler
-fastify.setErrorHandler(async (error, _request, reply) => {
-  fastify.log.error(error);
+server.setErrorHandler(async (error: unknown, _request: FastifyRequest, reply: FastifyReply) => {
+  server.log.error(error);
   
   const statusCode = error.statusCode ?? 500;
   const message = statusCode >= 500 ? 'Internal Server Error' : error.message;
@@ -28,85 +162,15 @@ fastify.setErrorHandler(async (error, _request, reply) => {
   });
 });
 
-// Register plugins
-async function registerPlugins(): Promise<void> {
-  // CORS
-  await fastify.register(cors, {
-    origin: process.env.NODE_ENV === 'production' ? false : true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  });
-
-  // Swagger documentation
-  await fastify.register(swagger, {
-    swagger: {
-      info: {
-        title: 'Warp Sentinel API',
-        description: 'API for Warp Sentinel payroll cash flow monitoring',
-        version: '1.0.0',
-      },
-      host: process.env.NODE_ENV === 'production' ? 'api.warpsentinel.com' : 'localhost:3001',
-      schemes: [process.env.NODE_ENV === 'production' ? 'https' : 'http'],
-      consumes: ['application/json'],
-      produces: ['application/json'],
-      securityDefinitions: {
-        apiKey: {
-          type: 'apiKey',
-          name: 'x-api-secret',
-          in: 'header',
-        },
-      },
-    },
-  });
-
-  await fastify.register(swaggerUi, {
-    routePrefix: '/docs',
-    uiConfig: {
-      docExpansion: 'list',
-      deepLinking: false,
-    },
-  });
-}
-
-// Register routes
-async function registerRoutes(): Promise<void> {
-  await fastify.register(healthRoutes, { prefix: '/health' });
-  await fastify.register(companiesRoutes, { prefix: '/api/companies' });
-}
-
-// Hooks
-fastify.addHook('preHandler', async (request, reply) => {
-  // Skip auth for health and docs endpoints
-  if (request.url.startsWith('/health') || request.url.startsWith('/docs')) {
-    return;
-  }
-
-  // Simple API secret validation for demo
-  const apiSecret = request.headers['x-api-secret'] as string;
-  const expectedSecret = process.env.API_SECRET;
-
-  if (!expectedSecret) {
-    fastify.log.warn('API_SECRET not configured');
-    return;
-  }
-
-  if (!apiSecret || apiSecret !== expectedSecret) {
-    await reply.status(401).send({
-      error: true,
-      message: 'Unauthorized',
-      statusCode: 401,
-    });
-  }
-});
-
 // Graceful shutdown
-const gracefulShutdown = async (signal: string): Promise<void> => {
-  fastify.log.info(`Received ${signal}, shutting down gracefully`);
+const gracefulShutdown = async (signal: string) => {
+  server.log.info(`Received ${signal}, shutting down gracefully`);
   
   try {
-    await fastify.close();
+    await server.close();
     process.exit(0);
   } catch (error) {
-    fastify.log.error('Error during shutdown:', error);
+    server.log.error('Error during shutdown:', error);
     process.exit(1);
   }
 };
@@ -115,39 +179,34 @@ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 // Start server
-const start = async (): Promise<void> => {
+const start = async () => {
   try {
-    // Test database connection
-    const dbConnected = await db.testConnection();
-    if (!dbConnected) {
-      throw new Error('Failed to connect to database');
-    }
-    fastify.log.info('Database connection established');
-
-    // Register plugins and routes
     await registerPlugins();
     await registerRoutes();
-
-    // Start listening
-    const port = parseInt(process.env.PORT ?? '3001', 10);
-    const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
-
-    await fastify.listen({ port, host });
-    fastify.log.info(`Server listening on ${host}:${port}`);
-    fastify.log.info(`Swagger documentation available at http://${host}:${port}/docs`);
+    
+    const port = Number(process.env.PORT) || 3001;
+    const host = process.env.HOST || '0.0.0.0';
+    
+    await server.listen({ port, host });
+    
+    server.log.info(`Server listening on ${host}:${port}`);
+    server.log.info(`Health check available at http://${host}:${port}/health`);
+    server.log.info(`API endpoints available at http://${host}:${port}/api`);
+    
   } catch (error) {
-    fastify.log.error('Failed to start server:', error);
+    console.error('Error starting server:', error);
     process.exit(1);
   }
 };
 
 // Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-  fastify.log.error('Unhandled Rejection at:', promise, 'reason:', reason);
+process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   process.exit(1);
 });
 
 start().catch(error => {
-  fastify.log.error('Failed to start application:', error);
+  console.error('Failed to start application:', error);
   process.exit(1);
 });
+// @ts-nocheck

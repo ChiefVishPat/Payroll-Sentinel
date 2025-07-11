@@ -99,6 +99,8 @@ export class CheckService extends BaseService {
   
   // Mock data storage (in real implementation, this would be API calls)
   private mockPayrollRuns = new Map<string, PayrollRun>();
+  // Mock data storage (in real implementation, this would be API calls)
+  private mockCompanies = new Map<string, { name: string; ein: string; state: string }>();
   private mockEmployees = new Map<string, Employee>();
   private mockEntries = new Map<string, PayrollEntry[]>();
 
@@ -152,6 +154,76 @@ export class CheckService extends BaseService {
     ];
 
     mockEmployees.forEach(emp => this.mockEmployees.set(emp.id, emp));
+  }
+
+  /**
+   * Create a new company in the Check sandbox (mock implementation)
+   * @param name - Legal company name
+   * @param ein - Company EIN (tax ID)
+   * @param state - Company state code (US)
+   * @returns Service response containing the CheckHQ company ID
+   */
+    async createCompany(
+      name: string,
+      ein: string,
+      state: string
+  ): Promise<ServiceResponse<{ companyId: string }>> {
+    return this.executeWithErrorHandling(async () => {
+      // Simulate API delay
+      await this.sleep(200);
+      // Generate a mock CheckHQ company identifier
+      const companyId = `cmp_${Math.random().toString(36).substring(2, 10)}`;
+      this.mockCompanies.set(companyId, { name, ein, state });
+      return { companyId };
+    }, `create company ${name}`);
+  }
+
+  /**
+   * Create a payroll schedule in the Check sandbox (mock)
+   * @param companyId - Check company ID
+   * @param frequency - Payroll frequency
+   * @param firstPayday - First payday date (YYYY-MM-DD)
+   */
+  async createPaySchedule(
+    companyId: string,
+    frequency: string,
+    firstPayday: string
+  ): Promise<ServiceResponse<{ payScheduleId: string }>> {
+    return this.executeWithErrorHandling(async () => {
+      await this.sleep(200);
+      const payScheduleId = `ps_${Math.random().toString(36).substring(2, 10)}`;
+      return { payScheduleId };
+    }, `create pay schedule for ${companyId}`);
+  }
+
+  /**
+   * Run payroll in the Check sandbox (mock)
+   * @param companyId - Check company ID
+   * @param payScheduleId - Payroll schedule ID
+   */
+  async runPayroll(
+    companyId: string,
+    payScheduleId: string
+  ): Promise<ServiceResponse<{ payrollRunId: string }>> {
+    return this.executeWithErrorHandling(async () => {
+      await this.sleep(300);
+      const payrollRunId = `pr_${Math.random().toString(36).substring(2, 10)}`;
+      return { payrollRunId };
+    }, `run payroll for ${companyId}`);
+  }
+
+  /**
+   * Poll payroll run status in the Check sandbox (mock)
+   * @param payrollRunId - Payroll run ID
+   */
+  async getPayrollStatus(
+    payrollRunId: string
+  ): Promise<ServiceResponse<{ status: 'pending' | 'paid' }>> {
+    return this.executeWithErrorHandling(async () => {
+      await this.sleep(100);
+      const status = 'paid';
+      return { status };
+    }, `get payroll status for ${payrollRunId}`);
   }
 
   /**

@@ -314,6 +314,55 @@ export class PlaidService extends BaseService {
   }
 
   /**
+   * Firehose a sandbox transaction (deposit or withdrawal)
+   * Only works in sandbox environment
+   * @param accessToken - Plaid access token
+   * @param amount - Transaction amount
+   * @param date - Transaction date (YYYY-MM-DD)
+   * @param description - Transaction description
+   */
+  async simulateTransaction(
+    accessToken: string,
+    amount: number,
+    date: string,
+    description: string
+  ): Promise<ServiceResponse<void>> {
+    if (this.plaidConfig.environment !== 'sandbox') {
+      throw new Error('Sandbox simulation only available in sandbox environment');
+    }
+    return this.executeWithErrorHandling(async () => {
+      const resp = await this.client.sandboxTransactionsFirehose({
+        access_token: accessToken,
+        amount,
+        date,
+        authorization: description,
+      });
+      return;
+    }, `sandbox firehose transaction`);
+  }
+
+  /**
+   * Get transaction history for linked accounts
+   * @param accessToken - Plaid access token
+   * @param startDate - Start date (YYYY-MM-DD)
+   * @param endDate - End date (YYYY-MM-DD)
+   */
+  async getTransactions(
+    accessToken: string,
+    startDate: string,
+    endDate: string
+  ): Promise<ServiceResponse<any[]>> {
+    return this.executeWithErrorHandling(async () => {
+      const resp = await this.client.transactionsGet({
+        access_token: accessToken,
+        start_date: startDate,
+        end_date: endDate,
+      });
+      return resp.data.transactions;
+    }, `get transactions`);
+  }
+
+  /**
    * Get service configuration and status
    * @returns Service configuration information
    */

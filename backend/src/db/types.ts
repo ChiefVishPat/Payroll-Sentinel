@@ -1,6 +1,9 @@
 export interface Company {
   id: string;
   name: string;
+  ein: string;
+  state: string;
+  check_company_id: string;
   created_at: string;
   updated_at: string;
 }
@@ -68,6 +71,8 @@ export interface Alert {
 // Input types for creating new records
 export interface CreateCompanyInput {
   name: string;
+  ein: string;
+  state: string;
 }
 
 export interface CreateBankAccountInput {
