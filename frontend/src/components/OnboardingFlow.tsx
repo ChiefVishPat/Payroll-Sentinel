@@ -79,8 +79,8 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setIsLoading(true);
     
     try {
-      console.log('➜ POST /api/banking/exchange →', { publicToken: public_token, companyId });
-      const response = await axios.post('/api/banking/exchange', {
+      console.log('➜ POST /api/banking/exchange-token →', { publicToken: public_token, companyId });
+      const response = await axios.post('/api/banking/exchange-token', {
         publicToken: public_token,
         companyId
       });

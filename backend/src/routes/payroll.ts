@@ -1,73 +1,39 @@
-import { FastifyInstance } from 'fastify';
-import { CheckService } from '../services/check';
+import { FastifyInstance } from 'fastify'
+import { supabase } from '../db/client'
+import { CheckMockService } from '../services/checkMock'
+import { PlaidService } from '../services/plaid'
+import { SlackService } from '../services/slack'
 
-/**
- * Payroll routes for managing payroll operations
- * Includes creating pay schedules and running payroll
- */
 export default async function payrollRoutes(fastify: FastifyInstance) {
-  const checkService = fastify.services.checkService as CheckService;
+  const checkLog = fastify.log.child({ mod: 'CheckMock' })
+  const supaLog = fastify.log.child({ mod: 'Supabase' })
+  const plaidLog = fastify.log.child({ mod: 'Plaid' })
+  const check = new CheckMockService()
+  const plaid = fastify.services?.plaidService as PlaidService
+  const slack = fastify.services?.slackService as SlackService
 
-  /**
-   * Schedule payroll for a company
-   * @route POST /api/pay-schedule
-   */
   fastify.post('/pay-schedule', async (request, reply) => {
-    const { companyId, frequency, firstPayday } = request.body;
+    const { companyId } = request.body as { companyId: string }
+    checkLog.info('create pay schedule')
+    const { pay_schedule_id } = await check.createPaySchedule()
+    const { error } = await supabase.from('pay_schedules').insert({ company_id: companyId, pay_schedule_id })
+    if (error) supaLog.error({ err: error }, 'failed to save schedule')
+    return reply.send({ payScheduleId: pay_schedule_id })
+  })
 
-    try {
-      const result = await checkService.createPaySchedule(companyId, frequency, firstPayday);
-      
-      if (!result.success || !result.data) {
-        fastify.log.error('Pay schedule creation failed:', result.error);
-        reply.status(500).send({ error: result.error?.message || 'Unable to schedule payroll' });
-        return;
-      }
-      
-      const { payScheduleId } = result.data;
-      reply.send({ success: true, payScheduleId });
-    } catch (error) {
-      fastify.log.error(error);
-      reply.status(500).send({ error: 'Unable to schedule payroll' });
-    }
-  });
-
-  /**
-   * Run payroll for a given pay schedule
-   * @route POST /api/payroll/run
-   */
   fastify.post('/payroll/run', async (request, reply) => {
-    const { companyId, payScheduleId } = request.body;
-
-    try {
-      const result = await checkService.runPayroll(companyId, payScheduleId);
-      
-      if (!result.success || !result.data) {
-        fastify.log.error('Payroll run failed:', result.error);
-        reply.status(500).send({ error: result.error?.message || 'Unable to run payroll' });
-        return;
-      }
-      
-      const { payrollRunId } = result.data;
-      fastify.log.info(`Payroll run initiated: ${payrollRunId}`);
-      
-      // Simulate polling for payroll status
-      let status = 'pending';
-      while (status !== 'paid') {
-        await new Promise(res => setTimeout(res, 2000)); // simulate delay
-        const statusResponse = await checkService.getPayrollStatus(payrollRunId);
-        if (statusResponse.success && statusResponse.data) {
-          status = statusResponse.data.status;
-        } else {
-          break; // Exit if status check fails
-        }
-      }
-
-      fastify.log.info(`Payroll run completed: ${payrollRunId}`);
-      reply.send({ success: true, payrollRunId });
-    } catch (error) {
-      fastify.log.error(error);
-      reply.status(500).send({ error: 'Unable to run payroll' });
+    const { companyId, itemId, payScheduleId } = request.body as { companyId: string; itemId: string; payScheduleId: string }
+    checkLog.info('run payroll')
+    const run = await check.runPayroll()
+    await supabase.from('payroll_runs').insert({ company_id: companyId, check_payroll_id: run.payroll_run_id, pay_date: new Date().toISOString(), total_amount: 1000, status: run.status })
+    plaidLog.info('simulate payroll debit')
+    const { data } = await supabase.from('company_bank').select('access_token').eq('item_id', itemId).single()
+    if (data?.access_token) {
+      await plaid.simulateTransaction(data.access_token, -1000, new Date().toISOString().split('T')[0], 'Payroll Debit')
     }
-  });
+    if (slack) {
+      await slack.sendNotification('Payroll', 'Payroll run complete')
+    }
+    return reply.send(run)
+  })
 }
