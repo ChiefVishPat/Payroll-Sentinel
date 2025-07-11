@@ -58,6 +58,7 @@ PLAID_SECRET=your_sandbox_secret
 # Supabase local stack
 SUPABASE_URL=http://localhost:54321
 SUPABASE_ANON_KEY=public-anon-key
+SUPABASE_SERVICE_ROLE_KEY=service-role-key
 
 # Slack alerts
 SLACK_BOT_TOKEN=xoxb-your-bot-token

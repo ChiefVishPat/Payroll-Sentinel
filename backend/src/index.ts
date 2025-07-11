@@ -7,8 +7,9 @@ import path from 'path';
 import bankingRoutes from './routes/banking.js';
 import companiesRoutes from './routes/companies.js';
 
-// Load environment variables
+// Load environment variables from repo root or backend folder
 dotenvFlow.config({ path: path.resolve(__dirname, '../..') });
+dotenvFlow.config({ path: path.resolve(__dirname, '..') });
 
 // Environment variable warnings
 if (process.env.NODE_ENV !== 'production') {

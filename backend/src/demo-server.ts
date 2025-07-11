@@ -2,10 +2,13 @@ import fastify from 'fastify';
 import cors from '@fastify/cors';
 import { PlaidService } from './services/plaid';
 import { CheckService } from './services/check';
+import path from 'path';
 
 // Load environment variables
 import dotenv from 'dotenv';
-dotenv.config();
+// Load .env from repo root then backend folder
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 // Create Fastify instance
 const server = fastify({
@@ -86,7 +89,9 @@ server.post('/api/banking/link-token', async (request, reply) => {
 // Simple in-memory store for demo
 const accessTokens = new Map<string, string>();
 
-server.post('/api/banking/exchange', async (request, reply) => {
+// Exchange a public token from Plaid Link for an access token
+// New endpoint name aligns with frontend expectations
+server.post('/api/banking/exchange-token', async (request, reply) => {
   const { publicToken, companyId } = request.body as any;
   plaidLog.info('exchanging public_token');
   try {
