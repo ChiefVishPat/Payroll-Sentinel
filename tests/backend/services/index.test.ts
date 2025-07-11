@@ -11,7 +11,7 @@ import {
   PlaidService,
   CheckService,
   SlackService,
-} from '../../services/index';
+} from '@backend/services/index';
 
 // Mock environment variables
 const mockEnv = {
