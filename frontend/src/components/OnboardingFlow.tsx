@@ -79,8 +79,8 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setIsLoading(true);
     
     try {
-      console.log('➜ POST /api/banking/exchange →', { publicToken: public_token, companyId });
-      const response = await axios.post('/api/banking/exchange', {
+      console.log('➜ POST /api/banking/exchange-token →', { publicToken: public_token, companyId });
+      const response = await axios.post('/api/banking/exchange-token', {
         publicToken: public_token,
         companyId
       });
@@ -198,7 +198,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-8">
+    <div className="min-h-screen max-w-4xl mx-auto p-8 bg-neutral-900 text-stone-100">
       <h1 className="text-3xl font-bold mb-8 text-center">Payroll Sentinel Demo</h1>
       
       {/* Step Indicator */}
@@ -207,14 +207,14 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <div
             key={step}
             className={`flex items-center ${
-              index <= currentStep ? 'text-blue-600' : 'text-gray-400'
+              index <= currentStep ? 'text-amber-200' : 'text-stone-500'
             }`}
           >
             <div
               className={`w-8 h-8 rounded-full border-2 flex items-center justify-center mr-2 ${
                 index <= currentStep
-                  ? 'bg-blue-600 border-blue-600 text-white'
-                  : 'border-gray-300'
+                  ? 'bg-amber-200 border-amber-200 text-neutral-900'
+                  : 'border-stone-600'
               }`}
             >
               {index + 1}
@@ -226,13 +226,13 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
       {/* Error Display */}
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
 
       {/* Step Content */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="bg-neutral-800 rounded-lg shadow-lg p-6">
         {currentStep === 0 && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Step 1: Create Company</h2>
@@ -273,7 +273,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
+                className="w-full bg-amber-600 text-white py-2 px-4 rounded hover:bg-amber-700 disabled:opacity-50"
               >
                 {isLoading ? 'Creating...' : 'Create Company'}
               </button>
@@ -284,7 +284,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         {currentStep === 1 && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Step 2: Link Bank Account</h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-stone-300 mb-4">
               Connect your bank account using Plaid. Use the test credentials:
               <br />
               <strong>Username:</strong> user_good
@@ -295,7 +295,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <button
                 onClick={getLinkToken}
                 disabled={isLoading}
-                className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:opacity-50"
+                className="w-full bg-teal-600 text-white py-2 px-4 rounded hover:bg-teal-700 disabled:opacity-50"
               >
                 {isLoading ? 'Preparing...' : 'Get Link Token'}
               </button>
@@ -304,7 +304,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <button
                 onClick={() => openPlaid()}
                 disabled={!plaidReady || isLoading}
-                className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:opacity-50"
+                className="w-full bg-teal-600 text-white py-2 px-4 rounded hover:bg-teal-700 disabled:opacity-50"
               >
                 {isLoading ? 'Connecting...' : 'Connect Bank Account'}
               </button>
@@ -315,7 +315,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         {currentStep === 2 && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Step 3: Create Pay Schedule</h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-stone-300 mb-4">
               Set up a biweekly payroll schedule for your company.
             </p>
             <form onSubmit={handlePayScheduleSubmit} className="space-y-4">
@@ -337,7 +337,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700 disabled:opacity-50"
+                className="w-full bg-emerald-600 text-white py-2 px-4 rounded hover:bg-emerald-700 disabled:opacity-50"
               >
                 {isLoading ? 'Creating...' : 'Create Pay Schedule'}
               </button>
@@ -348,7 +348,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         {currentStep === 3 && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Step 4: Run Payroll</h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-stone-300 mb-4">
               Everything is set up! You can now run payroll and simulate deposits.
             </p>
             
@@ -357,7 +357,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <div className="mb-6">
                 <h3 className="text-lg font-medium mb-2">Current Balances:</h3>
                 {balances.map((balance, index) => (
-                  <div key={index} className="bg-gray-50 p-3 rounded mb-2">
+                  <div key={index} className="bg-neutral-700 p-3 rounded mb-2">
                     <p><strong>Account:</strong> {balance.accountId}</p>
                     <p><strong>Current:</strong> ${balance.current.toFixed(2)}</p>
                     <p><strong>Available:</strong> ${balance.available?.toFixed(2) || 'N/A'}</p>
@@ -370,7 +370,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <button
                 onClick={simulateDeposit}
                 disabled={isLoading}
-                className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:opacity-50"
+                className="w-full bg-teal-600 text-white py-2 px-4 rounded hover:bg-teal-700 disabled:opacity-50"
               >
                 {isLoading ? 'Simulating...' : 'Simulate Deposit $5,000'}
               </button>
@@ -378,7 +378,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <button
                 onClick={handleRunPayroll}
                 disabled={isLoading}
-                className="w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 disabled:opacity-50"
+                className="w-full bg-rose-600 text-white py-2 px-4 rounded hover:bg-rose-700 disabled:opacity-50"
               >
                 {isLoading ? 'Running...' : 'Run Payroll'}
               </button>
@@ -386,7 +386,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <button
                 onClick={fetchBalances}
                 disabled={isLoading}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
+                className="w-full bg-sky-600 text-white py-2 px-4 rounded hover:bg-sky-700 disabled:opacity-50"
               >
                 {isLoading ? 'Refreshing...' : 'Refresh Balances'}
               </button>
