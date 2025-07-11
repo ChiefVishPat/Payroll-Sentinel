@@ -14,8 +14,8 @@ import { PlaidService } from './services/plaid.js';
 import { CheckService } from './services/check.js';
 import { SlackService } from './services/slack.js';
 
-// Load environment variables from project root .env files
-dotenvFlow.config({ path: path.resolve(__dirname, '../..') });
+// Load environment variables from the backend folder
+dotenvFlow.config({ path: path.resolve(__dirname, '..') });
 
 // Initialize database service
 import { initializeDatabase } from './config/database.js';

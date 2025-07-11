@@ -7,8 +7,10 @@ import path from 'path';
 import bankingRoutes from './routes/banking.js';
 import companiesRoutes from './routes/companies.js';
 
-// Load environment variables
-dotenvFlow.config({ path: path.resolve(__dirname, '../..') });
+// Load environment variables from the backend folder
+// When running via `pnpm --filter backend dev` the current working directory
+// is `backend`, so we resolve one level up from `src` to load `backend/.env`.
+dotenvFlow.config({ path: path.resolve(__dirname, '..') });
 
 // Environment variable warnings
 if (process.env.NODE_ENV !== 'production') {
