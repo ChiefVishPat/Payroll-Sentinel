@@ -4,11 +4,22 @@ import { CheckService } from './services/check.js';
 import cors from '@fastify/cors';
 import * as dotenvFlow from 'dotenv-flow';
 import path from 'path';
+import fs from 'fs';
+
+// ----- Environment Configuration -----
+// Attempt to load environment variables from either the project root or the
+// backend directory so local setups work regardless of where `.env` is placed.
+const backendEnvPath = path.resolve(__dirname, '..');
+const repoRootEnvPath = path.resolve(__dirname, '../..');
+const envPath = fs.existsSync(path.join(backendEnvPath, '.env'))
+  ? backendEnvPath
+  : repoRootEnvPath;
+
+dotenvFlow.config({ path: envPath });
+console.log(`Loaded environment variables from ${envPath}`);
+
 import bankingRoutes from './routes/banking.js';
 import companiesRoutes from './routes/companies.js';
-
-// Load environment variables
-dotenvFlow.config({ path: path.resolve(__dirname, '../..') });
 
 // Environment variable warnings
 if (process.env.NODE_ENV !== 'production') {
