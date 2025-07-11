@@ -7,7 +7,7 @@
  * Run with: npm run verify-supabase
  */
 
-import 'dotenv-flow/config';
+import '../loadEnv.js';
 import { db } from '../db/client';
 
 // ANSI color codes for console output
