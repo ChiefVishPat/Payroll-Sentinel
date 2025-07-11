@@ -86,7 +86,9 @@ server.post('/api/banking/link-token', async (request, reply) => {
 // Simple in-memory store for demo
 const accessTokens = new Map<string, string>();
 
-server.post('/api/banking/exchange', async (request, reply) => {
+// Exchange a public token from Plaid Link for an access token
+// New endpoint name aligns with frontend expectations
+server.post('/api/banking/exchange-token', async (request, reply) => {
   const { publicToken, companyId } = request.body as any;
   plaidLog.info('exchanging public_token');
   try {

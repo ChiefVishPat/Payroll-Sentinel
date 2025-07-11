@@ -40,7 +40,7 @@ async function testRawSQL(): Promise<void> {
         console.log('\n3. Debugging the issue...');
         console.log('Environment check:');
         console.log('- SUPABASE_URL:', process.env.SUPABASE_URL);
-        console.log('- Service role key length:', process.env.SUPABASE_SERVICE_ROLE_KEY?.length);
+        console.log('- Service key length:', process.env.SUPABASE_SERVICE_ROLE_KEY?.length);
         
         // Check if we can read from the table
         console.log('\n4. Testing read access...');

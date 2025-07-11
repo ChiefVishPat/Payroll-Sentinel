@@ -22,6 +22,7 @@ export interface BankAccount {
   id: string;
   company_id: string;
   plaid_account_id: string;
+  plaid_access_token?: string;
   account_name: string;
   account_type: string;
   account_subtype: string | null;

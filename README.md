@@ -218,3 +218,11 @@ See [LICENSE](LICENSE) file for details.
 ---
 
 **Status**: Phases 1-2 complete. Ready for Phase 3 external API integrations.
+
+## Running the Sandbox Demo
+
+1. `npm install` in the repo root.
+2. Copy `.env.example` to `.env` and adjust sandbox credentials.
+3. Start the backend and frontend with `npm run dev`.
+4. Visit `http://localhost:3000/demo/onboarding`.
+5. Follow the 4 step wizard to create a company, link a bank, schedule payroll and run it.
