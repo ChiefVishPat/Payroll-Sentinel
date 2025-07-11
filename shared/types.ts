@@ -10,9 +10,6 @@ export interface Company {
   name: string;
   ein: string;
   state: string;
-  check_company_id: string;
-  created_at: string;
-  updated_at: string;
 }
 
 /**
@@ -26,18 +23,14 @@ export interface BankAccount {
   account_type: string;
   account_subtype: string | null;
   institution_name: string | null;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
 }
 
 /**
  * Payroll run result
  */
 export interface PayrollRun {
-  payrollRunId: string;
-  status: 'pending' | 'paid' | string;
-  created_at?: string;
+  payroll_run_id: string;
+  status: string;
 }
 
 /**

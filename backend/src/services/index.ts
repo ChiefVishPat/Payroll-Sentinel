@@ -263,7 +263,7 @@ export function initializeAllServices(companies: string[] = []): {
       maxAlertsPerDay: 10,
       alertChannels: {
         slack: true,
-        email: false,
+        // email channel disabled
         webhook: false,
       },
     },
@@ -399,7 +399,7 @@ export function createRiskDetectionService(
       maxAlertsPerDay: 10,
       alertChannels: {
         slack: !!slack,
-        email: false,
+        // email channel disabled
         webhook: false,
       },
     },

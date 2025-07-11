@@ -218,3 +218,11 @@ See [LICENSE](LICENSE) file for details.
 ---
 
 **Status**: Phases 1-2 complete. Ready for Phase 3 external API integrations.
+
+## Running the Sandbox Demo
+
+1. `pnpm install`
+2. copy `.env.example` to `.env` and fill in sandbox keys
+3. `pnpm --filter backend dev` in one terminal
+4. `pnpm --filter frontend dev` in another
+5. open `http://localhost:3000/demo/onboarding`

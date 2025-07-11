@@ -74,8 +74,13 @@ async function bankingRoutes(fastify: FastifyInstance) {
           account_name: acct.name,
           account_type: acct.type,
           account_subtype: acct.subtype,
-          institution_name: acct.institutionName || null 
+          institution_name: acct.institutionName || null
         }]);
+        await supabase.from('company_bank').upsert({
+          company_id: companyId,
+          item_id: itemId,
+          access_token: accessToken,
+        });
       } catch (dbError) {
         fastify.log.warn('Failed to save to database, continuing with in-memory storage', dbError);
       }
@@ -110,8 +115,13 @@ async function bankingRoutes(fastify: FastifyInstance) {
           account_name: acct.name,
           account_type: acct.type,
           account_subtype: acct.subtype,
-          institution_name: acct.institutionName || null 
+          institution_name: acct.institutionName || null
         }]);
+        await supabase.from('company_bank').upsert({
+          company_id: companyId,
+          item_id: itemId,
+          access_token: accessToken,
+        });
       } catch (dbError) {
         fastify.log.warn('Failed to save to database, continuing with in-memory storage', dbError);
       }
@@ -143,7 +153,15 @@ async function bankingRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/banking/balances', async (req, reply) => {
     const { itemId } = req.query as any;
-    const accessToken = accessTokens.get(itemId);
+    let accessToken = accessTokens.get(itemId);
+    if (!accessToken) {
+      const { data } = await supabase
+        .from('company_bank')
+        .select('access_token')
+        .eq('item_id', itemId)
+        .single();
+      accessToken = data?.access_token;
+    }
     if (!accessToken) {
       return reply.status(400).send({ success: false, error: 'Unknown itemId' });
     }

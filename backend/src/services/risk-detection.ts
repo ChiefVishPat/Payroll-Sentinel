@@ -97,7 +97,7 @@ export class RiskDetectionService extends BaseService {
       enabledCompanies: [],
       alertChannels: {
         slack: true,
-        email: false,
+        // email alerts disabled in sandbox
         webhook: false,
       },
       ...config,
@@ -568,7 +568,7 @@ export class RiskDetectionService extends BaseService {
   } {
     const enabledChannels: string[] = [];
     if (this.config.alertChannels?.slack) enabledChannels.push('slack');
-    if (this.config.alertChannels?.email) enabledChannels.push('email');
+    // email channel intentionally ignored
     if (this.config.alertChannels?.webhook) enabledChannels.push('webhook');
 
     const totalAlerts = Array.from(this.alertHistory.values())
