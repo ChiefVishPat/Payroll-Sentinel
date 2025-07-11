@@ -6,7 +6,7 @@
  * This script uses raw SQL to test database insertion and bypass potential RLS issues
  */
 
-import 'dotenv-flow/config';
+import '../loadEnv.js';
 import { supabase } from '../db/client';
 
 async function testRawSQL(): Promise<void> {

@@ -1,14 +1,13 @@
 // @ts-nocheck
+// Load environment variables before any other imports
+import './loadEnv.js';
+
 import fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import { CheckService } from './services/check.js';
 import cors from '@fastify/cors';
-import * as dotenvFlow from 'dotenv-flow';
-import path from 'path';
+
 import bankingRoutes from './routes/banking.js';
 import companiesRoutes from './routes/companies.js';
-
-// Load environment variables
-dotenvFlow.config({ path: path.resolve(__dirname, '../..') });
 
 // Environment variable warnings
 if (process.env.NODE_ENV !== 'production') {

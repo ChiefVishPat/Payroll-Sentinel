@@ -1,11 +1,9 @@
+import './loadEnv.js';
+
 import fastify from 'fastify';
 import cors from '@fastify/cors';
 import { PlaidService } from './services/plaid';
 import { CheckService } from './services/check';
-
-// Load environment variables
-import dotenv from 'dotenv';
-dotenv.config();
 
 // Create Fastify instance
 const server = fastify({

@@ -125,11 +125,27 @@ The application uses a PostgreSQL database hosted on Supabase with the following
    cp .env.example .env
    # Edit .env with your actual values
    ```
+   The backend will automatically load `.env` from either the project root or
+   the `backend` folder. Ensure your Supabase keys are defined and then verify
+   the connection with:
+
+   ```bash
+   npm run verify-supabase --workspace=backend
+   ```
 
 3. **Database setup:**
    - Create a new Supabase project
    - Run the SQL schema from `backend/src/db/schema.sql`
    - Update `.env` with your Supabase credentials
+
+### Demo Workflow
+
+1. **Create Company** – POST `/api/companies` with name and EIN.
+2. **Link Bank Account** – use Plaid sandbox credentials `user_good` / `pass_good`.
+3. **Create Pay Schedule** – POST `/api/pay-schedule` to set biweekly runs.
+4. **Run Payroll** – POST `/api/payroll/run` and monitor Slack alerts.
+
+For a step-by-step guide, see [`README_SANDBOX_DEMO.md`](README_SANDBOX_DEMO.md).
 
 ### Development
 

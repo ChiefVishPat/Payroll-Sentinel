@@ -1,9 +1,8 @@
 // @ts-nocheck
-import fastify from 'fastify';
-import * as dotenv from 'dotenv';
+// Load environment variables before other imports
+import './loadEnv.js';
 
-// Load environment variables
-dotenv.config();
+import fastify from 'fastify';
 
 // Create Fastify instance
 const server = fastify({

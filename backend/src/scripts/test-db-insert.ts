@@ -6,7 +6,7 @@
  * This script directly tests database insertion to identify the issue
  */
 
-import 'dotenv-flow/config';
+import '../loadEnv.js';
 import { supabase } from '../db/client';
 
 async function testDatabaseInsert(): Promise<void> {

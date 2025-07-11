@@ -1,11 +1,13 @@
 // @ts-nocheck
+// Load environment variables before any other imports
+import './loadEnv.js';
+
 import fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import winston from 'winston';
-import * as dotenvFlow from 'dotenv-flow';
-import path from 'path';
+
 import { registerRoutes } from './routes/index.js';
 // import middlewarePlugin, { errorHandler } from './middleware';
 import { JobScheduler } from './services/jobScheduler.js';
@@ -13,9 +15,6 @@ import { RiskEngine } from './services/riskEngine.js';
 import { PlaidService } from './services/plaid.js';
 import { CheckService } from './services/check.js';
 import { SlackService } from './services/slack.js';
-
-// Load environment variables from project root .env files
-dotenvFlow.config({ path: path.resolve(__dirname, '../..') });
 
 // Initialize database service
 import { initializeDatabase } from './config/database.js';
