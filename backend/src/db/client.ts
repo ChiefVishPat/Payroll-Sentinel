@@ -15,11 +15,15 @@ class DatabaseClient {
    */
   private constructor() {
     const supabaseUrl: string | undefined = process.env.SUPABASE_URL;
-    const supabaseKey: string | undefined = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // Prefer service role key when provided, otherwise fall back to anon key
+    const supabaseKey: string | undefined =
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
     // Validate required environment variables
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase configuration. Please check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.');
+      throw new Error(
+        'Missing Supabase configuration. Please check SUPABASE_URL and SUPABASE_ANON_KEY environment variables.'
+      );
     }
 
     // Initialize Supabase client with backend-specific configuration

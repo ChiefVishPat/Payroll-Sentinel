@@ -175,7 +175,6 @@ When the backend is running, visit `http://localhost:3001/docs` for the Swagger 
 |----------|-------------|----------|
 | `SUPABASE_URL` | Supabase project URL | ✅ |
 | `SUPABASE_ANON_KEY` | Supabase anonymous key | ✅ |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | ✅ |
 | `PLAID_CLIENT_ID` | Plaid client identifier | Phase 3 |
 | `PLAID_SECRET` | Plaid secret key | Phase 3 |
 | `CHECK_API_KEY` | Check API key | Phase 3 |

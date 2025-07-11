@@ -48,7 +48,7 @@ async function verifySupabaseConnection(): Promise<void> {
   printSection('Environment Variables Check');
   
   const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseKey = process.env.SUPABASE_ANON_KEY;
   
   if (!supabaseUrl || supabaseUrl === 'https://your-project.supabase.co') {
     printColored('❌ SUPABASE_URL: Not configured or using placeholder value', colors.red);
@@ -58,12 +58,12 @@ async function verifySupabaseConnection(): Promise<void> {
     printColored(`✅ SUPABASE_URL: ${supabaseUrl}`, colors.green);
   }
   
-  if (!supabaseKey || supabaseKey === 'your_supabase_service_role_key') {
-    printColored('❌ SUPABASE_SERVICE_ROLE_KEY: Not configured or using placeholder value', colors.red);
-    printColored('\nPlease update your .env file with your real Supabase service role key', colors.yellow);
+  if (!supabaseKey || supabaseKey === 'your_supabase_anon_key') {
+    printColored('❌ SUPABASE_ANON_KEY: Not configured or using placeholder value', colors.red);
+    printColored('\nPlease update your .env file with your real Supabase anon key', colors.yellow);
     return;
   } else {
-    printColored(`✅ SUPABASE_SERVICE_ROLE_KEY: ${supabaseKey.substring(0, 10)}...`, colors.green);
+    printColored(`✅ SUPABASE_ANON_KEY: ${supabaseKey.substring(0, 10)}...`, colors.green);
   }
   
   // Test basic connection
