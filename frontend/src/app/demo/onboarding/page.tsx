@@ -14,7 +14,7 @@ export default function OnboardingPage() {
       {!companyId ? (
         <StartupForm onSuccess={setCompanyId} />
       ) : (
-        <PlaidLinkComponent companyId={companyId} onSuccess={() => router.push('/dashboard')} />
+        <PlaidLinkComponent companyId={companyId} onSuccess={() => router.push('/')} />
       )}
     </div>
   )
