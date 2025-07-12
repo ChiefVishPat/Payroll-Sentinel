@@ -142,17 +142,21 @@ async function bankingRoutes(fastify: FastifyInstance) {
    * @route GET /api/banking/balances
    */
   fastify.get('/banking/balances', async (req, reply) => {
-    const { itemId } = req.query as any;
-    const accessToken = accessTokens.get(itemId);
-    if (!accessToken) {
-      return reply.status(400).send({ success: false, error: 'Unknown itemId' });
+    const { companyId } = req.query as { companyId: string };
+    if (!companyId) {
+      return reply.status(400).send({ success: false, error: 'Missing companyId' });
     }
-    const res = await plaidService.getBalances(accessToken);
+
+    const res = await plaidService.getBalancesForCompany(companyId);
     if (!res.success || !res.data) {
-      fastify.log.error('Plaid: get balances failed:', res.error);
+      fastify.log.error('Plaid: get balances for company failed:', res.error);
       return reply.status(500).send({ success: false, error: res.error?.message });
     }
-    return reply.send({ success: true, balances: res.data });
+
+    // Aggregate total balance across all accounts
+    const total = res.data.reduce((sum, b) => sum + b.current, 0);
+
+    return reply.send({ success: true, totalBalance: total, balances: res.data });
   });
 
   /**
