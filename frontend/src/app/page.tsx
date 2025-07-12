@@ -1,5 +1,5 @@
-import DashboardLayout from '@/components/layout/dashboard-layout'
-import DashboardStatsCards from '@/components/dashboard/dashboard-stats'
+import DashboardLayout from '@frontend/components/layout/dashboard-layout'
+import DashboardStatsCards from '@frontend/components/dashboard/dashboard-stats'
 
 export default function Home() {
   return (
