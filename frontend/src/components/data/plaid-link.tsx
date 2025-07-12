@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { usePlaidLink } from 'react-plaid-link'
-import { Button } from '@/components/ui/button'
-import { api } from '@/lib/api'
+import { Button } from '@frontend/components/ui/button'
+import { api } from '@frontend/lib/api'
 import { CreditCard, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react'
 
 interface PlaidLinkProps {
