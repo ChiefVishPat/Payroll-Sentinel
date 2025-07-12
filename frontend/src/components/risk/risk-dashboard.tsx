@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@fron
 import { Button } from '@frontend/components/ui/button'
 import { formatDateTime, getRiskColor } from '@frontend/lib/utils'
 import { api } from '@frontend/lib/api'
+import { useCompany } from '@frontend/context/CompanyContext'
+import CompanySelector from '@frontend/components/CompanySelector'
 import { RiskAssessment, RiskAlert } from '@frontend/types'
 import { 
   Shield, 
@@ -16,6 +18,11 @@ import {
 } from 'lucide-react'
 
 export default function RiskDashboard() {
+  const { companyId } = useCompany()
+
+  if (!companyId) {
+    return <CompanySelector />
+  }
   const [riskStatus, setRiskStatus] = useState<any>(null)
   const [assessments, setAssessments] = useState<RiskAssessment[]>([])
   const [alerts, setAlerts] = useState<RiskAlert[]>([])
@@ -28,7 +35,6 @@ export default function RiskDashboard() {
   const fetchRiskData = async () => {
     try {
       setLoading(true)
-      const companyId = 'demo-company'
       
       // Try to fetch real data, fall back to mock data
       let statusData = null
@@ -97,7 +103,7 @@ export default function RiskDashboard() {
   const triggerAssessment = async () => {
     try {
       setTriggering(true)
-      await api.risk.triggerAssessment()
+      await api.risk.triggerAssessment(companyId)
       await fetchRiskData()
     } catch (error) {
       console.error('Error triggering assessment:', error)
@@ -108,8 +114,8 @@ export default function RiskDashboard() {
 
   const acknowledgeAlert = async (alertId: string) => {
     try {
-      await api.risk.acknowledgeAlert(alertId)
-      setAlerts(alerts.map(alert => 
+      await api.risk.acknowledgeAlert(alertId, companyId)
+      setAlerts(alerts.map(alert =>
         alert.id === alertId ? { ...alert, acknowledged: true } : alert
       ))
     } catch (error) {

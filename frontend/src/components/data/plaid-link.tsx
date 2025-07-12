@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { usePlaidLink } from 'react-plaid-link'
 import { Button } from '@frontend/components/ui/button'
 import { api } from '@frontend/lib/api'
+import { useCompany } from '@frontend/context/CompanyContext'
+import CompanySelector from '@frontend/components/CompanySelector'
 import { CreditCard, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react'
 
 interface PlaidLinkProps {
@@ -11,6 +13,11 @@ interface PlaidLinkProps {
 }
 
 export default function PlaidLinkComponent({ onSuccess }: PlaidLinkProps) {
+  const { companyId } = useCompany()
+
+  if (!companyId) {
+    return <CompanySelector />
+  }
   const [isConnecting, setIsConnecting] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
@@ -23,7 +30,7 @@ export default function PlaidLinkComponent({ onSuccess }: PlaidLinkProps) {
   const getLinkToken = async () => {
     try {
       console.log('Requesting link_token…');
-      const linkTokenResponse = await api.banking.linkToken('sandbox-user-123', 'demo-company')
+      const linkTokenResponse = await api.banking.linkToken('sandbox-user-123', companyId)
       setLinkToken(linkTokenResponse.data.linkToken)
       console.debug('[PlaidLink] link token obtained:', linkTokenResponse.data.linkToken)
     } catch (error) {
@@ -40,7 +47,7 @@ export default function PlaidLinkComponent({ onSuccess }: PlaidLinkProps) {
     setIsConnecting(true)
     
     try {
-      await api.banking.exchangeToken(public_token, 'demo-company')
+      await api.banking.exchangeToken(public_token, companyId)
       console.log('access_token stored – fetching accounts next');
       setConnectionStatus('success')
       setMessage('Bank account connected successfully!')

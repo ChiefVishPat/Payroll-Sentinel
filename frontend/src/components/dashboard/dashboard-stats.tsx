@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@frontend/components/ui/card'
 import { formatCurrency, formatDate, getRiskColor } from '@frontend/lib/utils'
 import { api } from '@frontend/lib/api'
+import { useCompany } from '@frontend/context/CompanyContext'
+import CompanySelector from '@frontend/components/CompanySelector'
 import { DashboardStats } from '@frontend/types'
 import { 
   DollarSign, 
@@ -15,6 +17,10 @@ import {
 } from 'lucide-react'
 
 export default function DashboardStatsCards() {
+  const { companyId } = useCompany()
+  if (!companyId) {
+    return <CompanySelector />
+  }
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -27,9 +33,6 @@ export default function DashboardStatsCards() {
     try {
       setLoading(true)
       setError(null)
-      
-      // For demo purposes, use a default company ID
-      const companyId = 'demo-company'
       
       // Try to fetch real data from backend
       const [healthRes] = await Promise.all([
