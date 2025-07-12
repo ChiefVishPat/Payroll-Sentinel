@@ -8,18 +8,21 @@ import { api, apiClient } from '@frontend/lib/api'
 import { useCompany } from '@frontend/context/CompanyContext'
 import CompanySelector from '@frontend/components/CompanySelector'
 import { PayrollRun, Employee } from '@frontend/types'
-import { 
-  Users, 
-  DollarSign, 
-  Calendar, 
+import {
+  Users,
+  DollarSign,
+  Calendar,
   CheckCircle,
   Clock,
   Play,
   RefreshCw
 } from 'lucide-react'
+import { Dialog, DialogTrigger, DialogContent, DialogClose } from '@frontend/components/ui/dialog'
+import { useState } from 'react'
 
 export default function PayrollDashboard() {
   const { companyId } = useCompany()
+  const [open, setOpen] = useState(false)
 
   if (!companyId) {
     return <CompanySelector />
@@ -90,13 +93,23 @@ export default function PayrollDashboard() {
           <p className="text-gray-600">Manage payroll runs and employees</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => { /* TODO open modal */ }} className="flex items-center gap-2">
-            <span className="text-xl">➕</span> Add Employee
-          </Button>
-          <Button
-            onClick={refreshData}
-            className="flex items-center gap-2"
-          >
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <span className="text-xl">➕</span> Add Employee
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Add Employee</h2>
+                <DialogClose asChild>
+                  <Button variant="ghost" size="sm">Close</Button>
+                </DialogClose>
+              </div>
+              <p className="text-sm text-gray-600">TODO: employee form goes here.</p>
+            </DialogContent>
+          </Dialog>
+          <Button onClick={refreshData} className="flex items-center gap-2">
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
