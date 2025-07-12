@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import DatabaseService from '../../config/database.js';
-import { ServiceResponse } from '../base.js';
+import DatabaseService from '@backend/config/database';
+import { ServiceResponse } from '@backend/services/base';
 
 /**
  * Base database service class with common CRUD operations

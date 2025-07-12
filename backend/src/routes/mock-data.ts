@@ -5,10 +5,10 @@ import {
   validateRequired, 
   validateString,
   mapServiceError 
-} from './helpers.js';
-import { CheckService } from '../services/check.js';
-import { PlaidService } from '../services/plaid.js';
-import DatabaseService from '../config/database.js';
+} from '@backend/routes/helpers';
+import { CheckService } from '@backend/services/check';
+import { PlaidService } from '@backend/services/plaid';
+import DatabaseService from '@backend/config/database';
 
 async function mockDataRoutes(fastify: FastifyInstance) {
   const checkService = new CheckService({

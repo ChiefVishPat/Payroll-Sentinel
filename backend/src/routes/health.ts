@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { db } from '../db/client';
+import { db } from '@backend/db/client';
 
 // Type definitions for health check responses
 interface HealthResponse {

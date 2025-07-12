@@ -1,8 +1,8 @@
 // @ts-nocheck
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { supabase } from '../db/client';
-import { CreateCompanyInput } from '../db/types';
-import { CheckService } from '../services/check';
+import { supabase } from '@backend/db/client';
+import { CreateCompanyInput } from '@backend/db/types';
+import { CheckService } from '@backend/services/check';
 
 export const companiesRoutes = async (fastify: FastifyInstance): Promise<void> => {
   // Check service guard: disable routes if API key missing

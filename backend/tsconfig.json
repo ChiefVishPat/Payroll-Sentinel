@@ -27,18 +27,11 @@
     "noImplicitOverride": false,
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
-    "types": [
-      "node",
-      "vitest/globals"
-    ],
+    "types": ["node", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@backend/*": [
-        "src/*"
-      ],
-      "@shared/*": [
-        "../shared/*"
-      ]
+      "@backend/*": ["./src/*"],
+      "@shared/*": ["../shared/*"]
     }
   },
   "include": [

@@ -45,7 +45,7 @@ const mockSupabase = {
   })),
 };
 
-vi.mock('../db/client', () => ({
+vi.mock('@backend/db/client', () => ({
   supabase: mockSupabase,
 }));
 
