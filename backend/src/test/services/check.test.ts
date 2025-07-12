@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { CheckService, CheckConfig, Employee, PayrollRun, PayrollSummary } from '../../services/check';
+import { CheckService, CheckConfig, Employee, PayrollRun, PayrollSummary } from '@backend/services/check';
 
 describe('CheckService', () => {
   let service: CheckService;

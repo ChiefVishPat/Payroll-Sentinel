@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { CreateCompanyInput } from '../db/types';
+import { CreateCompanyInput } from '@backend/db/types';
 
 // Mock Supabase client
 const mockSupabase = {
@@ -45,7 +45,7 @@ const mockSupabase = {
   })),
 };
 
-vi.mock('../db/client', () => ({
+vi.mock('@backend/db/client', () => ({
   supabase: mockSupabase,
 }));
 

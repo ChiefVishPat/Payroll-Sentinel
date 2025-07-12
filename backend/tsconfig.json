@@ -25,7 +25,12 @@
     "noImplicitOverride": false,
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
-    "types": ["node", "vitest/globals"]
+    "types": ["node", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@backend/*": ["./src/*"],
+      "@shared/*": ["../shared/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts", "node_modules/plaid"]

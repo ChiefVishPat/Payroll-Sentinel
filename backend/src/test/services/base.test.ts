@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
-import { BaseService, ServiceConfig, ServiceError, ServiceResponse } from '../../services/base';
+import { BaseService, ServiceConfig, ServiceError, ServiceResponse } from '@backend/services/base';
 
 // Test implementation of BaseService
 class TestService extends BaseService {

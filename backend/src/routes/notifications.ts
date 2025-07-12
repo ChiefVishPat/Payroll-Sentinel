@@ -8,9 +8,9 @@ import {
   parsePagination,
   formatPaginatedResponse,
   mapServiceError
-} from './helpers.js';
-import { ApiError, ErrorType } from '../middleware/index.js';
-import { SlackService } from '../services/slack.js';
+} from '@backend/routes/helpers';
+import { ApiError, ErrorType } from '@backend/middleware';
+import { SlackService } from '@backend/services/slack';
 
 interface NotificationFilters {
   companyId?: string;

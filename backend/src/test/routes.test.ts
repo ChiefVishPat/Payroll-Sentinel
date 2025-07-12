@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FastifyInstance } from 'fastify';
-import { createServer } from '../index.js';
+import { createServer } from '@backend/index';
 
 // Mock all the services
-vi.mock('../services/cashflow.js', () => ({
+vi.mock('@backend/services/cashflow', () => ({
   CashFlowService: vi.fn().mockImplementation(() => ({
     getCurrentAnalysis: vi.fn().mockResolvedValue({
       success: true,
@@ -31,7 +31,7 @@ vi.mock('../services/cashflow.js', () => ({
   }))
 }));
 
-vi.mock('../services/riskAssessment.js', () => ({
+vi.mock('@backend/services/riskAssessment', () => ({
   RiskAssessmentService: vi.fn().mockImplementation(() => ({
     getRiskStatus: vi.fn().mockResolvedValue({
       success: true,
@@ -60,7 +60,7 @@ vi.mock('../services/riskAssessment.js', () => ({
   }))
 }));
 
-vi.mock('../services/check.js', () => ({
+vi.mock('@backend/services/check', () => ({
   CheckService: vi.fn().mockImplementation(() => ({
     getPayrollRuns: vi.fn().mockResolvedValue({
       success: true,
@@ -93,7 +93,7 @@ vi.mock('../services/check.js', () => ({
   }))
 }));
 
-vi.mock('../services/plaid.js', () => ({
+vi.mock('@backend/services/plaid', () => ({
   PlaidService: vi.fn().mockImplementation(() => ({
     createLinkToken: vi.fn().mockResolvedValue({
       success: true,
@@ -116,7 +116,7 @@ vi.mock('../services/plaid.js', () => ({
   }))
 }));
 
-vi.mock('../services/slack.js', () => ({
+vi.mock('@backend/services/slack', () => ({
   SlackService: vi.fn().mockImplementation(() => ({
     sendNotification: vi.fn().mockResolvedValue({
       success: true,
@@ -142,7 +142,7 @@ vi.mock('../services/slack.js', () => ({
   }))
 }));
 
-vi.mock('../services/monitoring.js', () => ({
+vi.mock('@backend/services/monitoring', () => ({
   MonitoringService: vi.fn().mockImplementation(() => ({
     getSystemHealth: vi.fn().mockResolvedValue({
       success: true,
