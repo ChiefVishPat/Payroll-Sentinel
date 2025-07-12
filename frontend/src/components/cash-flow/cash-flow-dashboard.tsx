@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@fron
 import { Button } from '@frontend/components/ui/button'
 import { formatCurrency, formatDate } from '@frontend/lib/utils'
 import { api } from '@frontend/lib/api'
+import { useCompany } from '@frontend/context/CompanyContext'
+import CompanySelector from '@frontend/components/CompanySelector'
 import { CashFlowSummary, CashFlowProjection } from '@frontend/types'
 import { 
   DollarSign, 
@@ -17,6 +19,11 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
 
 export default function CashFlowDashboard() {
+  const { companyId } = useCompany()
+
+  if (!companyId) {
+    return <CompanySelector />
+  }
   const [summary, setSummary] = useState<CashFlowSummary | null>(null)
   const [projections, setProjections] = useState<CashFlowProjection[]>([])
   const [loading, setLoading] = useState(true)
@@ -29,7 +36,6 @@ export default function CashFlowDashboard() {
   const fetchCashFlowData = async () => {
     try {
       setLoading(true)
-      const companyId = 'demo-company'
       
       let summaryData = null
       let projectionsData = []
@@ -76,7 +82,7 @@ export default function CashFlowDashboard() {
   const recalculateProjections = async () => {
     try {
       setRefreshing(true)
-      await api.cashFlow.recalculate()
+      await api.cashFlow.recalculate(companyId)
       await fetchCashFlowData()
     } catch (error) {
       console.error('Error recalculating projections:', error)

@@ -1,11 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
+import useSWR from 'swr'
 import { usePlaidLink } from 'react-plaid-link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@frontend/components/ui/card'
 import { Button } from '@frontend/components/ui/button'
-import { formatCurrency, formatDate, getStatusColor } from '@frontend/lib/utils'
-import { api } from '@frontend/lib/api'
+import { formatCurrency, formatDate } from '@frontend/lib/utils'
+import { api, apiClient } from '@frontend/lib/api'
+import { useCompany } from '@frontend/context/CompanyContext'
+import CompanySelector from '@frontend/components/CompanySelector'
 import { BankAccount, Transaction } from '@frontend/types'
 import { 
   CreditCard, 
@@ -18,145 +21,52 @@ import {
   Calendar
 } from 'lucide-react'
 
+/**
+ * Simple SWR fetcher using the shared Axios client.
+ */
+const fetcher = (url: string) =>
+  apiClient.get(url).then(res => res.data?.accounts || res.data?.transactions || res.data)
+
+/**
+ * Dashboard view for banking data.
+ * Shows linked accounts and recent transactions using SWR to poll the backend.
+ */
 export default function BankingDashboard() {
-  const [accounts, setAccounts] = useState<BankAccount[]>([])
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [status, setStatus] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const { companyId } = useCompany()
+
+  if (!companyId) {
+    return <CompanySelector />
+  }
+  const { data: accounts, isLoading: loadingAccounts, mutate: mutateAccounts } =
+    useSWR(() => `/api/banking/accounts?companyId=${companyId}`, fetcher, {
+      refreshInterval: 30000
+    })
+  const {
+    data: transactions,
+    mutate: mutateTransactions,
+    isLoading: loadingTx
+  } = useSWR(
+    () => `/api/banking/transactions?companyId=${companyId}`,
+    fetcher
+  )
+  const { data: status, mutate: mutateStatus } = useSWR(
+    () => `/api/banking/status?companyId=${companyId}`,
+    fetcher
+  )
+
   const [refreshing, setRefreshing] = useState(false)
   const [linkToken, setLinkToken] = useState<string | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
 
+  const loading = loadingAccounts || loadingTx || !status
+
   useEffect(() => {
-    fetchBankingData()
     getLinkToken()
   }, [])
 
-  const fetchBankingData = async () => {
-    try {
-      setLoading(true)
-      const companyId = 'demo-company'
-      
-      // Try to fetch real data, fall back to mock data
-      let accountsData = []
-      let transactionsData = []
-      let statusData = null
-
-      try {
-        const [accountsRes, transactionsRes, statusRes] = await Promise.all([
-          api.banking.getAccounts(companyId),
-          api.banking.getTransactions(companyId),
-          api.banking.getStatus(companyId)
-        ])
-        
-        // extract payload arrays from API wrapper
-        accountsData = accountsRes.data?.data || []
-        transactionsData = transactionsRes.data?.data || []
-        // status endpoint returns raw or wrapped data
-        statusData = statusRes.data?.data ?? statusRes.data
-      } catch (error) {
-        console.log('Banking API not available, using mock data')
-        
-        // Mock data
-        accountsData = [
-          {
-            id: '1',
-            name: 'Business Checking',
-            type: 'checking',
-            balance: 125000,
-            availableBalance: 124500,
-            institutionName: 'Chase Bank',
-            lastUpdated: new Date().toISOString()
-          },
-          {
-            id: '2', 
-            name: 'Business Savings',
-            type: 'savings',
-            balance: 75000,
-            availableBalance: 75000,
-            institutionName: 'Chase Bank',
-            lastUpdated: new Date().toISOString()
-          },
-          {
-            id: '3',
-            name: 'Business Credit Line',
-            type: 'credit',
-            balance: -15000,
-            availableBalance: 35000,
-            institutionName: 'American Express',
-            lastUpdated: new Date().toISOString()
-          }
-        ]
-
-        transactionsData = [
-          {
-            id: '1',
-            accountId: '1',
-            amount: -65000,
-            description: 'Payroll Transfer',
-            category: 'Payroll',
-            date: '2025-01-09',
-            type: 'debit'
-          },
-          {
-            id: '2',
-            accountId: '1',
-            amount: 25000,
-            description: 'Client Payment - ABC Corp',
-            category: 'Income',
-            date: '2025-01-08',
-            type: 'credit'
-          },
-          {
-            id: '3',
-            accountId: '1',
-            amount: -8000,
-            description: 'Office Rent',
-            category: 'Rent',
-            date: '2025-01-07',
-            type: 'debit'
-          },
-          {
-            id: '4',
-            accountId: '1',
-            amount: -2500,
-            description: 'Software Subscriptions',
-            category: 'Software',
-            date: '2025-01-06',
-            type: 'debit'
-          },
-          {
-            id: '5',
-            accountId: '2',
-            amount: 15000,
-            description: 'Transfer from Checking',
-            category: 'Transfer',
-            date: '2025-01-05',
-            type: 'credit'
-          }
-        ]
-
-        statusData = {
-          connected: true,
-          lastSync: new Date().toISOString(),
-          accountCount: 3,
-          status: 'healthy'
-        }
-      }
-
-      setAccounts(accountsData)
-      setTransactions(transactionsData)
-      setStatus(statusData)
-    } catch (error) {
-      console.error('Error fetching banking data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const getLinkToken = async () => {
     try {
-      const response = await api.banking.linkToken('sandbox-user-123', 'demo-company')
+      const response = await api.banking.linkToken('sandbox-user-123', companyId)
       setLinkToken(response.data.linkToken)
       console.log('Link token obtained:', response.data.linkToken)
     } catch (error) {
@@ -168,9 +78,9 @@ export default function BankingDashboard() {
     console.log('Plaid Link success:', public_token)
     setIsConnecting(true)
     try {
-      await api.banking.exchangeToken(public_token, 'demo-company')
+      await api.banking.exchangeToken(public_token, companyId)
       console.log('Successfully exchanged public token')
-      await fetchBankingData() // Refresh data
+      await Promise.all([mutateAccounts(), mutateTransactions(), mutateStatus()])
     } catch (error) {
       console.error('Failed to exchange token:', error)
     } finally {
@@ -192,8 +102,8 @@ export default function BankingDashboard() {
   const refreshBankData = async () => {
     try {
       setRefreshing(true)
-      await api.banking.refresh()
-      await fetchBankingData()
+      await api.banking.refresh(companyId)
+      await Promise.all([mutateAccounts(), mutateTransactions(), mutateStatus()])
     } catch (error) {
       console.error('Error refreshing bank data:', error)
     } finally {
@@ -218,14 +128,16 @@ export default function BankingDashboard() {
   }
 
   const getTotalBalance = () => {
+    if (!accounts) return 0
     return accounts.reduce((total, account) => {
-      return total + (account.type === 'credit' ? 0 : account.balance)
+      return total + (account.type === 'credit' ? 0 : (account as any).balance)
     }, 0)
   }
 
   const getTotalAvailable = () => {
+    if (!accounts) return 0
     return accounts.reduce((total, account) => {
-      return total + account.availableBalance
+      return total + (account as any).availableBalance
     }, 0)
   }
 
@@ -269,14 +181,18 @@ export default function BankingDashboard() {
             className="flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
-            {isConnecting ? 'Connecting...' : 'Connect Account'}
+            {isConnecting
+              ? 'Connecting...'
+              : accounts && accounts.length > 0
+              ? 'Link another account'
+              : 'Connect Account'}
           </Button>
         </div>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
             <DollarSign className="h-4 w-4 text-green-600" />
@@ -286,12 +202,12 @@ export default function BankingDashboard() {
               {formatCurrency(getTotalBalance())}
             </div>
             <p className="text-xs text-gray-600 mt-1">
-              Across {accounts.length} accounts
+              Across {accounts?.length || 0} accounts
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Available Funds</CardTitle>
             <CreditCard className="h-4 w-4 text-blue-600" />
@@ -306,7 +222,7 @@ export default function BankingDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Connection Status</CardTitle>
             <Building className="h-4 w-4 text-green-600" />
@@ -321,14 +237,14 @@ export default function BankingDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
             <Calendar className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {transactions.length}
+              {transactions?.length || 0}
             </div>
             <p className="text-xs text-gray-600 mt-1">
               Transactions this month
@@ -338,42 +254,42 @@ export default function BankingDashboard() {
       </div>
 
       {/* Bank Accounts */}
-      <Card>
+      <Card className="dark:bg-gray-800">
         <CardHeader>
           <CardTitle>Bank Accounts</CardTitle>
-          <CardDescription>
-            Connected bank accounts and balances
-          </CardDescription>
+          <CardDescription>Connected bank accounts and balances</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {accounts.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <p>No bank accounts connected</p>
-                <p className="text-sm mt-2">Click "Connect Account" to add your first bank account</p>
+            {!accounts || accounts.length === 0 ? (
+              <div className="flex items-center justify-between p-4 border rounded w-full">
+                <div className="font-medium">No bank connection yet</div>
+                <Button onClick={connectAccount} disabled={isConnecting || !plaidReady}>
+                  Link Bank Account
+                </Button>
               </div>
             ) : (
-              accounts.map((account) => (
-                <div key={account.id} className="flex items-center justify-between p-4 border rounded">
+              accounts.map(account => (
+                <div key={account.id} className="flex items-center justify-between p-4 border rounded dark:border-gray-700">
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-gray-100 rounded">
-                      <CreditCard className="h-6 w-6 text-gray-600" />
+                    <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                      <CreditCard className="h-6 w-6 text-gray-600 dark:text-gray-300" />
                     </div>
                     <div>
                       <div className="font-medium">{account.name}</div>
-                      <div className="text-sm text-gray-600">{account.institutionName}</div>
-                      <div className="text-xs text-gray-500 capitalize">{account.type} account</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">{account.institutionName}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{account.type} account</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className={`text-lg font-semibold ${account.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatCurrency(account.balance)}
+                    <div className={`text-lg font-semibold ${account.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}> 
+                      {formatCurrency((account as any).balance)}
                     </div>
-                    <div className="text-sm text-gray-600">
-                      Available: {formatCurrency(account.availableBalance)}
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Available: {formatCurrency((account as any).availableBalance)}
                     </div>
-                    <div className="text-xs text-gray-500">
-                      Updated: {formatDate(account.lastUpdated)}
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Updated: {formatDate((account as any).lastUpdated)}
                     </div>
                   </div>
                 </div>
@@ -384,7 +300,7 @@ export default function BankingDashboard() {
       </Card>
 
       {/* Recent Transactions */}
-      <Card>
+      <Card className="dark:bg-gray-800">
         <CardHeader>
           <CardTitle>Recent Transactions</CardTitle>
           <CardDescription>
@@ -393,8 +309,8 @@ export default function BankingDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {transactions.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+            {!transactions || transactions.length === 0 ? (
+              <div className="p-4 text-center text-gray-500 border rounded dark:border-gray-700">
                 No recent transactions
               </div>
             ) : (
@@ -419,7 +335,7 @@ export default function BankingDashboard() {
                       {transaction.amount >= 0 ? '+' : ''}{formatCurrency(transaction.amount)}
                     </div>
                     <div className="text-xs text-gray-500">
-                      Account: {accounts.find(a => a.id === transaction.accountId)?.name || 'Unknown'}
+                      Account: {accounts?.find(a => a.id === transaction.accountId)?.name || 'Unknown'}
                     </div>
                   </div>
                 </div>

@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@fron
 import { Button } from '@frontend/components/ui/button'
 import { formatCurrency, formatDate, getStatusColor } from '@frontend/lib/utils'
 import { api } from '@frontend/lib/api'
+import { useCompany } from '@frontend/context/CompanyContext'
+import CompanySelector from '@frontend/components/CompanySelector'
 import { PayrollRun, Employee } from '@frontend/types'
 import { 
   Users, 
@@ -17,6 +19,11 @@ import {
 } from 'lucide-react'
 
 export default function PayrollDashboard() {
+  const { companyId } = useCompany()
+
+  if (!companyId) {
+    return <CompanySelector />
+  }
   const [payrollRuns, setPayrollRuns] = useState<PayrollRun[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
   const [summary, setSummary] = useState<any>(null)
@@ -29,7 +36,6 @@ export default function PayrollDashboard() {
   const fetchPayrollData = async () => {
     try {
       setLoading(true)
-      const companyId = 'demo-company'
       
       let runsData = []
       let employeesData = []
@@ -111,7 +117,7 @@ export default function PayrollDashboard() {
 
   const approvePayroll = async (runId: string) => {
     try {
-      await api.payroll.approveRun(runId)
+      await api.payroll.approveRun(runId, companyId)
       setPayrollRuns(runs => runs.map(run => 
         run.id === runId ? { ...run, status: 'approved' } : run
       ))
@@ -122,7 +128,7 @@ export default function PayrollDashboard() {
 
   const processPayroll = async (runId: string) => {
     try {
-      await api.payroll.processRun(runId)
+      await api.payroll.processRun(runId, companyId)
       setPayrollRuns(runs => runs.map(run => 
         run.id === runId ? { ...run, status: 'processed' } : run
       ))
