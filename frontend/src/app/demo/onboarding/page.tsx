@@ -1,17 +1,21 @@
-'use client';
+'use client'
 
-import React from 'react';
-import OnboardingFlow from '../../../components/OnboardingFlow';
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import StartupForm from '../../../components/StartupForm'
+import PlaidLinkComponent from '../../../components/PlaidLinkComponent'
 
 export default function OnboardingPage() {
-  const handleComplete = () => {
-    console.log('Onboarding completed successfully!');
-    // You could redirect to dashboard or show success message
-  };
+  const [companyId, setCompanyId] = useState<string | null>(null)
+  const router = useRouter()
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <OnboardingFlow onComplete={handleComplete} />
+    <div className="dark:bg-gray-900 text-gray-100 min-h-screen flex items-center justify-center p-6">
+      {!companyId ? (
+        <StartupForm onSuccess={setCompanyId} />
+      ) : (
+        <PlaidLinkComponent companyId={companyId} onSuccess={() => router.push('/dashboard')} />
+      )}
     </div>
-  );
+  )
 }
