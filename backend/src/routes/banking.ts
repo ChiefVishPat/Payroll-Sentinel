@@ -36,6 +36,7 @@ async function bankingRoutes(fastify: FastifyInstance) {
    */
   fastify.post('/banking/link-token', async (req, reply) => {
     const { userId = 'demo-user', companyId } = req.body as { userId?: string; companyId: string };
+    void companyId; // Reserved for future DB association
     fastify.log.info(`Plaid: creating link_token for user ${userId}`);
     const res = await plaidService.createLinkToken(userId, 'Payroll Demo');
     if (!res.success || !res.data) {
@@ -198,21 +199,42 @@ async function bankingRoutes(fastify: FastifyInstance) {
   });
 
   /**
-   * Get transactions for an item
+   * Get transactions for all accounts of a company
    * @route GET /api/banking/transactions
    */
   fastify.get('/banking/transactions', async (req, reply) => {
-    const { itemId, startDate, endDate } = req.query as any;
-    const accessToken = accessTokens.get(itemId);
-    if (!accessToken) {
-      return reply.status(400).send({ success: false, error: 'Unknown itemId' });
+    const { companyId, startDate, endDate } = req.query as any;
+
+    try {
+      const resolvedCompanyId = await resolveCompanyId(companyId);
+      const { data: accounts, error } = await supabase
+        .from('bank_accounts')
+        .select('plaid_access_token')
+        .eq('company_id', resolvedCompanyId)
+        .eq('is_active', true);
+
+      if (error) {
+        fastify.log.error('Failed to fetch access tokens:', error);
+        return reply.status(500).send({ success: false, error: error.message });
+      }
+
+      const tokens = (accounts || []).map(a => a.plaid_access_token);
+      const transactions: any[] = [];
+
+      for (const token of tokens) {
+        const res = await plaidService.getTransactions(token, startDate, endDate);
+        if (!res.success || !res.data) {
+          fastify.log.error('Plaid: get transactions failed:', res.error);
+          continue;
+        }
+        transactions.push(...res.data);
+      }
+
+      return reply.send({ success: true, transactions });
+    } catch (err) {
+      fastify.log.error('Error fetching transactions:', err);
+      return reply.status(500).send({ success: false, error: 'Failed to fetch transactions' });
     }
-    const res = await plaidService.getTransactions(accessToken, startDate, endDate);
-    if (!res.success || !res.data) {
-      fastify.log.error('Plaid: get transactions failed:', res.error);
-      return reply.status(500).send({ success: false, error: res.error?.message });
-    }
-    return reply.send({ success: true, transactions: res.data });
   });
   
 }
