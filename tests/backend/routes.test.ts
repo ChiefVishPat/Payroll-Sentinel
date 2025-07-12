@@ -1,16 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FastifyInstance } from 'fastify';
-<<<<<<< HEAD:backend/src/test/routes.test.ts
 import { createServer } from '@backend/index';
 
 // Mock all the services
 vi.mock('@backend/services/cashflow', () => ({
-=======
-import { createServer } from '@backend/index.js';
-
-// Mock all the services
-vi.mock('@backend/services/cashflow.js', () => ({
->>>>>>> vp/clean-up-and-reorganize-codebase:tests/backend/routes.test.ts
   CashFlowService: vi.fn().mockImplementation(() => ({
     getCurrentAnalysis: vi.fn().mockResolvedValue({
       success: true,
@@ -38,11 +31,7 @@ vi.mock('@backend/services/cashflow.js', () => ({
   }))
 }));
 
-<<<<<<< HEAD:backend/src/test/routes.test.ts
 vi.mock('@backend/services/riskAssessment', () => ({
-=======
-vi.mock('@backend/services/riskAssessment.js', () => ({
->>>>>>> vp/clean-up-and-reorganize-codebase:tests/backend/routes.test.ts
   RiskAssessmentService: vi.fn().mockImplementation(() => ({
     getRiskStatus: vi.fn().mockResolvedValue({
       success: true,
@@ -71,11 +60,7 @@ vi.mock('@backend/services/riskAssessment.js', () => ({
   }))
 }));
 
-<<<<<<< HEAD:backend/src/test/routes.test.ts
 vi.mock('@backend/services/check', () => ({
-=======
-vi.mock('@backend/services/check.js', () => ({
->>>>>>> vp/clean-up-and-reorganize-codebase:tests/backend/routes.test.ts
   CheckService: vi.fn().mockImplementation(() => ({
     getPayrollRuns: vi.fn().mockResolvedValue({
       success: true,
@@ -108,11 +93,7 @@ vi.mock('@backend/services/check.js', () => ({
   }))
 }));
 
-<<<<<<< HEAD:backend/src/test/routes.test.ts
 vi.mock('@backend/services/plaid', () => ({
-=======
-vi.mock('@backend/services/plaid.js', () => ({
->>>>>>> vp/clean-up-and-reorganize-codebase:tests/backend/routes.test.ts
   PlaidService: vi.fn().mockImplementation(() => ({
     createLinkToken: vi.fn().mockResolvedValue({
       success: true,
@@ -135,11 +116,7 @@ vi.mock('@backend/services/plaid.js', () => ({
   }))
 }));
 
-<<<<<<< HEAD:backend/src/test/routes.test.ts
 vi.mock('@backend/services/slack', () => ({
-=======
-vi.mock('@backend/services/slack.js', () => ({
->>>>>>> vp/clean-up-and-reorganize-codebase:tests/backend/routes.test.ts
   SlackService: vi.fn().mockImplementation(() => ({
     sendNotification: vi.fn().mockResolvedValue({
       success: true,
@@ -165,11 +142,7 @@ vi.mock('@backend/services/slack.js', () => ({
   }))
 }));
 
-<<<<<<< HEAD:backend/src/test/routes.test.ts
 vi.mock('@backend/services/monitoring', () => ({
-=======
-vi.mock('@backend/services/monitoring.js', () => ({
->>>>>>> vp/clean-up-and-reorganize-codebase:tests/backend/routes.test.ts
   MonitoringService: vi.fn().mockImplementation(() => ({
     getSystemHealth: vi.fn().mockResolvedValue({
       success: true,
