@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import useSWR from 'swr'
 import { usePlaidLink } from 'react-plaid-link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@frontend/components/ui/card'
 import { Button } from '@frontend/components/ui/button'
 import { formatCurrency, formatDate, getStatusColor } from '@frontend/lib/utils'
-import { api } from '@frontend/lib/api'
+import { api, apiClient } from '@frontend/lib/api'
 import { BankAccount, Transaction } from '@frontend/types'
 import { 
   CreditCard, 
@@ -18,140 +19,53 @@ import {
   Calendar
 } from 'lucide-react'
 
+// Generic fetcher for SWR using the Axios client
+const fetcher = (url: string) =>
+  apiClient.get(url).then(res => res.data?.data ?? res.data)
+
 export default function BankingDashboard() {
-  const [accounts, setAccounts] = useState<BankAccount[]>([])
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [status, setStatus] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const companyId = 'demo-company'
+  const {
+    data: accounts,
+    error: accountsError,
+    isLoading: accountsLoading,
+    mutate: mutateAccounts,
+  } = useSWR<BankAccount[]>(`/api/banking/accounts?companyId=${companyId}`,
+    fetcher,
+    { refreshInterval: 30000 },
+  )
+  const {
+    data: transactions,
+    error: transactionsError,
+    isLoading: transactionsLoading,
+    mutate: mutateTransactions,
+  } = useSWR<Transaction[]>(`/api/banking/transactions?companyId=${companyId}`,
+    fetcher,
+    { refreshInterval: 30000 },
+  )
+  const {
+    data: status,
+    error: statusError,
+    isLoading: statusLoading,
+    mutate: mutateStatus,
+  } = useSWR<any>(`/api/banking/status?companyId=${companyId}`,
+    fetcher,
+    { refreshInterval: 30000 },
+  )
   const [refreshing, setRefreshing] = useState(false)
   const [linkToken, setLinkToken] = useState<string | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
 
+  const loading = accountsLoading || transactionsLoading || statusLoading
+  const hasError = accountsError || transactionsError || statusError
+
   useEffect(() => {
-    fetchBankingData()
     getLinkToken()
   }, [])
 
-  const fetchBankingData = async () => {
-    try {
-      setLoading(true)
-      const companyId = 'demo-company'
-      
-      // Try to fetch real data, fall back to mock data
-      let accountsData = []
-      let transactionsData = []
-      let statusData = null
-
-      try {
-        const [accountsRes, transactionsRes, statusRes] = await Promise.all([
-          api.banking.getAccounts(companyId),
-          api.banking.getTransactions(companyId),
-          api.banking.getStatus(companyId)
-        ])
-        
-        // extract payload arrays from API wrapper
-        accountsData = accountsRes.data?.data || []
-        transactionsData = transactionsRes.data?.data || []
-        // status endpoint returns raw or wrapped data
-        statusData = statusRes.data?.data ?? statusRes.data
-      } catch (error) {
-        console.log('Banking API not available, using mock data')
-        
-        // Mock data
-        accountsData = [
-          {
-            id: '1',
-            name: 'Business Checking',
-            type: 'checking',
-            balance: 125000,
-            availableBalance: 124500,
-            institutionName: 'Chase Bank',
-            lastUpdated: new Date().toISOString()
-          },
-          {
-            id: '2', 
-            name: 'Business Savings',
-            type: 'savings',
-            balance: 75000,
-            availableBalance: 75000,
-            institutionName: 'Chase Bank',
-            lastUpdated: new Date().toISOString()
-          },
-          {
-            id: '3',
-            name: 'Business Credit Line',
-            type: 'credit',
-            balance: -15000,
-            availableBalance: 35000,
-            institutionName: 'American Express',
-            lastUpdated: new Date().toISOString()
-          }
-        ]
-
-        transactionsData = [
-          {
-            id: '1',
-            accountId: '1',
-            amount: -65000,
-            description: 'Payroll Transfer',
-            category: 'Payroll',
-            date: '2025-01-09',
-            type: 'debit'
-          },
-          {
-            id: '2',
-            accountId: '1',
-            amount: 25000,
-            description: 'Client Payment - ABC Corp',
-            category: 'Income',
-            date: '2025-01-08',
-            type: 'credit'
-          },
-          {
-            id: '3',
-            accountId: '1',
-            amount: -8000,
-            description: 'Office Rent',
-            category: 'Rent',
-            date: '2025-01-07',
-            type: 'debit'
-          },
-          {
-            id: '4',
-            accountId: '1',
-            amount: -2500,
-            description: 'Software Subscriptions',
-            category: 'Software',
-            date: '2025-01-06',
-            type: 'debit'
-          },
-          {
-            id: '5',
-            accountId: '2',
-            amount: 15000,
-            description: 'Transfer from Checking',
-            category: 'Transfer',
-            date: '2025-01-05',
-            type: 'credit'
-          }
-        ]
-
-        statusData = {
-          connected: true,
-          lastSync: new Date().toISOString(),
-          accountCount: 3,
-          status: 'healthy'
-        }
-      }
-
-      setAccounts(accountsData)
-      setTransactions(transactionsData)
-      setStatus(statusData)
-    } catch (error) {
-      console.error('Error fetching banking data:', error)
-    } finally {
-      setLoading(false)
-    }
+  // Log errors and show a simple message when data fails to load
+  if (hasError) {
+    console.error('Error fetching banking data', accountsError || transactionsError || statusError)
   }
 
   const getLinkToken = async () => {
@@ -170,7 +84,11 @@ export default function BankingDashboard() {
     try {
       await api.banking.exchangeToken(public_token, 'demo-company')
       console.log('Successfully exchanged public token')
-      await fetchBankingData() // Refresh data
+      await Promise.all([
+        mutateAccounts(),
+        mutateTransactions(),
+        mutateStatus(),
+      ])
     } catch (error) {
       console.error('Failed to exchange token:', error)
     } finally {
@@ -193,7 +111,11 @@ export default function BankingDashboard() {
     try {
       setRefreshing(true)
       await api.banking.refresh()
-      await fetchBankingData()
+      await Promise.all([
+        mutateAccounts(),
+        mutateTransactions(),
+        mutateStatus(),
+      ])
     } catch (error) {
       console.error('Error refreshing bank data:', error)
     } finally {
@@ -218,15 +140,21 @@ export default function BankingDashboard() {
   }
 
   const getTotalBalance = () => {
-    return accounts.reduce((total, account) => {
+    return (accounts ?? []).reduce((total, account) => {
       return total + (account.type === 'credit' ? 0 : account.balance)
     }, 0)
   }
 
   const getTotalAvailable = () => {
-    return accounts.reduce((total, account) => {
+    return (accounts ?? []).reduce((total, account) => {
       return total + account.availableBalance
     }, 0)
+  }
+
+  if (hasError) {
+    return (
+      <div className="text-center text-red-600">Error loading banking data</div>
+    )
   }
 
   if (loading) {
@@ -286,7 +214,7 @@ export default function BankingDashboard() {
               {formatCurrency(getTotalBalance())}
             </div>
             <p className="text-xs text-gray-600 mt-1">
-              Across {accounts.length} accounts
+              Across {accounts?.length ?? 0} accounts
             </p>
           </CardContent>
         </Card>
@@ -328,7 +256,7 @@ export default function BankingDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {transactions.length}
+              {(transactions?.length ?? 0)}
             </div>
             <p className="text-xs text-gray-600 mt-1">
               Transactions this month
@@ -347,13 +275,13 @@ export default function BankingDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {accounts.length === 0 ? (
+            {(accounts?.length ?? 0) === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <p>No bank accounts connected</p>
                 <p className="text-sm mt-2">Click "Connect Account" to add your first bank account</p>
               </div>
             ) : (
-              accounts.map((account) => (
+              (accounts ?? []).map((account) => (
                 <div key={account.id} className="flex items-center justify-between p-4 border rounded">
                   <div className="flex items-center gap-4">
                     <div className="p-2 bg-gray-100 rounded">
@@ -393,12 +321,12 @@ export default function BankingDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {transactions.length === 0 ? (
+            {(transactions?.length ?? 0) === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 No recent transactions
               </div>
             ) : (
-              transactions.map((transaction) => (
+              (transactions ?? []).map((transaction) => (
                 <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded ${transaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100'}`}>
@@ -419,7 +347,7 @@ export default function BankingDashboard() {
                       {transaction.amount >= 0 ? '+' : ''}{formatCurrency(transaction.amount)}
                     </div>
                     <div className="text-xs text-gray-500">
-                      Account: {accounts.find(a => a.id === transaction.accountId)?.name || 'Unknown'}
+                      Account: {(accounts ?? []).find(a => a.id === transaction.accountId)?.name || 'Unknown'}
                     </div>
                   </div>
                 </div>
