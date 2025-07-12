@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { Company } from '../types/shared';
+import { Company } from '@shared/types';
 import { CheckService } from '../services/check.js';
 
 /**

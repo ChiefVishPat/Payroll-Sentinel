@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { CreateCompanyInput } from '../db/types';
+import { CreateCompanyInput } from '@backend/db/types';
 
 // Mock Supabase client
 const mockSupabase = {
