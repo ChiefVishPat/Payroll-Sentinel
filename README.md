@@ -117,7 +117,12 @@ The application uses a PostgreSQL database hosted on Supabase with the following
    ```bash
    git clone <repository-url>
    cd warp-sentinel
-   npm install
+   pnpm install
+   ```
+   This installs workspace packages and sets up Husky git hooks.
+   If hooks are missing, run:
+   ```bash
+   pnpm prepare
    ```
 
 2. **Set up environment variables:**
@@ -226,6 +231,7 @@ npm run test --workspace=backend
 2. Ensure all tests pass and coverage remains at 100%
 3. Follow the existing code style and TypeScript patterns
 4. Update documentation for any new features
+5. Husky runs lint and tests before each commit
 
 ## License
 
