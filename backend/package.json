@@ -16,14 +16,7 @@
     "type-check": "tsc --noEmit",
     "verify-supabase": "tsx src/scripts/verify-supabase.ts",
     "test-db-insert": "tsx src/scripts/test-db-insert.ts",
-    "test-raw-sql": "tsx src/scripts/test-raw-sql.ts",
-    "test-services": "node src/test-services/test-all.js",
-    "test-base": "node src/test-services/test-base.js",
-    "test-check": "node src/test-services/test-check.js",
-    "test-plaid": "node src/test-services/test-plaid.js",
-    "test-slack": "node src/test-services/test-slack.js",
-    "test-status": "node src/test-services/test-status.js",
-    "test-business-logic": "node src/test-services/test-business-logic.js"
+    "test-raw-sql": "tsx src/scripts/test-raw-sql.ts"
   },
   "dependencies": {
     "@fastify/cors": "^8.5.0",
