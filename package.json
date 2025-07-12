@@ -15,11 +15,11 @@
     "test": "npm run test --workspace=backend && npm run test --workspace=frontend",
     "lint": "npm run lint --workspace=backend && npm run lint --workspace=frontend",
     "format": "npm run format --workspace=backend && npm run format --workspace=frontend",
-    "cleanup:report": "cat cleanup.log",
-    "precommit": "pnpm lint && pnpm test --run --no-watch"
+    "prepare": "husky install"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "husky": "^9.0.11"
   },
   "engines": {
     "node": ">=18.0.0",
