@@ -138,39 +138,130 @@ async function bankingRoutes(fastify: FastifyInstance) {
   });
 
   /**
-   * Get current account balances
-   * @route GET /api/banking/balances
+   * Get linked bank accounts for a company
+   * @route GET /api/banking/accounts
    */
-  fastify.get('/banking/balances', async (req, reply) => {
-    const { itemId } = req.query as any;
-    const accessToken = accessTokens.get(itemId);
-    if (!accessToken) {
-      return reply.status(400).send({ success: false, error: 'Unknown itemId' });
+  fastify.get('/banking/accounts', async (req, reply) => {
+    const { companyId } = req.query as any;
+    const { data, error } = await supabase
+      .from('bank_accounts')
+      .select('plaid_account_id, account_name, account_type, account_subtype, institution_name, updated_at')
+      .eq('company_id', companyId);
+    if (error) {
+      fastify.log.error('Supabase: failed to fetch accounts', error);
+      return reply.status(500).send({ success: false, error: error.message });
     }
-    const res = await plaidService.getBalances(accessToken);
-    if (!res.success || !res.data) {
-      fastify.log.error('Plaid: get balances failed:', res.error);
-      return reply.status(500).send({ success: false, error: res.error?.message });
-    }
-    return reply.send({ success: true, balances: res.data });
+    const accounts = data.map(a => ({
+      id: a.plaid_account_id,
+      name: a.account_name,
+      type: a.account_type,
+      subtype: a.account_subtype,
+      institutionName: a.institution_name,
+      lastUpdated: a.updated_at
+    }));
+    return reply.send({ success: true, accounts });
   });
 
   /**
-   * Get transactions for an item
+   * Get connection status for a company
+   * @route GET /api/banking/status
+   */
+  fastify.get('/banking/status', async (req, reply) => {
+    const { companyId } = req.query as any;
+    const { data, error } = await supabase
+      .from('bank_accounts')
+      .select('updated_at')
+      .eq('company_id', companyId);
+    if (error) {
+      fastify.log.error('Supabase: failed to fetch accounts', error);
+      return reply.status(500).send({ success: false, error: error.message });
+    }
+    return reply.send({
+      success: true,
+      connected: data.length > 0,
+      lastSync: data[0]?.updated_at || null,
+      accountCount: data.length,
+      status: data.length > 0 ? 'healthy' : 'missing'
+    });
+  });
+
+  /**
+   * Trigger refresh of Plaid data
+   * @route POST /api/banking/refresh
+   */
+  fastify.post('/banking/refresh', async (req, reply) => {
+    const { companyId } = req.body as any;
+    const { data: accounts, error } = await supabase
+      .from('bank_accounts')
+      .select('plaid_access_token')
+      .eq('company_id', companyId);
+    if (error) {
+      fastify.log.error('Supabase: failed to fetch accounts', error);
+      return reply.status(500).send({ success: false, error: error.message });
+    }
+    const tokens = [...new Set(accounts.map(a => a.plaid_access_token))];
+    for (const token of tokens) {
+      await plaidService.getBalances(token);
+    }
+    return reply.send({ success: true });
+  });
+
+  /**
+   * Get current account balances for a company
+   * @route GET /api/banking/balances
+   */
+  fastify.get('/banking/balances', async (req, reply) => {
+    const { companyId } = req.query as any;
+    const { data: accounts, error } = await supabase
+      .from('bank_accounts')
+      .select('plaid_access_token, plaid_account_id')
+      .eq('company_id', companyId);
+    if (error) {
+      fastify.log.error('Supabase: failed to fetch accounts', error);
+      return reply.status(500).send({ success: false, error: error.message });
+    }
+    const balances = [] as any[];
+    const tokens = [...new Set(accounts.map(a => a.plaid_access_token))];
+    for (const token of tokens) {
+      const res = await plaidService.getBalances(token);
+      if (res.success && res.data) {
+        balances.push(...res.data.filter(b =>
+          accounts.some(a => a.plaid_account_id === b.accountId)
+        ));
+      }
+    }
+    return reply.send({ success: true, balances });
+  });
+
+  /**
+   * Get transactions for a company
    * @route GET /api/banking/transactions
    */
   fastify.get('/banking/transactions', async (req, reply) => {
-    const { itemId, startDate, endDate } = req.query as any;
-    const accessToken = accessTokens.get(itemId);
-    if (!accessToken) {
-      return reply.status(400).send({ success: false, error: 'Unknown itemId' });
+    const { companyId, startDate, endDate } = req.query as any;
+    const { data: accounts, error } = await supabase
+      .from('bank_accounts')
+      .select('plaid_access_token, plaid_account_id')
+      .eq('company_id', companyId);
+    if (error) {
+      fastify.log.error('Supabase: failed to fetch accounts', error);
+      return reply.status(500).send({ success: false, error: error.message });
     }
-    const res = await plaidService.getTransactions(accessToken, startDate, endDate);
-    if (!res.success || !res.data) {
-      fastify.log.error('Plaid: get transactions failed:', res.error);
-      return reply.status(500).send({ success: false, error: res.error?.message });
+    const transactions = [] as any[];
+    const tokens = [...new Set(accounts.map(a => a.plaid_access_token))];
+    for (const token of tokens) {
+      const res = await plaidService.getTransactions(
+        token,
+        startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        endDate || new Date().toISOString().slice(0, 10)
+      );
+      if (res.success && res.data) {
+        transactions.push(...res.data.filter(t =>
+          accounts.some(a => a.plaid_account_id === t.account_id)
+        ));
+      }
     }
-    return reply.send({ success: true, transactions: res.data });
+    return reply.send({ success: true, transactions });
   });
   
 }
