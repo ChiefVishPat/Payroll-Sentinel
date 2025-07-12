@@ -7,7 +7,8 @@ import { formatCurrency, formatDate, getStatusColor } from '@frontend/lib/utils'
 import { api, apiClient } from '@frontend/lib/api'
 import { useCompany } from '@frontend/context/CompanyContext'
 import CompanySelector from '@frontend/components/CompanySelector'
-import { PayrollRun, Employee } from '@frontend/types'
+import { PayrollRun } from '@frontend/types'
+import type { Employee } from '@frontend/shared/types'
 import {
   Users,
   DollarSign,
@@ -106,7 +107,49 @@ export default function PayrollDashboard() {
                   <Button variant="ghost" size="sm">Close</Button>
                 </DialogClose>
               </div>
-              <p className="text-sm text-gray-600">TODO: employee form goes here.</p>
+              <form
+                onSubmit={async e => {
+                  e.preventDefault()
+                  const formData = new FormData(e.currentTarget)
+                  await api.payroll.addEmployee({
+                    companyId,
+                    name: formData.get('name'),
+                    title: formData.get('title'),
+                    salary: Number(formData.get('salary') || 0),
+                    status: formData.get('status'),
+                  })
+                  await Promise.all([mutEmp(), mutSum()])
+                  setOpen(false)
+                  e.currentTarget.reset()
+                }}
+                className="space-y-4"
+              >
+                <input
+                  name="name"
+                  placeholder="Name"
+                  className="w-full border p-2 rounded"
+                  required
+                />
+                <input
+                  name="title"
+                  placeholder="Title"
+                  className="w-full border p-2 rounded"
+                  required
+                />
+                <input
+                  name="salary"
+                  type="number"
+                  step="0.01"
+                  placeholder="Salary"
+                  className="w-full border p-2 rounded"
+                  required
+                />
+                <select name="status" className="w-full border p-2 rounded">
+                  <option value="active">active</option>
+                  <option value="inactive">inactive</option>
+                </select>
+                <Button type="submit">Save</Button>
+              </form>
             </DialogContent>
           </Dialog>
           <Button onClick={refreshData} className="flex items-center gap-2">
@@ -259,10 +302,12 @@ export default function PayrollDashboard() {
                 <div key={employee.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
                   <div className="flex-1">
                     <div className="font-medium">{employee.name}</div>
-                    <div className="text-sm text-gray-600">{employee.position}</div>
-                    <div className="text-xs text-gray-500">
-                      {employee.department} • Started {formatDate(employee.startDate)}
-                    </div>
+                    <div className="text-sm text-gray-600">{employee.title}</div>
+                    {employee.start_date && (
+                      <div className="text-xs text-gray-500">
+                        {employee.department || 'General'} • Started {formatDate(employee.start_date)}
+                      </div>
+                    )}
                   </div>
                   <div className="text-right">
                     <div className="font-semibold">{formatCurrency(employee.salary)}</div>
