@@ -1,26 +1,65 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #1D1D1D;
+  --foreground: #EAEAEA;
+  --secondary-background: #2C2C2C;
+  --secondary-foreground: #B0B0B0;
+  --accent: #0077FF;
+  --highlight: #4CAF50;
+  --error: #FF5733;
+  --border: #444444;
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-poppins);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  color: var(--foreground);
+}
+
+button {
+  background-color: var(--accent);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 5px;
+  padding: 12px 20px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #005BB5;
+}
+
+input,
+select,
+textarea {
+  background-color: var(--secondary-background);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  padding: 10px;
+  border-radius: 5px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.alert-success {
+  background-color: var(--highlight);
+  color: #FFFFFF;
+}
+
+.alert-error {
+  background-color: var(--error);
+  color: #FFFFFF;
 }

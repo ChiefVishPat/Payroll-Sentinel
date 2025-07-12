@@ -38,14 +38,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname()
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-[#1D1D1D] text-[#EAEAEA]">
       {/* Mobile sidebar */}
       <div className={cn(
         "fixed inset-0 z-40 lg:hidden",
         sidebarOpen ? "block" : "hidden"
       )}>
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-        <div className="relative flex w-full max-w-xs flex-col bg-white">
+        <div className="relative flex w-full max-w-xs flex-col bg-[#2C2C2C]">
           <div className="absolute right-0 top-0 -mr-12 pt-2">
             <button
               type="button"
@@ -60,16 +60,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col bg-[#2C2C2C]">
         <Sidebar />
       </div>
 
       {/* Main content */}
       <div className="flex flex-1 flex-col lg:pl-64">
-        <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-white shadow">
+        <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-[#2C2C2C] shadow">
           <button
             type="button"
-            className="border-r border-gray-200 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 lg:hidden"
+            className="border-r border-[#444444] px-4 text-[#B0B0B0] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#0077FF] lg:hidden"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="h-6 w-6" />
@@ -77,8 +77,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex flex-1 justify-between px-4">
             <div className="flex flex-1">
               <div className="flex w-full md:ml-0">
-                <div className="relative w-full text-gray-400 focus-within:text-gray-600">
-                  <h1 className="text-xl font-semibold text-gray-900 py-4">
+                <div className="relative w-full text-[#B0B0B0] focus-within:text-[#EAEAEA]">
+                  <h1 className="text-xl font-semibold text-[#EAEAEA] py-4">
                     Payroll Sentinel
                   </h1>
                 </div>
@@ -87,7 +87,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="ml-4 flex items-center md:ml-6">
               <button
                 type="button"
-                className="rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                className="rounded-full bg-[#2C2C2C] p-1 text-[#B0B0B0] hover:text-[#EAEAEA] focus:outline-none focus:ring-2 focus:ring-[#0077FF] focus:ring-offset-2"
               >
                 <Bell className="h-6 w-6" />
               </button>
@@ -108,11 +108,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   function Sidebar() {
     return (
-      <div className="flex min-h-0 flex-1 flex-col bg-white">
+      <div className="flex min-h-0 flex-1 flex-col bg-[#2C2C2C]">
         <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
           <div className="flex flex-shrink-0 items-center px-4">
-            <Shield className="h-8 w-8 text-indigo-600" />
-            <span className="ml-2 text-xl font-semibold text-gray-900">
+            <Shield className="h-8 w-8 text-[#0077FF]" />
+            <span className="ml-2 text-xl font-semibold text-[#EAEAEA]">
               Payroll Sentinel
             </span>
           </div>
@@ -125,14 +125,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   href={item.href}
                   className={cn(
                     isActive
-                      ? 'bg-indigo-50 text-indigo-700'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900',
+                      ? 'bg-[#0077FF]/20 text-[#0077FF]'
+                      : 'text-[#B0B0B0] hover:bg-[#2C2C2C] hover:text-[#EAEAEA]',
                     'group flex items-center px-2 py-2 text-sm font-medium rounded-md'
                   )}
                 >
                   <item.icon
                     className={cn(
-                      isActive ? 'text-indigo-500' : 'text-gray-400 group-hover:text-gray-500',
+                      isActive ? 'text-[#0077FF]' : 'text-[#B0B0B0] group-hover:text-[#EAEAEA]',
                       'mr-3 h-6 w-6'
                     )}
                   />

@@ -147,8 +147,8 @@ export default function RiskDashboard() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Risk Analysis</h1>
-          <p className="text-gray-600">Monitor and assess financial risks</p>
+          <h1 className="text-2xl font-bold text-[#EAEAEA]">Risk Analysis</h1>
+          <p className="text-[#B0B0B0]">Monitor and assess financial risks</p>
         </div>
         <Button 
           onClick={triggerAssessment} 
@@ -171,7 +171,7 @@ export default function RiskDashboard() {
             <div className={`text-2xl font-bold ${riskLevelColor}`}>
               {riskStatus?.overallRisk?.charAt(0).toUpperCase() + riskStatus?.overallRisk?.slice(1)}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[#B0B0B0] mt-1">
               Risk Score: {riskStatus?.score}/100
             </p>
           </CardContent>
@@ -186,7 +186,7 @@ export default function RiskDashboard() {
             <div className="text-2xl font-bold text-yellow-600">
               {alerts.filter(a => !a.acknowledged).length}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[#B0B0B0] mt-1">
               Unacknowledged alerts
             </p>
           </CardContent>
@@ -201,7 +201,7 @@ export default function RiskDashboard() {
             <div className="text-2xl font-bold text-blue-600">
               {riskStatus?.lastAssessment ? formatDateTime(riskStatus.lastAssessment).split(',')[0] : 'N/A'}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[#B0B0B0] mt-1">
               {riskStatus?.lastAssessment ? formatDateTime(riskStatus.lastAssessment).split(',')[1] : 'No recent assessment'}
             </p>
           </CardContent>
@@ -219,10 +219,10 @@ export default function RiskDashboard() {
         <CardContent>
           <div className="space-y-4">
             {riskStatus?.factors?.map((factor: any, index: number) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+              <div key={index} className="flex items-center justify-between p-3 bg-[#2C2C2C] rounded">
                 <div>
                   <div className="font-medium">{factor.category}</div>
-                  <div className="text-sm text-gray-600">Impact: {factor.impact}</div>
+                  <div className="text-sm text-[#B0B0B0]">Impact: {factor.impact}</div>
                 </div>
                 <div className="text-right">
                   <div className="font-semibold">{factor.score}/100</div>
@@ -247,7 +247,7 @@ export default function RiskDashboard() {
         <CardContent>
           <div className="space-y-4">
             {alerts.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-[#B0B0B0]">
                 No active alerts
               </div>
             ) : (
@@ -258,13 +258,13 @@ export default function RiskDashboard() {
                       <div className={`px-2 py-1 text-xs rounded ${getRiskColor(alert.level)}`}>
                         {alert.level}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-[#B0B0B0]">
                         {alert.type.replace('_', ' ')}
                       </div>
                     </div>
                     <div className="font-medium">{alert.title}</div>
-                    <div className="text-sm text-gray-600 mt-1">{alert.description}</div>
-                    <div className="text-xs text-gray-500 mt-2">
+                    <div className="text-sm text-[#B0B0B0] mt-1">{alert.description}</div>
+                    <div className="text-xs text-[#B0B0B0] mt-2">
                       {formatDateTime(alert.timestamp)}
                     </div>
                   </div>

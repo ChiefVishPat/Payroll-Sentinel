@@ -115,8 +115,8 @@ export default function CashFlowDashboard() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Cash Flow</h1>
-          <p className="text-gray-600">Monitor and forecast cash flow</p>
+          <h1 className="text-2xl font-bold text-[#EAEAEA]">Cash Flow</h1>
+          <p className="text-[#B0B0B0]">Monitor and forecast cash flow</p>
         </div>
         <Button 
           onClick={recalculateProjections} 
@@ -139,7 +139,7 @@ export default function CashFlowDashboard() {
             <div className="text-2xl font-bold text-green-600">
               {formatCurrency(summary?.currentBalance || 0)}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[#B0B0B0] mt-1">
               Available funds
             </p>
           </CardContent>
@@ -154,7 +154,7 @@ export default function CashFlowDashboard() {
             <div className="text-2xl font-bold text-blue-600">
               {formatCurrency(summary?.projectedBalance || 0)}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[#B0B0B0] mt-1">
               30-day projection
             </p>
           </CardContent>
@@ -169,7 +169,7 @@ export default function CashFlowDashboard() {
             <div className="text-2xl font-bold text-red-600">
               {formatCurrency(summary?.burnRate || 0)}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[#B0B0B0] mt-1">
               Average monthly expenses
             </p>
           </CardContent>
@@ -184,7 +184,7 @@ export default function CashFlowDashboard() {
             <div className={`text-2xl font-bold ${runwayColor}`}>
               {summary?.runway?.toFixed(1) || '0.0'} months
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[#B0B0B0] mt-1">
               At current burn rate
             </p>
           </CardContent>
@@ -305,16 +305,16 @@ export default function CashFlowDashboard() {
               { date: '2025-01-06', description: 'Software Subscriptions', amount: -2500, type: 'expense' },
               { date: '2025-01-05', description: 'Client Payment - XYZ Ltd', amount: 15000, type: 'income' }
             ].map((transaction, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+              <div key={index} className="flex items-center justify-between p-3 bg-[#2C2C2C] rounded">
                 <div>
                   <div className="font-medium">{transaction.description}</div>
-                  <div className="text-sm text-gray-600">{formatDate(transaction.date)}</div>
+                  <div className="text-sm text-[#B0B0B0]">{formatDate(transaction.date)}</div>
                 </div>
                 <div className="text-right">
                   <div className={`font-semibold ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {transaction.amount > 0 ? '+' : ''}{formatCurrency(transaction.amount)}
                   </div>
-                  <div className="text-sm text-gray-500 capitalize">{transaction.type}</div>
+                  <div className="text-sm text-[#B0B0B0] capitalize">{transaction.type}</div>
                 </div>
               </div>
             ))}

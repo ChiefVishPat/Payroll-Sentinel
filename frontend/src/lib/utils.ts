@@ -43,7 +43,7 @@ export function getRiskColor(level: 'low' | 'medium' | 'high'): string {
     case 'high':
       return 'text-red-600 bg-red-50'
     default:
-      return 'text-gray-600 bg-gray-50'
+      return 'text-[#B0B0B0] bg-[#2C2C2C]'
   }
 }
 
@@ -62,6 +62,6 @@ export function getStatusColor(status: string): string {
     case 'disconnected':
       return 'text-red-600 bg-red-50'
     default:
-      return 'text-gray-600 bg-gray-50'
+      return 'text-[#B0B0B0] bg-[#2C2C2C]'
   }
 }

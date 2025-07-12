@@ -48,7 +48,7 @@ export default function DataManagement() {
                 <h1 className="text-2xl font-bold text-gray-900">
                     Data Management
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-[#B0B0B0]">
                     Connect accounts, upload data, and manage your information
                 </p>
             </div>
@@ -138,7 +138,7 @@ export default function DataManagement() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
                                             <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                                            <div className="text-sm text-gray-600 mb-2">
+                                            <div className="text-sm text-[#B0B0B0] mb-2">
                                                 Transaction History CSV
                                             </div>
                                             <input
@@ -159,7 +159,7 @@ export default function DataManagement() {
 
                                         <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
                                             <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                                            <div className="text-sm text-gray-600 mb-2">
+                                            <div className="text-sm text-[#B0B0B0] mb-2">
                                                 Employee Directory CSV
                                             </div>
                                             <input
@@ -217,7 +217,7 @@ export default function DataManagement() {
                                                 <div className="font-medium">
                                                     Bank Accounts
                                                 </div>
-                                                <div className="text-sm text-gray-600">
+                                                <div className="text-sm text-[#B0B0B0]">
                                                     3 accounts connected
                                                 </div>
                                             </div>
@@ -237,7 +237,7 @@ export default function DataManagement() {
                                                 <div className="font-medium">
                                                     Employee Data
                                                 </div>
-                                                <div className="text-sm text-gray-600">
+                                                <div className="text-sm text-[#B0B0B0]">
                                                     12 employees loaded
                                                 </div>
                                             </div>
@@ -257,7 +257,7 @@ export default function DataManagement() {
                                                 <div className="font-medium">
                                                     Payroll History
                                                 </div>
-                                                <div className="text-sm text-gray-600">
+                                                <div className="text-sm text-[#B0B0B0]">
                                                     6 months of data
                                                 </div>
                                             </div>
@@ -277,7 +277,7 @@ export default function DataManagement() {
                                                 <div className="font-medium">
                                                     Accounting Software
                                                 </div>
-                                                <div className="text-sm text-gray-600">
+                                                <div className="text-sm text-[#B0B0B0]">
                                                     QuickBooks integration
                                                 </div>
                                             </div>

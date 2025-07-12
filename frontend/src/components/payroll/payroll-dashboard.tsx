@@ -89,8 +89,8 @@ export default function PayrollDashboard() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Payroll</h1>
-          <p className="text-gray-600">Manage payroll runs and employees</p>
+          <h1 className="text-2xl font-bold text-[#EAEAEA]">Payroll</h1>
+          <p className="text-[#B0B0B0]">Manage payroll runs and employees</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={open} onOpenChange={setOpen}>
@@ -106,7 +106,7 @@ export default function PayrollDashboard() {
                   <Button variant="ghost" size="sm">Close</Button>
                 </DialogClose>
               </div>
-              <p className="text-sm text-gray-600">TODO: employee form goes here.</p>
+              <p className="text-sm text-[#B0B0B0]">TODO: employee form goes here.</p>
             </DialogContent>
           </Dialog>
           <Button onClick={refreshData} className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export default function PayrollDashboard() {
             <div className="text-2xl font-bold text-blue-600">
               {summary?.totalEmployees || 0}
             </div>
-            <p className="text-xs text-gray-600 mt-1">Total employees</p>
+            <p className="text-xs text-[#B0B0B0] mt-1">Total employees</p>
           </CardContent>
         </Card>
 
@@ -140,7 +140,7 @@ export default function PayrollDashboard() {
             <div className="text-2xl font-bold text-green-600">
               {summary ? formatCurrency(summary.monthlyPayroll) : '$0'}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[#B0B0B0] mt-1">
               Total monthly cost
             </p>
           </CardContent>
@@ -155,7 +155,7 @@ export default function PayrollDashboard() {
             <div className="text-2xl font-bold text-purple-600">
               {summary?.nextPayroll ? formatDate(summary.nextPayroll) : 'Not scheduled'}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[#B0B0B0] mt-1">
               Scheduled date
             </p>
           </CardContent>
@@ -170,7 +170,7 @@ export default function PayrollDashboard() {
             <div className="text-2xl font-bold text-yellow-600">
               {summary?.pendingRuns ?? 0}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[#B0B0B0] mt-1">
               Awaiting approval
             </p>
           </CardContent>
@@ -188,7 +188,7 @@ export default function PayrollDashboard() {
         <CardContent>
           <div className="space-y-4">
             {(payrollRuns?.data || []).length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-[#B0B0B0]">
                 No payroll runs found
               </div>
             ) : (
@@ -201,10 +201,10 @@ export default function PayrollDashboard() {
                       </div>
                       <div className="font-medium">{run.payPeriod}</div>
                     </div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-[#B0B0B0]">
                       {formatCurrency(run.totalAmount)} for {run.employeeCount} employees
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-[#B0B0B0] mt-1">
                       Scheduled: {formatDate(run.scheduledDate)}
                     </div>
                   </div>
@@ -251,16 +251,16 @@ export default function PayrollDashboard() {
         <CardContent>
           <div className="space-y-4">
             {(employees?.data || []).length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-[#B0B0B0]">
                 No employees found
               </div>
             ) : (
               (employees?.data || []).map((employee: Employee) => (
-                <div key={employee.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div key={employee.id} className="flex items-center justify-between p-3 bg-[#2C2C2C] rounded">
                   <div className="flex-1">
                     <div className="font-medium">{employee.name}</div>
-                    <div className="text-sm text-gray-600">{employee.position}</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-sm text-[#B0B0B0]">{employee.position}</div>
+                    <div className="text-xs text-[#B0B0B0]">
                       {employee.department} • Started {formatDate(employee.startDate)}
                     </div>
                   </div>

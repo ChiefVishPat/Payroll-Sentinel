@@ -183,7 +183,7 @@ export default function DashboardStatsCards() {
               <div className={`text-2xl font-bold ${card.color}`}>
                 {card.value}
               </div>
-              <p className="text-xs text-gray-600 mt-1">
+              <p className="text-xs text-[#B0B0B0] mt-1">
                 {card.description}
               </p>
             </CardContent>

@@ -162,8 +162,8 @@ export default function BankingDashboard() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Banking</h1>
-          <p className="text-gray-600">Manage bank accounts and transactions</p>
+          <h1 className="text-2xl font-bold text-[#EAEAEA]">Banking</h1>
+          <p className="text-[#B0B0B0]">Manage bank accounts and transactions</p>
         </div>
         <div className="flex gap-2">
           <Button 
@@ -201,7 +201,7 @@ export default function BankingDashboard() {
             <div className="text-2xl font-bold text-green-600">
               {formatCurrency(getTotalBalance())}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[#B0B0B0] mt-1">
               Across {accounts?.length || 0} accounts
             </p>
           </CardContent>
@@ -216,7 +216,7 @@ export default function BankingDashboard() {
             <div className="text-2xl font-bold text-blue-600">
               {formatCurrency(getTotalAvailable())}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[#B0B0B0] mt-1">
               Available to spend
             </p>
           </CardContent>
@@ -231,7 +231,7 @@ export default function BankingDashboard() {
             <div className="text-2xl font-bold text-green-600">
               {status?.connected ? 'Connected' : 'Disconnected'}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[#B0B0B0] mt-1">
               Last sync: {status?.lastSync ? formatDate(status.lastSync) : 'Never'}
             </p>
           </CardContent>
@@ -246,7 +246,7 @@ export default function BankingDashboard() {
             <div className="text-2xl font-bold text-purple-600">
               {transactions?.length || 0}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[#B0B0B0] mt-1">
               Transactions this month
             </p>
           </CardContent>
@@ -272,23 +272,23 @@ export default function BankingDashboard() {
               accounts.map(account => (
                 <div key={account.id} className="flex items-center justify-between p-4 border rounded dark:border-gray-700">
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded">
-                      <CreditCard className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+                    <div className="p-2 bg-[#2C2C2C] rounded">
+                      <CreditCard className="h-6 w-6 text-[#B0B0B0]" />
                     </div>
                     <div>
                       <div className="font-medium">{account.name}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">{account.institutionName}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{account.type} account</div>
+                      <div className="text-sm text-[#B0B0B0]">{account.institutionName}</div>
+                      <div className="text-xs text-[#B0B0B0] capitalize">{account.type} account</div>
                     </div>
                   </div>
                   <div className="text-right">
                     <div className={`text-lg font-semibold ${account.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}> 
                       {formatCurrency((account as any).balance)}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="text-sm text-[#B0B0B0]">
                       Available: {formatCurrency((account as any).availableBalance)}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                    <div className="text-xs text-[#B0B0B0]">
                       Updated: {formatDate((account as any).lastUpdated)}
                     </div>
                   </div>
@@ -310,12 +310,12 @@ export default function BankingDashboard() {
         <CardContent>
           <div className="space-y-4">
             {!transactions || transactions.length === 0 ? (
-              <div className="p-4 text-center text-gray-500 border rounded dark:border-gray-700">
+              <div className="p-4 text-center text-[#B0B0B0] border rounded dark:border-gray-700">
                 No recent transactions
               </div>
             ) : (
               transactions.map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div key={transaction.id} className="flex items-center justify-between p-3 bg-[#2C2C2C] rounded">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded ${transaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100'}`}>
                       {transaction.type === 'credit' ? (
@@ -326,15 +326,15 @@ export default function BankingDashboard() {
                     </div>
                     <div>
                       <div className="font-medium">{transaction.description}</div>
-                      <div className="text-sm text-gray-600">{transaction.category}</div>
-                      <div className="text-xs text-gray-500">{formatDate(transaction.date)}</div>
+                      <div className="text-sm text-[#B0B0B0]">{transaction.category}</div>
+                      <div className="text-xs text-[#B0B0B0]">{formatDate(transaction.date)}</div>
                     </div>
                   </div>
                   <div className="text-right">
                     <div className={`font-semibold ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {transaction.amount >= 0 ? '+' : ''}{formatCurrency(transaction.amount)}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-[#B0B0B0]">
                       Account: {accounts?.find(a => a.id === transaction.accountId)?.name || 'Unknown'}
                     </div>
                   </div>

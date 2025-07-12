@@ -99,11 +99,11 @@ export default function PlaidLinkComponent({ onSuccess }: PlaidLinkProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4 p-4 border rounded-lg bg-gray-50">
+      <div className="flex items-center gap-4 p-4 border rounded-lg bg-[#2C2C2C]">
         <CreditCard className="h-8 w-8 text-blue-600" />
         <div className="flex-1">
           <div className="font-medium">Connect Your Bank Account</div>
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-[#B0B0B0]">
             Securely connect your business bank accounts using Plaid
           </div>
         </div>
@@ -112,7 +112,7 @@ export default function PlaidLinkComponent({ onSuccess }: PlaidLinkProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 border rounded-lg">
           <div className="font-medium mb-2">Production Connection</div>
-          <div className="text-sm text-gray-600 mb-3">
+          <div className="text-sm text-[#B0B0B0] mb-3">
             Connect your real bank accounts for live data
           </div>
           <Button 
@@ -126,7 +126,7 @@ export default function PlaidLinkComponent({ onSuccess }: PlaidLinkProps) {
 
         <div className="p-4 border rounded-lg">
           <div className="font-medium mb-2">Try Plaid Demo</div>
-          <div className="text-sm text-gray-600 mb-3">
+          <div className="text-sm text-[#B0B0B0] mb-3">
             Test the connection flow with Plaid's sandbox
           </div>
           <Button 
