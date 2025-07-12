@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@fron
 import { Button } from '@frontend/components/ui/button'
 import { formatCurrency, formatDate } from '@frontend/lib/utils'
 import { api, apiClient } from '@frontend/lib/api'
+import { useCompany } from '@frontend/context/CompanyContext'
+import CompanySelector from '@frontend/components/CompanySelector'
 import { BankAccount, Transaction } from '@frontend/types'
 import { 
   CreditCard, 
@@ -30,7 +32,11 @@ const fetcher = (url: string) =>
  * Shows linked accounts and recent transactions using SWR to poll the backend.
  */
 export default function BankingDashboard() {
-  const companyId = 'demo-company'
+  const { companyId } = useCompany()
+
+  if (!companyId) {
+    return <CompanySelector />
+  }
   const { data: accounts, isLoading: loadingAccounts, mutate: mutateAccounts } =
     useSWR(() => `/api/banking/accounts?companyId=${companyId}`, fetcher, {
       refreshInterval: 30000
@@ -60,7 +66,7 @@ export default function BankingDashboard() {
 
   const getLinkToken = async () => {
     try {
-      const response = await api.banking.linkToken('sandbox-user-123', 'demo-company')
+      const response = await api.banking.linkToken('sandbox-user-123', companyId)
       setLinkToken(response.data.linkToken)
       console.log('Link token obtained:', response.data.linkToken)
     } catch (error) {
@@ -72,7 +78,7 @@ export default function BankingDashboard() {
     console.log('Plaid Link success:', public_token)
     setIsConnecting(true)
     try {
-      await api.banking.exchangeToken(public_token, 'demo-company')
+      await api.banking.exchangeToken(public_token, companyId)
       console.log('Successfully exchanged public token')
       await Promise.all([mutateAccounts(), mutateTransactions(), mutateStatus()])
     } catch (error) {
@@ -96,7 +102,7 @@ export default function BankingDashboard() {
   const refreshBankData = async () => {
     try {
       setRefreshing(true)
-      await api.banking.refresh()
+      await api.banking.refresh(companyId)
       await Promise.all([mutateAccounts(), mutateTransactions(), mutateStatus()])
     } catch (error) {
       console.error('Error refreshing bank data:', error)

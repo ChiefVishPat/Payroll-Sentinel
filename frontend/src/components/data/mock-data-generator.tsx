@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@frontend/components/ui/card'
 import { Button } from '@frontend/components/ui/button'
 import { api } from '@frontend/lib/api'
+import { useCompany } from '@frontend/context/CompanyContext'
+import CompanySelector from '@frontend/components/CompanySelector'
 import { 
   Database, 
   Shuffle, 
@@ -16,6 +18,11 @@ import {
 } from 'lucide-react'
 
 export default function MockDataGenerator() {
+  const { companyId } = useCompany()
+
+  if (!companyId) {
+    return <CompanySelector />
+  }
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedData, setGeneratedData] = useState<any>(null)
 
@@ -24,7 +31,7 @@ export default function MockDataGenerator() {
     
     try {
       // Call the backend API to generate real mock data
-      const response = await api.mockData.generate('demo-company')
+      const response = await api.mockData.generate(companyId)
       console.log('Mock data generation response:', response.data)
       
       if (response.data.success) {
