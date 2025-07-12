@@ -7,6 +7,7 @@
 
 import { PlaidApi, Configuration, PlaidEnvironments } from 'plaid';
 import { BaseService, ServiceResponse, ServiceConfig } from './base';
+import { supabase } from '@backend/db/client';
 
 // Plaid-specific types and interfaces
 export interface PlaidConfig extends ServiceConfig {
@@ -258,6 +259,41 @@ export class PlaidService extends BaseService {
       });
       return true;
     }, 'validate access token');
+  }
+
+  /**
+   * Retrieve balances for all bank accounts linked to a company.
+   * @param companyId - Company identifier
+   * @returns Aggregated balances across all linked accounts
+   */
+  async getBalancesForCompany(companyId: string): Promise<ServiceResponse<AccountBalance[]>> {
+    return this.executeWithErrorHandling(async () => {
+      // Fetch active bank accounts for the company to obtain tokens
+      const { data, error } = await supabase
+        .from('bank_accounts')
+        .select('plaid_access_token')
+        .eq('company_id', companyId)
+        .eq('is_active', true);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      // Deduplicate tokens before calling Plaid
+      const tokens = Array.from(new Set((data || []).map(a => a.plaid_access_token)));
+
+      const allBalances: AccountBalance[] = [];
+
+      for (const token of tokens) {
+        const res = await this.getBalances(token);
+        if (!res.success || !res.data) {
+          throw new Error(res.error?.message || 'Failed to fetch balances');
+        }
+        allBalances.push(...res.data);
+      }
+
+      return allBalances;
+    }, 'get balances for company');
   }
 
   /**
