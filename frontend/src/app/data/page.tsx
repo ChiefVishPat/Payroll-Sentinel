@@ -1,5 +1,5 @@
-import DashboardLayout from '@/components/layout/dashboard-layout'
-import DataManagement from '@/components/data/data-management'
+import DashboardLayout from '@frontend/components/layout/dashboard-layout'
+import DataManagement from '@frontend/components/data/data-management'
 
 export default function DataPage() {
   return (

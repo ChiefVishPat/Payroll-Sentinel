@@ -6,8 +6,8 @@
  * This script uses raw SQL to test database insertion and bypass potential RLS issues
  */
 
-import '../loadEnv.js';
-import { supabase } from '../db/client';
+import '@backend/loadEnv';
+import { supabase } from '@backend/db/client';
 
 async function testRawSQL(): Promise<void> {
   console.log('🔧 Testing with raw SQL...\n');

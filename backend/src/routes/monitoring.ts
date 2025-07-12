@@ -7,9 +7,9 @@ import {
   parsePagination,
   formatPaginatedResponse,
   mapServiceError 
-} from './helpers.js';
-import { MonitoringService } from '../services/monitoring.js';
-import { ApiError, ErrorType } from '../middleware/index.js';
+} from '@backend/routes/helpers';
+import { MonitoringService } from '@backend/services/monitoring';
+import { ApiError, ErrorType } from '@backend/middleware';
 
 interface JobFilters {
   companyId?: string;

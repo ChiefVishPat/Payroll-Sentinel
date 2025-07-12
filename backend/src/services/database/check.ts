@@ -1,4 +1,4 @@
-import { ServiceResponse } from '../base.js';
+import { ServiceResponse } from '@backend/services/base';
 import { BaseDatabaseService } from './base.js';
 
 /**

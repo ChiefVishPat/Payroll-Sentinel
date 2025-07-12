@@ -5,10 +5,10 @@
  * and triggers alerts based on configurable thresholds and rules.
  */
 
-import { BaseService, ServiceResponse, ServiceConfig } from './base';
-import { CashFlowAnalysisService, CashFlowAnalysisResult, AlertTrigger } from './cashflow';
-import { SlackService } from './slack';
-import { calculateRiskScore } from '../utils/risk';
+import { BaseService, ServiceResponse, ServiceConfig } from '@backend/services/base';
+import { CashFlowAnalysisService, CashFlowAnalysisResult, AlertTrigger } from '@backend/services/cashflow';
+import { SlackService } from '@backend/services/slack';
+import { calculateRiskScore } from '@backend/utils/risk';
 
 export interface RiskDetectionConfig extends ServiceConfig {
   // Monitoring configuration
