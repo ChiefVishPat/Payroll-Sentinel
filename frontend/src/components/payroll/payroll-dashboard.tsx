@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import useSWR from 'swr'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@frontend/components/ui/card'
 import { Button } from '@frontend/components/ui/button'
 import { formatCurrency, formatDate, getStatusColor } from '@frontend/lib/utils'
-import { api } from '@frontend/lib/api'
+import { api, apiClient } from '@frontend/lib/api'
 import { useCompany } from '@frontend/context/CompanyContext'
 import CompanySelector from '@frontend/components/CompanySelector'
 import { PayrollRun, Employee } from '@frontend/types'
@@ -24,103 +24,33 @@ export default function PayrollDashboard() {
   if (!companyId) {
     return <CompanySelector />
   }
-  const [payrollRuns, setPayrollRuns] = useState<PayrollRun[]>([])
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [summary, setSummary] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const fetcher = (url: string) => apiClient.get(url).then(res => res.data)
 
-  useEffect(() => {
-    fetchPayrollData()
-  }, [])
+  const { data: payrollRuns, isLoading: loadingRuns, mutate: mutRuns } =
+    useSWR(() => `/api/payroll/runs?companyId=${companyId}`, fetcher, {
+      refreshInterval: 10000
+    })
+  const { data: employees, isLoading: loadingEmp, mutate: mutEmp } = useSWR(
+    () => `/api/payroll/employees?companyId=${companyId}`,
+    fetcher,
+    { refreshInterval: 10000 }
+  )
+  const { data: summary, isLoading: loadingSummary, mutate: mutSum } = useSWR(
+    () => `/api/payroll/summary?companyId=${companyId}`,
+    fetcher,
+    { refreshInterval: 10000 }
+  )
 
-  const fetchPayrollData = async () => {
-    try {
-      setLoading(true)
-      
-      let runsData = []
-      let employeesData = []
-      let summaryData = null
+  const loading = loadingRuns || loadingEmp || loadingSummary
 
-      try {
-        const [runsRes, employeesRes, summaryRes] = await Promise.all([
-          api.payroll.getRuns(companyId),
-          api.payroll.getEmployees(companyId),
-          api.payroll.getSummary(companyId)
-        ])
-
-        runsData = runsRes.data || []
-        employeesData = employeesRes.data || []
-        summaryData = summaryRes.data
-      } catch (error) {
-        console.log('Payroll API not available, using mock data')
-        
-        // Use mock data
-        runsData = [
-          {
-            id: '1',
-            payPeriod: '2025-01-01 to 2025-01-15',
-            scheduledDate: '2025-01-16',
-            status: 'pending',
-            totalAmount: 65000,
-            employeeCount: 12,
-            entries: []
-          },
-          {
-            id: '2',
-            payPeriod: '2024-12-16 to 2024-12-31',
-            scheduledDate: '2025-01-01',
-            status: 'processed',
-            totalAmount: 62000,
-            employeeCount: 12,
-            entries: []
-          }
-        ]
-        
-        employeesData = [
-          {
-            id: '1',
-            name: 'John Doe',
-            position: 'Software Engineer',
-            salary: 85000,
-            status: 'active',
-            startDate: '2024-01-15',
-            department: 'Engineering'
-          },
-          {
-            id: '2',
-            name: 'Jane Smith',
-            position: 'Product Manager',
-            salary: 95000,
-            status: 'active',
-            startDate: '2024-02-01',
-            department: 'Product'
-          }
-        ]
-        
-        summaryData = {
-          totalEmployees: 12,
-          activeEmployees: 12,
-          totalMonthlySalary: 65000,
-          nextPayrollDate: '2025-01-16'
-        }
-      }
-
-      setPayrollRuns(runsData)
-      setEmployees(employeesData)
-      setSummary(summaryData)
-    } catch (error) {
-      console.error('Error fetching payroll data:', error)
-    } finally {
-      setLoading(false)
-    }
+  const refreshData = async () => {
+    await Promise.all([mutRuns(), mutEmp(), mutSum()])
   }
 
   const approvePayroll = async (runId: string) => {
     try {
       await api.payroll.approveRun(runId, companyId)
-      setPayrollRuns(runs => runs.map(run => 
-        run.id === runId ? { ...run, status: 'approved' } : run
-      ))
+      await mutRuns()
     } catch (error) {
       console.error('Error approving payroll:', error)
     }
@@ -129,9 +59,7 @@ export default function PayrollDashboard() {
   const processPayroll = async (runId: string) => {
     try {
       await api.payroll.processRun(runId, companyId)
-      setPayrollRuns(runs => runs.map(run => 
-        run.id === runId ? { ...run, status: 'processed' } : run
-      ))
+      await mutRuns()
     } catch (error) {
       console.error('Error processing payroll:', error)
     }
@@ -161,18 +89,23 @@ export default function PayrollDashboard() {
           <h1 className="text-2xl font-bold text-gray-900">Payroll</h1>
           <p className="text-gray-600">Manage payroll runs and employees</p>
         </div>
-        <Button 
-          onClick={fetchPayrollData}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => { /* TODO open modal */ }} className="flex items-center gap-2">
+            <span className="text-xl">➕</span> Add Employee
+          </Button>
+          <Button
+            onClick={refreshData}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
             <Users className="h-4 w-4 text-blue-600" />
@@ -181,20 +114,18 @@ export default function PayrollDashboard() {
             <div className="text-2xl font-bold text-blue-600">
               {summary?.totalEmployees || 0}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
-              {summary?.activeEmployees || 0} active
-            </p>
+            <p className="text-xs text-gray-600 mt-1">Total employees</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Monthly Payroll</CardTitle>
             <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(summary?.totalMonthlySalary || 0)}
+              {summary ? formatCurrency(summary.monthlyPayroll) : '$0'}
             </div>
             <p className="text-xs text-gray-600 mt-1">
               Total monthly cost
@@ -202,14 +133,14 @@ export default function PayrollDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Next Payroll</CardTitle>
             <Calendar className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {summary?.nextPayrollDate ? formatDate(summary.nextPayrollDate) : 'Not scheduled'}
+              {summary?.nextPayroll ? formatDate(summary.nextPayroll) : 'Not scheduled'}
             </div>
             <p className="text-xs text-gray-600 mt-1">
               Scheduled date
@@ -217,14 +148,14 @@ export default function PayrollDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Runs</CardTitle>
             <Clock className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {payrollRuns.filter(run => run.status === 'pending' || run.status === 'draft').length}
+              {summary?.pendingRuns ?? 0}
             </div>
             <p className="text-xs text-gray-600 mt-1">
               Awaiting approval
@@ -234,7 +165,7 @@ export default function PayrollDashboard() {
       </div>
 
       {/* Payroll Runs */}
-      <Card>
+      <Card className="dark:bg-gray-800">
         <CardHeader>
           <CardTitle>Payroll Runs</CardTitle>
           <CardDescription>
@@ -243,12 +174,12 @@ export default function PayrollDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {payrollRuns.length === 0 ? (
+            {(payrollRuns?.data || []).length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 No payroll runs found
               </div>
             ) : (
-              payrollRuns.map((run) => (
+              (payrollRuns?.data || []).map((run: PayrollRun) => (
                 <div key={run.id} className="flex items-center justify-between p-4 border rounded">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -297,7 +228,7 @@ export default function PayrollDashboard() {
       </Card>
 
       {/* Employee List */}
-      <Card>
+      <Card className="dark:bg-gray-800">
         <CardHeader>
           <CardTitle>Employees</CardTitle>
           <CardDescription>
@@ -306,12 +237,12 @@ export default function PayrollDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {employees.length === 0 ? (
+            {(employees?.data || []).length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 No employees found
               </div>
             ) : (
-              employees.map((employee) => (
+              (employees?.data || []).map((employee: Employee) => (
                 <div key={employee.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
                   <div className="flex-1">
                     <div className="font-medium">{employee.name}</div>
