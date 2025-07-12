@@ -1,6 +1,0 @@
-2025-07-11 DELETE backend/test_plaid_mvp.js (obsolete demo script)
-2025-07-11 DELETE shared/types.d.ts (generated artifact)
-2025-07-11 DELETE shared/types.d.ts.map (generated artifact)
-2025-07-11 DELETE shared/types.js (generated artifact)
-2025-07-11 DELETE shared/types.js.map (generated artifact)
-2025-07-11 MOVE   backend/src/test/ -> tests/backend/ (consolidate tests)
