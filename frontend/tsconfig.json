@@ -23,12 +23,8 @@
       }
     ],
     "paths": {
-      "@frontend/*": [
-        "./src/*"
-      ],
-      "@shared/*": [
-        "../shared/*"
-      ]
+      "@frontend/*": ["./src/*"],
+      "@frontend/shared/*": ["../shared/*"]
     }
   },
   "include": [

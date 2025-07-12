@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { formatCurrency, formatDate } from '@/lib/utils'
-import { api } from '@/lib/api'
-import { CashFlowSummary, CashFlowProjection } from '@/types'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@frontend/components/ui/card'
+import { Button } from '@frontend/components/ui/button'
+import { formatCurrency, formatDate } from '@frontend/lib/utils'
+import { api } from '@frontend/lib/api'
+import { CashFlowSummary, CashFlowProjection } from '@frontend/types'
 import { 
   DollarSign, 
   TrendingUp, 
