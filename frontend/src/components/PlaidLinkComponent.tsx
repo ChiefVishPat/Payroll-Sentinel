@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { usePlaidLink } from 'react-plaid-link'
-import axios from 'axios'
+import { apiClient } from '../lib/api'
 
 interface PlaidLinkProps {
   companyId: string
@@ -20,7 +20,10 @@ export default function PlaidLinkComponent({ companyId, onSuccess }: PlaidLinkPr
   const fetchLinkToken = async () => {
     setLoading(true)
     try {
-      const res = await axios.post('/api/banking/link-token', { companyId })
+      const res = await apiClient.post('/api/banking/link-token', {
+        userId: 'sandbox-user-123',
+        companyId,
+      })
       console.debug('[PlaidLink] link_token', res.data.linkToken)
       setLinkToken(res.data.linkToken)
     } catch (err: any) {
@@ -32,7 +35,10 @@ export default function PlaidLinkComponent({ companyId, onSuccess }: PlaidLinkPr
 
   const handleSuccess = async (public_token: string) => {
     try {
-      await axios.post('/api/banking/exchange-token', { publicToken: public_token, companyId })
+      await apiClient.post('/api/banking/exchange-token', {
+        publicToken: public_token,
+        companyId,
+      })
       onSuccess()
     } catch (err: any) {
       setError(err.response?.data?.error || 'Token exchange failed')

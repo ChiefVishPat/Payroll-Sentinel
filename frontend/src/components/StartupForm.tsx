@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, FormEvent } from 'react'
-import axios from 'axios'
+import { apiClient } from '../lib/api'
 
 interface StartupFormProps {
   onSuccess: (companyId: string) => void
@@ -23,7 +23,7 @@ export default function StartupForm({ onSuccess }: StartupFormProps) {
     setError('')
     setLoading(true)
     try {
-      const res = await axios.post('/api/companies', { name, ein, state })
+      const res = await apiClient.post('/api/companies', { name, ein, state })
       const companyId = res.data.id || res.data.companyId || res.data.check_company_id
       console.debug('[Onboard] companyId', companyId)
       onSuccess(companyId)

@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import StartupForm from '../../../components/StartupForm'
-import PlaidLinkComponent from '../../../components/PlaidLinkComponent'
+import StartupForm from '@frontend/components/StartupForm'
+import PlaidLinkComponent from '@frontend/components/PlaidLinkComponent'
 
 export default function OnboardingPage() {
   const [companyId, setCompanyId] = useState<string | null>(null)
