@@ -68,6 +68,7 @@ export default function BankingDashboard() {
     console.error('Error fetching banking data', accountsError || transactionsError || statusError)
   }
 
+  // Obtain a one-time token for Plaid Link
   const getLinkToken = async () => {
     try {
       const response = await api.banking.linkToken('sandbox-user-123', 'demo-company')
@@ -78,6 +79,7 @@ export default function BankingDashboard() {
     }
   }
 
+  // Exchange the public token for an access token and refresh data
   const onPlaidSuccess = async (public_token: string, metadata: any) => {
     console.log('Plaid Link success:', public_token)
     setIsConnecting(true)
@@ -107,6 +109,7 @@ export default function BankingDashboard() {
     onExit: onPlaidExit,
   })
 
+  // Trigger backend sync and refetch SWR data
   const refreshBankData = async () => {
     try {
       setRefreshing(true)
@@ -123,6 +126,7 @@ export default function BankingDashboard() {
     }
   }
 
+  // Open Plaid Link to connect a new account
   const connectAccount = async () => {
     if (!linkToken) {
       console.error('No link token available')
@@ -139,12 +143,14 @@ export default function BankingDashboard() {
     openPlaid()
   }
 
+  // Aggregate the balances of all non-credit accounts
   const getTotalBalance = () => {
     return (accounts ?? []).reduce((total, account) => {
       return total + (account.type === 'credit' ? 0 : account.balance)
     }, 0)
   }
 
+  // Sum of currently available funds across accounts
   const getTotalAvailable = () => {
     return (accounts ?? []).reduce((total, account) => {
       return total + account.availableBalance
@@ -162,7 +168,7 @@ export default function BankingDashboard() {
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
+            <Card key={i} className="animate-pulse dark:bg-gray-800 dark:border-gray-700">
               <CardHeader>
                 <div className="h-4 bg-gray-200 rounded w-3/4"></div>
                 <div className="h-8 bg-gray-200 rounded w-1/2"></div>
@@ -182,8 +188,8 @@ export default function BankingDashboard() {
           <p className="text-gray-600">Manage bank accounts and transactions</p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            onClick={refreshBankData} 
+          <Button
+            onClick={refreshBankData}
             disabled={refreshing}
             variant="outline"
             className="flex items-center gap-2"
@@ -191,20 +197,20 @@ export default function BankingDashboard() {
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
             {refreshing ? 'Syncing...' : 'Refresh'}
           </Button>
-          <Button 
+          <Button
             onClick={connectAccount}
             disabled={isConnecting || !plaidReady}
             className="flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
-            {isConnecting ? 'Connecting...' : 'Connect Account'}
+            {isConnecting ? 'Connecting...' : 'Link another account'}
           </Button>
         </div>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
             <DollarSign className="h-4 w-4 text-green-600" />
@@ -219,7 +225,7 @@ export default function BankingDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Available Funds</CardTitle>
             <CreditCard className="h-4 w-4 text-blue-600" />
@@ -234,7 +240,7 @@ export default function BankingDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Connection Status</CardTitle>
             <Building className="h-4 w-4 text-green-600" />
@@ -249,7 +255,7 @@ export default function BankingDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
             <Calendar className="h-4 w-4 text-purple-600" />
@@ -266,7 +272,7 @@ export default function BankingDashboard() {
       </div>
 
       {/* Bank Accounts */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
           <CardTitle>Bank Accounts</CardTitle>
           <CardDescription>
@@ -276,31 +282,31 @@ export default function BankingDashboard() {
         <CardContent>
           <div className="space-y-4">
             {(accounts?.length ?? 0) === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <p>No bank accounts connected</p>
-                <p className="text-sm mt-2">Click "Connect Account" to add your first bank account</p>
+              <div className="p-6 text-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800">
+                <p className="text-gray-500">No bank accounts connected</p>
+                <p className="text-sm text-gray-500 mt-2">Use "Link another account" to add your first bank account.</p>
               </div>
             ) : (
               (accounts ?? []).map((account) => (
-                <div key={account.id} className="flex items-center justify-between p-4 border rounded">
+                <div key={account.id} className="flex items-center justify-between p-4 border rounded dark:bg-gray-800 dark:border-gray-700">
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-gray-100 rounded">
+                    <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded">
                       <CreditCard className="h-6 w-6 text-gray-600" />
                     </div>
                     <div>
                       <div className="font-medium">{account.name}</div>
-                      <div className="text-sm text-gray-600">{account.institutionName}</div>
-                      <div className="text-xs text-gray-500 capitalize">{account.type} account</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">{account.institutionName}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{account.type} account</div>
                     </div>
                   </div>
                   <div className="text-right">
                     <div className={`text-lg font-semibold ${account.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {formatCurrency(account.balance)}
                     </div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
                       Available: {formatCurrency(account.availableBalance)}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
                       Updated: {formatDate(account.lastUpdated)}
                     </div>
                   </div>
@@ -312,7 +318,7 @@ export default function BankingDashboard() {
       </Card>
 
       {/* Recent Transactions */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
           <CardTitle>Recent Transactions</CardTitle>
           <CardDescription>
@@ -322,12 +328,12 @@ export default function BankingDashboard() {
         <CardContent>
           <div className="space-y-4">
             {(transactions?.length ?? 0) === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                No recent transactions
+              <div className="p-3 text-center bg-gray-100 dark:bg-gray-800 text-gray-500 rounded">
+                No transactions yet — come back after your first payment clears.
               </div>
             ) : (
               (transactions ?? []).map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded ${transaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100'}`}>
                       {transaction.type === 'credit' ? (
