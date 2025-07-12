@@ -1,6 +1,6 @@
-import DashboardLayout from '@/components/layout/dashboard-layout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import DashboardLayout from '@frontend/components/layout/dashboard-layout'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@frontend/components/ui/card'
+import { Button } from '@frontend/components/ui/button'
 import { 
   Settings, 
   User, 

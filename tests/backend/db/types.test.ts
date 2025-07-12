@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CreateCompanyInput } from '../../db/types';
+import { CreateCompanyInput } from '@backend/db/types';
 
 // Additional types and validation utilities for testing
 export interface BankAccount {

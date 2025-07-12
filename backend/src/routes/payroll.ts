@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { CheckService } from '../services/check';
+import { CheckService } from '@backend/services/check';
 
 /**
  * Payroll routes for managing payroll operations

@@ -1,5 +1,5 @@
-import DashboardLayout from '@/components/layout/dashboard-layout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import DashboardLayout from '@frontend/components/layout/dashboard-layout'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@frontend/components/ui/card'
 import { Activity, Server, Database, Cpu, MemoryStick, Clock } from 'lucide-react'
 
 export default function MonitoringPage() {

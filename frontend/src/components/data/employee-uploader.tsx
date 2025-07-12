@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { api } from '@/lib/api'
+import { Button } from '@frontend/components/ui/button'
+import { api } from '@frontend/lib/api'
 import { Users, Upload, Download, Plus, Trash2, CheckCircle } from 'lucide-react'
 
 interface EmployeeUploaderProps {

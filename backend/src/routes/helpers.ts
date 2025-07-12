@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { formatSuccessResponse, ApiError, ErrorType } from '../middleware/index.js';
+import { formatSuccessResponse, ApiError, ErrorType } from '@backend/middleware';
 
 /**
  * Generic route handler wrapper for consistent error handling and response formatting
@@ -177,7 +177,7 @@ export async function resolveCompanyId(value: any): Promise<string> {
     return raw;
   }
   // Lazy-load Supabase to avoid requiring DB config until used
-  const { supabase } = await import('../db/client.js');
+  const { supabase } = await import('@backend/db/client');
   const { data, error } = await supabase.from('companies').select('id').eq('name', raw).single();
   if (error || !data) {
     throw new ApiError(

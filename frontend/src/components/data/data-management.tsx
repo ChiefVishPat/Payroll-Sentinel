@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { api } from '@/lib/api'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@frontend/components/ui/card'
+import { Button } from '@frontend/components/ui/button'
+import { api } from '@frontend/lib/api'
 import { 
   Upload, 
   Database, 

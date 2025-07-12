@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { formatCurrency, formatDate, getRiskColor } from '@/lib/utils'
-import { api } from '@/lib/api'
-import { DashboardStats } from '@/types'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@frontend/components/ui/card'
+import { formatCurrency, formatDate, getRiskColor } from '@frontend/lib/utils'
+import { api } from '@frontend/lib/api'
+import { DashboardStats } from '@frontend/types'
 import { 
   DollarSign, 
   TrendingDown, 

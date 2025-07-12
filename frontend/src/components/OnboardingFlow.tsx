@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 import axios from 'axios';
-import { Company, PaySchedule, AccountBalance } from '../../../shared/types';
+import { Company, PaySchedule, AccountBalance } from '@frontend/shared/types';
 
 // Set up axios default config
 axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
