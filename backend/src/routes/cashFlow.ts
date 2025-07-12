@@ -9,11 +9,11 @@ import {
   formatPaginatedResponse,
   mapServiceError,
   resolveCompanyId
-} from './helpers.js';
-import { CashFlowAnalysisService } from '../services/cashflow.js';
-import { PlaidService } from '../services/plaid.js';
-import DatabaseCheckService from '../services/database/check.js';
-import { ApiError, ErrorType } from '../middleware/index.js';
+} from '@backend/routes/helpers';
+import { CashFlowAnalysisService } from '@backend/services/cashflow';
+import { PlaidService } from '@backend/services/plaid';
+import DatabaseCheckService from '@backend/services/database/check';
+import { ApiError, ErrorType } from '@backend/middleware';
 
 // Removed unused interface
 

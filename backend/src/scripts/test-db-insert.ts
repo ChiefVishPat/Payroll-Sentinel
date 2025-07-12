@@ -6,8 +6,8 @@
  * This script directly tests database insertion to identify the issue
  */
 
-import '../loadEnv.js';
-import { supabase } from '../db/client';
+import '@backend/loadEnv';
+import { supabase } from '@backend/db/client';
 
 async function testDatabaseInsert(): Promise<void> {
   console.log('🧪 Testing direct database insertion...\n');

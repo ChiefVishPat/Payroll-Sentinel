@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { usePlaidLink } from 'react-plaid-link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils'
-import { api } from '@/lib/api'
-import { BankAccount, Transaction } from '@/types'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@frontend/components/ui/card'
+import { Button } from '@frontend/components/ui/button'
+import { formatCurrency, formatDate, getStatusColor } from '@frontend/lib/utils'
+import { api } from '@frontend/lib/api'
+import { BankAccount, Transaction } from '@frontend/types'
 import { 
   CreditCard, 
   Building, 

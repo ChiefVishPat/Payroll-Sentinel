@@ -17,25 +17,6 @@ This guide explains how to upload and manage data in your Payroll Sentinel dashb
 
 ### Steps
 1. Go to **Data Management** → **Connect Accounts** tab
-2. Click **"Connect Bank Account"** under Production Connection
-3. Follow the Plaid Link flow:
-   - Select your bank from the list
-   - Enter your online banking credentials
-   - Select accounts to connect
-   - Verify micro-deposits (if required)
-
-### What Gets Connected
-- ✅ Account balances (checking, savings, credit)
-- ✅ Transaction history (last 24 months)
-- ✅ Account metadata (names, types, numbers)
-- ✅ Real-time balance updates
-
-### Supported Banks
-- Chase, Bank of America, Wells Fargo, Citi
-- 11,000+ financial institutions via Plaid
-- Business and personal accounts
-- Credit cards and lines of credit
-
 ## 👥 Uploading Employee Data
 
 ### Manual Entry

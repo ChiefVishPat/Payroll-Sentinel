@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import { Company } from '../types/shared';
-import { CheckService } from '../services/check.js';
+import { Company } from '@shared/types';
+import { CheckService } from '@backend/services/check';
 
 /**
  * Registers company-related routes.

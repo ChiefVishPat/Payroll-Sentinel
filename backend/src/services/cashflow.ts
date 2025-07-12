@@ -5,10 +5,10 @@
  * to provide comprehensive cash flow analysis and risk assessment.
  */
 
-import { BaseService, ServiceResponse, ServiceConfig } from './base';
-import { PlaidService } from './plaid';
-import { CheckService } from './check';
-import { SlackService } from './slack';
+import { BaseService, ServiceResponse, ServiceConfig } from '@backend/services/base';
+import { PlaidService } from '@backend/services/plaid';
+import { CheckService } from '@backend/services/check';
+import { SlackService } from '@backend/services/slack';
 import {
   RiskAssessment,
   PayrollObligation,
@@ -18,7 +18,7 @@ import {
   generateRiskSummary,
   formatCurrency,
   RiskLevel,
-} from '../utils/risk';
+} from '@backend/utils/risk';
 
 export interface CashFlowConfig extends ServiceConfig {
   // Configuration for cash flow analysis

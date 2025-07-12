@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { FastifyInstance } from 'fastify';
-import { supabase } from '../db/client';
-import { PlaidService } from '../services/plaid';
+import { supabase } from '@backend/db/client';
+import { PlaidService } from '@backend/services/plaid';
 
 // Simple in-memory store for access tokens (for demo purposes)
 const accessTokens = new Map<string, string>();

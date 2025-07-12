@@ -7,8 +7,8 @@
  * Run with: npm run verify-supabase
  */
 
-import '../loadEnv.js';
-import { db } from '../db/client';
+import '@backend/loadEnv';
+import { db } from '@backend/db/client';
 
 // ANSI color codes for console output
 const colors = {
