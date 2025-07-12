@@ -37,7 +37,7 @@ const server = fastify({
 async function registerPlugins() {
   // CORS
   await server.register(cors, {
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    origin: (origin: string | undefined, callback: () => void) => {
       // Allow requests with no origin (like mobile apps or curl)
       if (!origin) {
         callback(null, true);
@@ -75,7 +75,7 @@ async function registerPlugins() {
 // Register routes
 async function registerRoutes() {
   // Root route
-  server.get('/', async (_request, _reply) => {
+  server.get('/', async () => {
     return {
       message: 'Payroll Sentinel API - Plaid Link MVP',
       version: '1.0.0',
