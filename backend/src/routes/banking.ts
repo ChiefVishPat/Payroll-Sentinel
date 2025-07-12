@@ -2,7 +2,8 @@
 import { FastifyInstance } from 'fastify';
 import { supabase } from '@backend/db/client';
 import { PlaidService } from '@backend/services/plaid';
-import { resolveCompanyId } from './helpers.js';
+import { handleRoute, resolveCompanyId } from '@backend/routes/helpers';
+import type { BankAccount } from '@shared/types';
 
 // Simple in-memory store for access tokens (for demo purposes)
 const accessTokens = new Map<string, string>();
@@ -122,6 +123,46 @@ async function bankingRoutes(fastify: FastifyInstance) {
     accessTokens.set(itemId, accessToken);
     return reply.send({ success: true, itemId, accessToken });
   });
+
+  /**
+   * Fetch active bank accounts for a company
+   * @route GET /api/banking/accounts
+   * @param request.query.companyId - Unique company identifier
+   */
+  fastify.get(
+    '/banking/accounts',
+    handleRoute(async (request, _reply) => {
+      const query = request.query as any;
+      const companyId = await resolveCompanyId(query.companyId);
+      fastify.log.info(`Fetching bank accounts for company ${companyId}`);
+
+      const { data, error } = await supabase
+        .from('bank_accounts')
+        .select('*')
+        .eq('company_id', companyId)
+        .eq('is_active', true);
+
+      if (error) {
+        fastify.log.error('Failed to fetch bank accounts:', error);
+        throw error;
+      }
+
+      const accounts: BankAccount[] = (data || []).map((row: any) => ({
+        id: row.id,
+        company_id: row.company_id,
+        plaid_account_id: row.plaid_account_id,
+        account_name: row.account_name,
+        account_type: row.account_type,
+        account_subtype: row.account_subtype,
+        institution_name: row.institution_name,
+        is_active: row.is_active,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      }));
+
+      return accounts;
+    })
+  );
   
   /**
    * Simulate a sandbox transaction (deposit or withdrawal)
