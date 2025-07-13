@@ -64,11 +64,11 @@ export interface PayrollEntry {
 export interface Employee {
   id: string
   name: string
-  position: string
+  title: string
   salary: number
   status: 'active' | 'inactive'
-  startDate: string
-  department: string
+  startDate?: string
+  department?: string
 }
 
 export interface BankAccount {
