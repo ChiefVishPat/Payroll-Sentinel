@@ -7,7 +7,8 @@ import { formatCurrency, formatDate, getStatusColor } from '@frontend/lib/utils'
 import { api, apiClient } from '@frontend/lib/api'
 import { useCompany } from '@frontend/context/CompanyContext'
 import CompanySelector from '@frontend/components/CompanySelector'
-import { PayrollRun, Employee } from '@frontend/types'
+import { PayrollRun } from '@frontend/types'
+import type { Employee } from '@frontend/shared/types'
 import {
   Users,
   DollarSign,
@@ -86,196 +87,286 @@ export default function PayrollDashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-[#EAEAEA]">Payroll</h1>
-          <p className="text-[#B0B0B0]">Manage payroll runs and employees</p>
-        </div>
-        <div className="flex gap-2">
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <span className="text-xl">➕</span> Add Employee
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">Add Employee</h2>
-                <DialogClose asChild>
-                  <Button variant="ghost" size="sm">Close</Button>
-                </DialogClose>
+      <div className="space-y-6">
+          <div className="flex justify-between items-center">
+              <div>
+                  <h1 className="text-2xl font-bold text-[#EAEAEA]">Payroll</h1>
+                  <p className="text-[#B0B0B0]">
+                      Manage payroll runs and employees
+                  </p>
               </div>
-              <p className="text-sm text-[#B0B0B0]">TODO: employee form goes here.</p>
-            </DialogContent>
-          </Dialog>
-          <Button onClick={refreshData} className="flex items-center gap-2">
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
-        </div>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="dark:bg-gray-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {summary?.totalEmployees || 0}
-            </div>
-            <p className="text-xs text-[#B0B0B0] mt-1">Total employees</p>
-          </CardContent>
-        </Card>
-
-        <Card className="dark:bg-gray-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Payroll</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {summary ? formatCurrency(summary.monthlyPayroll) : '$0'}
-            </div>
-            <p className="text-xs text-[#B0B0B0] mt-1">
-              Total monthly cost
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="dark:bg-gray-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Next Payroll</CardTitle>
-            <Calendar className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {summary?.nextPayroll ? formatDate(summary.nextPayroll) : 'Not scheduled'}
-            </div>
-            <p className="text-xs text-[#B0B0B0] mt-1">
-              Scheduled date
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="dark:bg-gray-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Runs</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
-              {summary?.pendingRuns ?? 0}
-            </div>
-            <p className="text-xs text-[#B0B0B0] mt-1">
-              Awaiting approval
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Payroll Runs */}
-      <Card className="dark:bg-gray-800">
-        <CardHeader>
-          <CardTitle>Payroll Runs</CardTitle>
-          <CardDescription>
-            Recent and upcoming payroll runs
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {(payrollRuns?.data || []).length === 0 ? (
-              <div className="text-center py-8 text-[#B0B0B0]">
-                No payroll runs found
+              <div className="flex gap-2">
+                  <Dialog open={open} onOpenChange={setOpen}>
+                      <DialogTrigger asChild>
+                          <Button className="flex items-center gap-2">
+                              <span className="text-xl">➕</span> Add Employee
+                          </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                          <div className="flex justify-between items-center mb-4">
+                              <h2 className="text-lg font-semibold">
+                                  Add Employee
+                              </h2>
+                              <DialogClose asChild>
+                                  <Button variant="ghost" size="sm">
+                                      Close
+                                  </Button>
+                              </DialogClose>
+                          </div>
+                          <p className="text-sm text-[#B0B0B0]">
+                              TODO: employee form goes here.
+                          </p>
+                          <form
+                              onSubmit={async (e) => {
+                                  e.preventDefault();
+                                  const formData = new FormData(
+                                      e.currentTarget
+                                  );
+                                  await api.payroll.addEmployee({
+                                      companyId,
+                                      name: formData.get('name'),
+                                      title: formData.get('title'),
+                                      salary: Number(
+                                          formData.get('salary') || 0
+                                      ),
+                                      status: formData.get('status'),
+                                  });
+                                  await Promise.all([mutEmp(), mutSum()]);
+                                  setOpen(false);
+                                  e.currentTarget.reset();
+                              }}
+                              className="space-y-4">
+                              <input
+                                  name="name"
+                                  placeholder="Name"
+                                  className="w-full border p-2 rounded"
+                                  required
+                              />
+                              <input
+                                  name="title"
+                                  placeholder="Title"
+                                  className="w-full border p-2 rounded"
+                                  required
+                              />
+                              <input
+                                  name="salary"
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="Salary"
+                                  className="w-full border p-2 rounded"
+                                  required
+                              />
+                              <select
+                                  name="status"
+                                  className="w-full border p-2 rounded">
+                                  <option value="active">active</option>
+                                  <option value="inactive">inactive</option>
+                              </select>
+                              <Button type="submit">Save</Button>
+                          </form>
+                      </DialogContent>
+                  </Dialog>
+                  <Button
+                      onClick={refreshData}
+                      className="flex items-center gap-2">
+                      <RefreshCw className="h-4 w-4" />
+                      Refresh
+                  </Button>
               </div>
-            ) : (
-              (payrollRuns?.data || []).map((run: PayrollRun) => (
-                <div key={run.id} className="flex items-center justify-between p-4 border rounded">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className={`px-2 py-1 text-xs rounded ${getStatusColor(run.status)}`}>
-                        {run.status}
+          </div>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card className="dark:bg-gray-800">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                          Total Employees
+                      </CardTitle>
+                      <Users className="h-4 w-4 text-blue-600" />
+                  </CardHeader>
+                  <CardContent>
+                      <div className="text-2xl font-bold text-blue-600">
+                          {summary?.totalEmployees || 0}
                       </div>
-                      <div className="font-medium">{run.payPeriod}</div>
-                    </div>
-                    <div className="text-sm text-[#B0B0B0]">
-                      {formatCurrency(run.totalAmount)} for {run.employeeCount} employees
-                    </div>
-                    <div className="text-xs text-[#B0B0B0] mt-1">
-                      Scheduled: {formatDate(run.scheduledDate)}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 ml-4">
-                    {run.status === 'pending' && (
-                      <Button
-                        size="sm"
-                        onClick={() => approvePayroll(run.id)}
-                        className="flex items-center gap-1"
-                      >
-                        <CheckCircle className="h-4 w-4" />
-                        Approve
-                      </Button>
-                    )}
-                    {run.status === 'approved' && (
-                      <Button
-                        size="sm"
-                        onClick={() => processPayroll(run.id)}
-                        className="flex items-center gap-1"
-                      >
-                        <Play className="h-4 w-4" />
-                        Process
-                      </Button>
-                    )}
-                    {run.status === 'processed' && (
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                      <p className="text-xs text-[#B0B0B0] mt-1">
+                          Total employees
+                      </p>
+                  </CardContent>
+              </Card>
 
-      {/* Employee List */}
-      <Card className="dark:bg-gray-800">
-        <CardHeader>
-          <CardTitle>Employees</CardTitle>
-          <CardDescription>
-            Active employee roster
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {(employees?.data || []).length === 0 ? (
-              <div className="text-center py-8 text-[#B0B0B0]">
-                No employees found
-              </div>
-            ) : (
-              (employees?.data || []).map((employee: Employee) => (
-                <div key={employee.id} className="flex items-center justify-between p-3 bg-[#2C2C2C] rounded">
-                  <div className="flex-1">
-                    <div className="font-medium">{employee.name}</div>
-                    <div className="text-sm text-[#B0B0B0]">{employee.position}</div>
-                    <div className="text-xs text-[#B0B0B0]">
-                      {employee.department} • Started {formatDate(employee.startDate)}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold">{formatCurrency(employee.salary)}</div>
-                    <div className={`text-sm px-2 py-1 rounded ${getStatusColor(employee.status)}`}>
-                      {employee.status}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
+              <Card className="dark:bg-gray-800">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                          Monthly Payroll
+                      </CardTitle>
+                      <DollarSign className="h-4 w-4 text-green-600" />
+                  </CardHeader>
+                  <CardContent>
+                      <div className="text-2xl font-bold text-green-600">
+                          {summary
+                              ? formatCurrency(summary.monthlyPayroll)
+                              : '$0'}
+                      </div>
+                      <p className="text-xs text-[#B0B0B0] mt-1">
+                          Total monthly cost
+                      </p>
+                  </CardContent>
+              </Card>
+
+              <Card className="dark:bg-gray-800">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                          Next Payroll
+                      </CardTitle>
+                      <Calendar className="h-4 w-4 text-purple-600" />
+                  </CardHeader>
+                  <CardContent>
+                      <div className="text-2xl font-bold text-purple-600">
+                          {summary?.nextPayroll
+                              ? formatDate(summary.nextPayroll)
+                              : 'Not scheduled'}
+                      </div>
+                      <p className="text-xs text-[#B0B0B0] mt-1">
+                          Scheduled date
+                      </p>
+                  </CardContent>
+              </Card>
+
+              <Card className="dark:bg-gray-800">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                          Pending Runs
+                      </CardTitle>
+                      <Clock className="h-4 w-4 text-yellow-600" />
+                  </CardHeader>
+                  <CardContent>
+                      <div className="text-2xl font-bold text-yellow-600">
+                          {summary?.pendingRuns ?? 0}
+                      </div>
+                      <p className="text-xs text-[#B0B0B0] mt-1">
+                          Awaiting approval
+                      </p>
+                  </CardContent>
+              </Card>
           </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
+
+          {/* Payroll Runs */}
+          <Card className="dark:bg-gray-800">
+              <CardHeader>
+                  <CardTitle>Payroll Runs</CardTitle>
+                  <CardDescription>
+                      Recent and upcoming payroll runs
+                  </CardDescription>
+              </CardHeader>
+              <CardContent>
+                  <div className="space-y-4">
+                      {(payrollRuns?.data || []).length === 0 ? (
+                          <div className="text-center py-8 text-[#B0B0B0]">
+                              No payroll runs found
+                          </div>
+                      ) : (
+                          (payrollRuns?.data || []).map((run: PayrollRun) => (
+                              <div
+                                  key={run.id}
+                                  className="flex items-center justify-between p-4 border rounded">
+                                  <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                          <div
+                                              className={`px-2 py-1 text-xs rounded ${getStatusColor(run.status)}`}>
+                                              {run.status}
+                                          </div>
+                                          <div className="font-medium">
+                                              {run.payPeriod}
+                                          </div>
+                                      </div>
+                                      <div className="text-sm text-[#B0B0B0]">
+                                          {formatCurrency(run.totalAmount)} for{' '}
+                                          {run.employeeCount} employees
+                                      </div>
+                                      <div className="text-xs text-[#B0B0B0] mt-1">
+                                          Scheduled:{' '}
+                                          {formatDate(run.scheduledDate)}
+                                      </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 ml-4">
+                                      {run.status === 'pending' && (
+                                          <Button
+                                              size="sm"
+                                              onClick={() =>
+                                                  approvePayroll(run.id)
+                                              }
+                                              className="flex items-center gap-1">
+                                              <CheckCircle className="h-4 w-4" />
+                                              Approve
+                                          </Button>
+                                      )}
+                                      {run.status === 'approved' && (
+                                          <Button
+                                              size="sm"
+                                              onClick={() =>
+                                                  processPayroll(run.id)
+                                              }
+                                              className="flex items-center gap-1">
+                                              <Play className="h-4 w-4" />
+                                              Process
+                                          </Button>
+                                      )}
+                                      {run.status === 'processed' && (
+                                          <CheckCircle className="h-5 w-5 text-green-600" />
+                                      )}
+                                  </div>
+                              </div>
+                          ))
+                      )}
+                  </div>
+              </CardContent>
+          </Card>
+
+          {/* Employee List */}
+          <Card className="dark:bg-gray-800">
+              <CardHeader>
+                  <CardTitle>Employees</CardTitle>
+                  <CardDescription>Active employee roster</CardDescription>
+              </CardHeader>
+              <CardContent>
+                  <div className="space-y-4">
+                      {(employees?.data || []).length === 0 ? (
+                          <div className="text-center py-8 text-[#B0B0B0]">
+                              No employees found
+                          </div>
+                      ) : (
+                          (employees?.data || []).map((employee: Employee) => (
+                              <div
+                                  key={employee.id}
+                                  className="flex items-center justify-between p-3 bg-[#2C2C2C] rounded">
+                                  <div className="flex-1">
+                                      <div className="font-medium">
+                                          {employee.name}
+                                      </div>
+                                      <div className="text-sm text-[#B0B0B0]">
+                                          {employee.position}
+                                      </div>
+                                      <div className="text-xs text-[#B0B0B0]">
+                                          {employee.department || 'General'} •
+                                          Started{' '}
+                                          {formatDate(employee.start_date)}
+                                      </div>
+                                  </div>
+                                  <div className="text-right">
+                                      <div className="font-semibold">
+                                          {formatCurrency(employee.salary)}
+                                      </div>
+                                      <div
+                                          className={`text-sm px-2 py-1 rounded ${getStatusColor(employee.status)}`}>
+                                          {employee.status}
+                                      </div>
+                                  </div>
+                              </div>
+                          ))
+                      )}
+                  </div>
+              </CardContent>
+          </Card>
+      </div>
+  );
 }

@@ -6,6 +6,7 @@
  * business logic for demonstration purposes.
  */
 
+import { any } from 'zod';
 import { BaseService, ServiceResponse, ServiceConfig } from './base';
 
 // Check-specific types and interfaces

@@ -49,4 +49,14 @@ export interface AccessTokenResponse {
     itemId: string;
     requestId: string;
 }
+export interface Employee {
+    id: string;
+    company_id: string;
+    name: string;
+    title: string;
+    salary: number;
+    status: string;
+    created_at?: string;
+    updated_at?: string;
+}
 //# sourceMappingURL=types.d.ts.map

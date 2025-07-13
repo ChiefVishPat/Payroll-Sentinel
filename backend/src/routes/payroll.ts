@@ -24,6 +24,8 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
             title text,
             salary numeric,
             status text,
+            department text,
+            start_date date,
             created_at timestamp with time zone default now(),
             updated_at timestamp with time zone default now()
           );`
@@ -31,6 +33,32 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
         fs.appendFileSync(
           'backend/logs/SCHEMA_CHANGES.md',
           `- ${new Date().toISOString()} created employees table\n`
+        )
+      }
+    }
+    try {
+      await supabase.from('employees').select('department').limit(1)
+    } catch (err: any) {
+      if (err?.message?.includes('column') || err?.code === '42703') {
+        await supabase.rpc('execute_sql', {
+          sql: 'alter table employees add column if not exists department text;'
+        })
+        fs.appendFileSync(
+          'backend/logs/SCHEMA_CHANGES.md',
+          `- ${new Date().toISOString()} added employees.department column\n`
+        )
+      }
+    }
+    try {
+      await supabase.from('employees').select('start_date').limit(1)
+    } catch (err: any) {
+      if (err?.message?.includes('column') || err?.code === '42703') {
+        await supabase.rpc('execute_sql', {
+          sql: 'alter table employees add column if not exists start_date date;'
+        })
+        fs.appendFileSync(
+          'backend/logs/SCHEMA_CHANGES.md',
+          `- ${new Date().toISOString()} added employees.start_date column\n`
         )
       }
     }
@@ -200,6 +228,42 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
     } catch (err) {
       fastify.log.error({ mod: 'Payroll' }, 'employees error %o', err)
       return reply.status(500).send({ error: 'failed to fetch employees' })
+    }
+  })
+
+  /**
+   * Add a new employee
+   * @route POST /api/payroll/employees
+   */
+  fastify.post('/payroll/employees', async (request, reply) => {
+    const {
+      companyId,
+      name,
+      title,
+      salary,
+      status,
+      department,
+      startDate,
+    } = request.body as any
+
+    await ensureSchema()
+
+    try {
+      const { error } = await supabase.from('employees').insert({
+        company_id: companyId,
+        name,
+        title,
+        salary,
+        status,
+        department,
+        start_date: startDate,
+      })
+      if (error) throw error
+      fastify.log.info({ mod: 'Payroll' }, 'employee added')
+      await reply.send({ success: true })
+    } catch (err) {
+      fastify.log.error({ mod: 'Payroll' }, 'add employee error %o', err)
+      return reply.status(500).send({ error: 'failed to add employee' })
     }
   })
 }
