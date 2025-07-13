@@ -11,11 +11,7 @@ import {
   PlaidService,
   CheckService,
   SlackService,
-<<<<<<< HEAD:backend/src/test/services/index.test.ts
 } from '@backend/services';
-=======
-} from '@backend/services/index';
->>>>>>> vp/clean-up-and-reorganize-codebase:tests/backend/services/index.test.ts
 
 // Mock environment variables
 const mockEnv = {
