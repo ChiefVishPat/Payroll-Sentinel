@@ -24,6 +24,7 @@ import { useState } from 'react'
 export default function PayrollDashboard() {
   const { companyId } = useCompany()
   const [open, setOpen] = useState(false)
+  const [scheduleOpen, setScheduleOpen] = useState(false)
 
   if (!companyId) {
     return <CompanySelector />
@@ -66,6 +67,15 @@ export default function PayrollDashboard() {
       await mutRuns()
     } catch (error) {
       console.error('Error processing payroll:', error)
+    }
+  }
+
+  const schedulePayroll = async (data: { frequency: string; firstPayday: string }) => {
+    try {
+      await api.payroll.schedulePayroll({ companyId, ...data })
+      await mutSum()
+    } catch (err) {
+      console.error('Schedule payroll failed', err)
     }
   }
 
@@ -160,6 +170,48 @@ export default function PayrollDashboard() {
                 </select>
                 <Button type="submit">Save</Button>
               </form>
+          </DialogContent>
+        </Dialog>
+        <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" /> Schedule
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">Create Pay Schedule</h2>
+              <DialogClose asChild>
+                <Button variant="ghost" size="sm">Close</Button>
+              </DialogClose>
+            </div>
+            <form
+              onSubmit={async e => {
+                e.preventDefault()
+                const formData = new FormData(e.currentTarget)
+                await schedulePayroll({
+                  frequency: String(formData.get('frequency')),
+                  firstPayday: String(formData.get('firstPayday')),
+                })
+                setScheduleOpen(false)
+                e.currentTarget.reset()
+              }}
+              className="space-y-4"
+            >
+              <select name="frequency" className="w-full border p-2 rounded">
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Biweekly</option>
+                <option value="semimonthly">Semimonthly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+              <input
+                name="firstPayday"
+                type="date"
+                className="w-full border p-2 rounded"
+                required
+              />
+              <Button type="submit">Save</Button>
+            </form>
           </DialogContent>
         </Dialog>
         <Button onClick={runPayroll} className="flex items-center gap-2">

@@ -39,6 +39,30 @@ CREATE TABLE payroll_runs (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Employees table
+CREATE TABLE employees (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    name TEXT,
+    title TEXT,
+    salary NUMERIC,
+    status TEXT,
+    department TEXT,
+    start_date DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Pay schedules table
+CREATE TABLE pay_schedules (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    frequency TEXT,
+    next_run_date DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Balance snapshots table
 CREATE TABLE balance_snapshots (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -86,6 +110,8 @@ CREATE INDEX idx_bank_accounts_company_id ON bank_accounts(company_id);
 CREATE INDEX idx_bank_accounts_plaid_account_id ON bank_accounts(plaid_account_id);
 CREATE INDEX idx_payroll_runs_company_id ON payroll_runs(company_id);
 CREATE INDEX idx_payroll_runs_pay_date ON payroll_runs(pay_date);
+CREATE INDEX idx_employees_company_id ON employees(company_id);
+CREATE INDEX idx_pay_schedules_company_id ON pay_schedules(company_id);
 CREATE INDEX idx_balance_snapshots_bank_account_id ON balance_snapshots(bank_account_id);
 CREATE INDEX idx_balance_snapshots_snapshot_date ON balance_snapshots(snapshot_date);
 CREATE INDEX idx_risk_assessments_company_id ON risk_assessments(company_id);
@@ -97,6 +123,8 @@ CREATE INDEX idx_alerts_sent_at ON alerts(sent_at);
 ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bank_accounts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payroll_runs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pay_schedules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE balance_snapshots ENABLE ROW LEVEL SECURITY;
 ALTER TABLE risk_assessments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE alerts ENABLE ROW LEVEL SECURITY;
@@ -106,6 +134,8 @@ ALTER TABLE alerts ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all operations for now" ON companies FOR ALL USING (true);
 CREATE POLICY "Allow all operations for now" ON bank_accounts FOR ALL USING (true);
 CREATE POLICY "Allow all operations for now" ON payroll_runs FOR ALL USING (true);
+CREATE POLICY "Allow all operations for now" ON employees FOR ALL USING (true);
+CREATE POLICY "Allow all operations for now" ON pay_schedules FOR ALL USING (true);
 CREATE POLICY "Allow all operations for now" ON balance_snapshots FOR ALL USING (true);
 CREATE POLICY "Allow all operations for now" ON risk_assessments FOR ALL USING (true);
 CREATE POLICY "Allow all operations for now" ON alerts FOR ALL USING (true);
@@ -126,4 +156,10 @@ CREATE TRIGGER update_bank_accounts_updated_at BEFORE UPDATE ON bank_accounts
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_payroll_runs_updated_at BEFORE UPDATE ON payroll_runs
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_employees_updated_at BEFORE UPDATE ON employees
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_pay_schedules_updated_at BEFORE UPDATE ON pay_schedules
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

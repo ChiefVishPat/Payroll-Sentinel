@@ -304,5 +304,95 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
       return reply.status(500).send({ error: 'failed to add employee' })
     }
   })
+
+  /**
+   * Approve a payroll run
+   * @route POST /api/payroll/runs/:runId/approve
+   */
+  fastify.post('/payroll/runs/:runId/approve', async (request, reply) => {
+    const { runId } = request.params as { runId: string }
+    const { companyId } = request.body as { companyId: string }
+
+    try {
+      const { error } = await supabase
+        .from('payroll_runs')
+        .update({ status: 'approved' })
+        .eq('id', runId)
+        .eq('company_id', companyId)
+
+      if (error) throw error
+      fastify.log.info({ mod: 'Payroll' }, 'run approved')
+      return reply.send({ success: true })
+    } catch (err) {
+      fastify.log.error({ mod: 'Payroll' }, 'approve run error %o', err)
+      return reply.status(500).send({ error: 'failed to approve run' })
+    }
+  })
+
+  /**
+   * Process a payroll run
+   * @route POST /api/payroll/runs/:runId/process
+   */
+  fastify.post('/payroll/runs/:runId/process', async (request, reply) => {
+    const { runId } = request.params as { runId: string }
+    const { companyId } = request.body as { companyId: string }
+
+    try {
+      const { error } = await supabase
+        .from('payroll_runs')
+        .update({ status: 'processed' })
+        .eq('id', runId)
+        .eq('company_id', companyId)
+
+      if (error) throw error
+      fastify.log.info({ mod: 'Payroll' }, 'run processed')
+      return reply.send({ success: true })
+    } catch (err) {
+      fastify.log.error({ mod: 'Payroll' }, 'process run error %o', err)
+      return reply.status(500).send({ error: 'failed to process run' })
+    }
+  })
+
+  /**
+   * Get upcoming payroll info
+   * @route GET /api/payroll/upcoming
+   */
+  fastify.get('/payroll/upcoming', async (request, reply) => {
+    const { companyId } = request.query as { companyId: string }
+    try {
+      const result = await checkService.getNextPayroll(companyId)
+      if (!result.success || !result.data) {
+        throw result.error || new Error('failed')
+      }
+      return reply.send(result.data)
+    } catch (err) {
+      fastify.log.error({ mod: 'Payroll' }, 'upcoming error %o', err)
+      return reply.status(500).send({ error: 'failed to fetch upcoming payroll' })
+    }
+  })
+
+  /**
+   * Basic payroll stats
+   * @route GET /api/payroll/stats
+   */
+  fastify.get('/payroll/stats', async (request, reply) => {
+    const { companyId } = request.query as { companyId: string }
+    try {
+      const { data: emp } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('company_id', companyId)
+
+      const { data: runs } = await supabase
+        .from('payroll_runs')
+        .select('id')
+        .eq('company_id', companyId)
+
+      return reply.send({ employeeCount: emp?.length || 0, runCount: runs?.length || 0 })
+    } catch (err) {
+      fastify.log.error({ mod: 'Payroll' }, 'stats error %o', err)
+      return reply.status(500).send({ error: 'failed to fetch stats' })
+    }
+  })
 }
 

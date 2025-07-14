@@ -206,6 +206,69 @@ export interface Database {
           message_content?: string | null;
           sent_at?: string;
           created_at?: string;
+      };
+      employees: {
+        Row: {
+          id: string;
+          company_id: string;
+          name: string | null;
+          title: string | null;
+          salary: number | null;
+          status: string | null;
+          department: string | null;
+          start_date: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          name?: string | null;
+          title?: string | null;
+          salary?: number | null;
+          status?: string | null;
+          department?: string | null;
+          start_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          name?: string | null;
+          title?: string | null;
+          salary?: number | null;
+          status?: string | null;
+          department?: string | null;
+          start_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      pay_schedules: {
+        Row: {
+          id: string;
+          company_id: string;
+          frequency: string | null;
+          next_run_date: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          frequency?: string | null;
+          next_run_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          frequency?: string | null;
+          next_run_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
       };
     };

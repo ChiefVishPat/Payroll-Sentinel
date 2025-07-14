@@ -80,6 +80,7 @@ export const api = {
     getEmployees: (companyId: string = 'demo-company') => apiClient.get(`/api/payroll/employees?companyId=${companyId}`),
     getSummary: (companyId: string = 'demo-company') => apiClient.get(`/api/payroll/summary?companyId=${companyId}`),
     addEmployee: (data: Record<string, unknown>) => apiClient.post('/api/payroll/employees', data),
+    schedulePayroll: (data: Record<string, unknown>) => apiClient.post('/api/pay-schedule', data),
     runPayroll: (data: Record<string, unknown>) => apiClient.post('/api/payroll/run', data),
     getUpcoming: (companyId: string = 'demo-company') => apiClient.get(`/api/payroll/upcoming?companyId=${companyId}`),
     getStats: (companyId: string = 'demo-company') => apiClient.get(`/api/payroll/stats?companyId=${companyId}`),
