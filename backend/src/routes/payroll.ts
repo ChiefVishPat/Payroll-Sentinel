@@ -35,7 +35,8 @@ async function ensureSchema(fastify: FastifyInstance): Promise<void> {
       );`;
 
     const { error: createError } = await supabase.rpc('execute_sql', {
-      sql: createTableSQL,
+      query: createTableSQL,
+      params: [],
     });
 
     if (createError) {
@@ -54,7 +55,8 @@ async function ensureSchema(fastify: FastifyInstance): Promise<void> {
     .limit(1);
   if (deptError?.code === '42703') {
     const { error: alterError } = await supabase.rpc('execute_sql', {
-      sql: 'ALTER TABLE employees ADD COLUMN department text;'
+      query: 'ALTER TABLE employees ADD COLUMN department text;',
+      params: [],
     });
     if (alterError) fastify.log.error('Failed to add department column', alterError);
   }
@@ -66,7 +68,8 @@ async function ensureSchema(fastify: FastifyInstance): Promise<void> {
     .limit(1);
   if (startDateError?.code === '42703') {
     const { error: alterError } = await supabase.rpc('execute_sql', {
-      sql: 'ALTER TABLE employees ADD COLUMN start_date date;'
+      query: 'ALTER TABLE employees ADD COLUMN start_date date;',
+      params: [],
     });
     if (alterError) fastify.log.error('Failed to add start_date column', alterError);
   }
@@ -114,7 +117,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
       payScheduleId?: string;
     };
 
-    await ensureSchema();
+    await ensureSchema(fastify);
 
     try {
       let scheduleId = payScheduleId;
@@ -182,11 +185,11 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
   fastify.get('/payroll/summary', async (request, reply) => {
     const start = Date.now()
     const { companyId } = request.query as { companyId: string }
-    await ensureSchema()
+    await ensureSchema(fastify)
     try {
       const { data: empRows } = await supabase
         .from('employees')
-        .select('salary')
+        .select('annual_salary')
         .eq('company_id', companyId)
 
       const { data: scheduleRows } = await supabase
@@ -203,7 +206,8 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
 
       const totalEmployees = empRows?.length || 0
       const monthlyPayroll =
-        (empRows?.reduce((t, e) => t + Number(e.salary || 0), 0) || 0) / 12
+        (empRows?.reduce((t, e) => t + Number(e.annual_salary || 0), 0) || 0) /
+        12
       const nextPayroll = scheduleRows?.[0]?.next_run_date || null
       const pendingRuns = runRows?.filter(r => r.status === 'pending').length || 0
 
@@ -221,7 +225,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/payroll/runs', async (request, reply) => {
     const { companyId } = request.query as { companyId: string }
-    await ensureSchema()
+    await ensureSchema(fastify)
     try {
       const { data, error } = await supabase
         .from('payroll_runs')
@@ -243,7 +247,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/payroll/employees', async (request, reply) => {
     const { companyId } = request.query as { companyId: string }
-    await ensureSchema()
+    await ensureSchema(fastify)
     try {
       const { data, error } = await supabase
         .from('employees')
@@ -251,8 +255,20 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
         .eq('company_id', companyId)
         .order('created_at', { ascending: true })
       if (error) throw error
+
+      // Map database columns to the simplified front-end shape
+      const transformed = (data || []).map(row => ({
+        id: row.id,
+        name: `${row.first_name} ${row.last_name}`.trim(),
+        title: row.department || '',
+        salary: Number(row.annual_salary || 0),
+        status: row.is_active ? 'active' : 'inactive',
+        department: row.department,
+        start_date: row.start_date,
+      }))
+
       fastify.log.info({ mod: 'Payroll' }, 'employees fetched')
-      return reply.send({ data })
+      return reply.send({ data: transformed })
     } catch (err) {
       fastify.log.error({ mod: 'Payroll' }, 'employees error %o', err)
       return reply.status(500).send({ error: 'failed to fetch employees' })
@@ -261,6 +277,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
 
   /**
    * Add a new employee
+   * Maps simple front-end fields to the database schema
    * @route POST /api/payroll/employees
    */
   fastify.post('/payroll/employees', async (request, reply) => {
@@ -274,17 +291,23 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
       startDate,
     } = request.body as any
 
-    await ensureSchema()
+    await ensureSchema(fastify)
 
     try {
+      const [firstName, ...rest] = String(name || '').trim().split(' ')
+      const lastName = rest.join(' ') || ''
+      const email = `${firstName.toLowerCase()}.${lastName.toLowerCase() || 'user'}@example.com`
+
       const { error } = await supabase.from('employees').insert({
         company_id: companyId,
-        name,
-        title,
-        salary,
-        status,
-        department,
-        start_date: startDate,
+        employee_number: `emp_${Date.now()}`,
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        department: department || title,
+        annual_salary: salary,
+        is_active: String(status) !== 'inactive',
+        start_date: startDate || null,
       })
       if (error) throw error
       fastify.log.info({ mod: 'Payroll' }, 'employee added')
