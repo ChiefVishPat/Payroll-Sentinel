@@ -16,7 +16,6 @@ interface Employee {
   position: string
   department: string
   salary: number
-  startDate: string
   status: 'active' | 'inactive'
 }
 
@@ -28,7 +27,6 @@ export default function EmployeeUploader({ onSuccess }: EmployeeUploaderProps) {
       position: '',
       department: '',
       salary: 0,
-      startDate: '',
       status: 'active'
     }
   ])
@@ -42,7 +40,6 @@ export default function EmployeeUploader({ onSuccess }: EmployeeUploaderProps) {
       position: '',
       department: '',
       salary: 0,
-      startDate: '',
       status: 'active'
     }])
   }
@@ -65,7 +62,6 @@ export default function EmployeeUploader({ onSuccess }: EmployeeUploaderProps) {
         position: 'Software Engineer',
         department: 'Engineering',
         salary: 85000,
-        startDate: '2024-01-15',
         status: 'active'
       },
       {
@@ -74,7 +70,6 @@ export default function EmployeeUploader({ onSuccess }: EmployeeUploaderProps) {
         position: 'Product Manager',
         department: 'Product',
         salary: 95000,
-        startDate: '2024-02-01',
         status: 'active'
       },
       {
@@ -83,7 +78,6 @@ export default function EmployeeUploader({ onSuccess }: EmployeeUploaderProps) {
         position: 'UX Designer',
         department: 'Design',
         salary: 75000,
-        startDate: '2024-03-10',
         status: 'active'
       },
       {
@@ -92,7 +86,6 @@ export default function EmployeeUploader({ onSuccess }: EmployeeUploaderProps) {
         position: 'Marketing Manager',
         department: 'Marketing',
         salary: 70000,
-        startDate: '2024-01-20',
         status: 'active'
       }
     ]
@@ -129,7 +122,7 @@ export default function EmployeeUploader({ onSuccess }: EmployeeUploaderProps) {
   }
 
   const downloadTemplate = () => {
-    const csvHeaders = 'Name,Email,Position,Department,Salary,Start Date,Status\n'
+    const csvHeaders = 'Name,Email,Position,Department,Salary,Status\n'
     const csvContent = csvHeaders + 
       'John Doe,john@company.com,Software Engineer,Engineering,85000,2024-01-15,active\n' +
       'Jane Smith,jane@company.com,Product Manager,Product,95000,2024-02-01,active'
@@ -238,16 +231,6 @@ export default function EmployeeUploader({ onSuccess }: EmployeeUploaderProps) {
                   onChange={(e) => updateEmployee(index, 'salary', parseFloat(e.target.value) || 0)}
                   className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
                   placeholder="65000"
-                />
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium">Start Date</label>
-                <input
-                  type="date"
-                  value={employee.startDate}
-                  onChange={(e) => updateEmployee(index, 'startDate', e.target.value)}
-                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
                 />
               </div>
             </div>

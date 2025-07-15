@@ -26,7 +26,6 @@ async function ensureSchema(fastify: FastifyInstance): Promise<void> {
         last_name text NOT NULL,
         email text UNIQUE NOT NULL,
         department text,
-        start_date date,
         annual_salary numeric(10,2),
         hourly_rate numeric(8,2),
         is_active boolean DEFAULT true,
@@ -57,18 +56,6 @@ async function ensureSchema(fastify: FastifyInstance): Promise<void> {
       sql: 'ALTER TABLE employees ADD COLUMN department text;'
     });
     if (alterError) fastify.log.error('Failed to add department column', alterError);
-  }
-
-  // Verify start_date column
-  const { error: startDateError } = await supabase
-    .from('employees')
-    .select('start_date')
-    .limit(1);
-  if (startDateError?.code === '42703') {
-    const { error: alterError } = await supabase.rpc('execute_sql', {
-      sql: 'ALTER TABLE employees ADD COLUMN start_date date;'
-    });
-    if (alterError) fastify.log.error('Failed to add start_date column', alterError);
   }
 }
 
@@ -259,8 +246,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
         title: row.department || '',
         salary: Number(row.annual_salary || 0),
         status: row.is_active ? 'active' : 'inactive',
-        department: row.department,
-        start_date: row.start_date,
+        department: row.department
       }))
 
       fastify.log.info({ mod: 'Payroll' }, 'employees fetched')
@@ -284,7 +270,6 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
       salary,
       status,
       department,
-      startDate,
     } = request.body as any
 
     await ensureSchema(fastify)
@@ -303,7 +288,6 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
         department: department || title,
         annual_salary: salary,
         is_active: String(status) !== 'inactive',
-        start_date: startDate || null,
       })
       if (error) throw error
       fastify.log.info({ mod: 'Payroll' }, 'employee added')

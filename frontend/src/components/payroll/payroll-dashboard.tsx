@@ -143,7 +143,6 @@ import { useState } from 'react'
                     salary: Number(formData.get('salary') || 0),
                     status: formData.get('status'),
                     department: formData.get('department'),
-                    startDate: formData.get('startDate'),
                   })
                   await Promise.all([mutEmp(), mutSum()])
                   setOpen(false)
@@ -166,11 +165,6 @@ import { useState } from 'react'
                 <input
                   name="department"
                   placeholder="Department"
-                  className="w-full border p-2 rounded text-black"
-                />
-                <input
-                  name="startDate"
-                  type="date"
                   className="w-full border p-2 rounded text-black"
                 />
                 <input
@@ -343,9 +337,9 @@ import { useState } from 'react'
                   <div className="flex-1">
                     <div className="font-medium">{employee.name}</div>
                     <div className="text-sm text-gray-600">{employee.title}</div>
-                    {employee.start_date && (
+                    {employee.created_at && (
                       <div className="text-xs text-gray-500">
-                        {employee.department || 'General'} • Started {formatDate(employee.start_date)}
+                        {employee.department || 'General'} • Started {formatDate(employee.created_at)}
                       </div>
                     )}
                   </div>
