@@ -67,7 +67,6 @@ export interface Employee {
   title: string
   salary: number
   status: 'active' | 'inactive'
-  startDate?: string
   department?: string
 }
 

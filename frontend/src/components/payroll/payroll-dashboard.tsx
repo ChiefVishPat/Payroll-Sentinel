@@ -21,29 +21,44 @@ import {
 import { Dialog, DialogTrigger, DialogContent, DialogClose } from '@frontend/components/ui/dialog'
 import { useState } from 'react'
 
-export default function PayrollDashboard() {
-  const { companyId } = useCompany()
-  const [open, setOpen] = useState(false)
+/**
+ * Payroll dashboard page showing payroll data and employee roster.
+ * SWR auto refresh is disabled so the modal form doesn't reset while typing.
+ */
+  export default function PayrollDashboard() {
+    const { companyId } = useCompany()
+    const [open, setOpen] = useState(false)
 
-  if (!companyId) {
-    return <CompanySelector />
-  }
-  const fetcher = (url: string) => apiClient.get(url).then(res => res.data)
+    const fetcher = (url: string) => apiClient.get(url).then(res => res.data)
 
-  const { data: payrollRuns, isLoading: loadingRuns, mutate: mutRuns } =
-    useSWR(() => `/api/payroll/runs?companyId=${companyId}`, fetcher, {
+    const swrOpts = {
       revalidateOnFocus: false,
-    })
-  const { data: employees, isLoading: loadingEmp, mutate: mutEmp } = useSWR(
-    () => `/api/payroll/employees?companyId=${companyId}`,
-    fetcher,
-    { revalidateOnFocus: false }
-  )
-  const { data: summary, isLoading: loadingSummary, mutate: mutSum } = useSWR(
-    () => `/api/payroll/summary?companyId=${companyId}`,
-    fetcher,
-    { revalidateOnFocus: false }
-  )
+      revalidateOnReconnect: false,
+      revalidateOnMount: false,
+      revalidateIfStale: false,
+      refreshInterval: 0,
+    }
+
+    const { data: payrollRuns, isLoading: loadingRuns, mutate: mutRuns } =
+      useSWR(
+        companyId ? `/api/payroll/runs?companyId=${companyId}` : null,
+        fetcher,
+        swrOpts
+      )
+    const { data: employees, isLoading: loadingEmp, mutate: mutEmp } = useSWR(
+      companyId ? `/api/payroll/employees?companyId=${companyId}` : null,
+      fetcher,
+      swrOpts
+    )
+    const { data: summary, isLoading: loadingSummary, mutate: mutSum } = useSWR(
+      companyId ? `/api/payroll/summary?companyId=${companyId}` : null,
+      fetcher,
+      swrOpts
+    )
+
+    if (!companyId) {
+      return <CompanySelector />
+    }
 
   const loading = loadingRuns || loadingEmp || loadingSummary
 
@@ -110,7 +125,7 @@ export default function PayrollDashboard() {
                 <span className="text-xl">➕</span> Add Employee
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="text-black">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">Add Employee</h2>
                 <DialogClose asChild>
@@ -127,6 +142,7 @@ export default function PayrollDashboard() {
                     title: formData.get('title'),
                     salary: Number(formData.get('salary') || 0),
                     status: formData.get('status'),
+                    department: formData.get('department'),
                   })
                   await Promise.all([mutEmp(), mutSum()])
                   setOpen(false)
@@ -137,24 +153,29 @@ export default function PayrollDashboard() {
                 <input
                   name="name"
                   placeholder="Name"
-                  className="w-full border p-2 rounded"
+                  className="w-full border p-2 rounded text-black"
                   required
                 />
                 <input
                   name="title"
                   placeholder="Title"
-                  className="w-full border p-2 rounded"
+                  className="w-full border p-2 rounded text-black"
                   required
+                />
+                <input
+                  name="department"
+                  placeholder="Department"
+                  className="w-full border p-2 rounded text-black"
                 />
                 <input
                   name="salary"
                   type="number"
                   step="0.01"
                   placeholder="Salary"
-                  className="w-full border p-2 rounded"
+                  className="w-full border p-2 rounded text-black"
                   required
                 />
-                <select name="status" className="w-full border p-2 rounded">
+                <select name="status" className="w-full border p-2 rounded text-black">
                   <option value="active">active</option>
                   <option value="inactive">inactive</option>
                 </select>
@@ -316,9 +337,9 @@ export default function PayrollDashboard() {
                   <div className="flex-1">
                     <div className="font-medium">{employee.name}</div>
                     <div className="text-sm text-gray-600">{employee.title}</div>
-                    {employee.start_date && (
+                    {employee.created_at && (
                       <div className="text-xs text-gray-500">
-                        {employee.department || 'General'} • Started {formatDate(employee.start_date)}
+                        {employee.department || 'General'} • Started {formatDate(employee.created_at)}
                       </div>
                     )}
                   </div>
