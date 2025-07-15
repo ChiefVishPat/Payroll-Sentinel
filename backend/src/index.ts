@@ -3,11 +3,12 @@
 import './loadEnv.js';
 
 import fastify, { FastifyRequest, FastifyReply } from 'fastify';
-import { CheckService } from './services/check.js';
 import cors from '@fastify/cors';
 
 import bankingRoutes from './routes/banking.js';
 import companiesRoutes from './routes/companies.js';
+import payrollRoutes from './routes/payroll.js';
+import { CheckService } from './services/check.js';
 
 // Environment variable warnings
 if (process.env.NODE_ENV !== 'production') {
@@ -32,6 +33,15 @@ const server = fastify({
     },
   },
 });
+
+// Initialize core services and attach to Fastify instance
+const checkService = new CheckService({
+  apiKey: process.env.CHECK_API_KEY || '',
+  environment:
+    (process.env.CHECK_ENVIRONMENT as 'sandbox' | 'production') || 'sandbox',
+});
+// @ts-ignore -- lightweight service container
+server.decorate('services', { checkService });
 
 // Register plugins
 async function registerPlugins() {
@@ -104,46 +114,8 @@ async function registerRoutes() {
   // Register company onboarding routes
   await server.register(companiesRoutes, { prefix: '/api/companies' });
 
-  // Payroll scheduling and run endpoints
-  const checkService = new CheckService({
-    apiKey: process.env.CHECK_API_KEY || '',
-    environment: (process.env.CHECK_ENVIRONMENT as 'sandbox' | 'production') || 'sandbox',
-  });
-  const payLog = server.log.child({ mod: 'Check' });
-  
-  // Schedule payroll
-  server.post('/api/pay-schedule', async (req: FastifyRequest, reply: FastifyReply) => {
-    const { companyId, frequency, firstPayday } = req.body as any;
-    payLog.info(`Creating pay schedule for company ${companyId}`);
-    const res = await checkService.createPaySchedule(companyId, frequency, firstPayday);
-    if (!res.success || !res.data) {
-      payLog.error('Pay schedule creation failed:', res.error);
-      return reply.status(500).send({ success: false, error: res.error?.message });
-    }
-    return reply.send({ success: true, payScheduleId: res.data.payScheduleId });
-  });
-
-  // Run payroll and poll until paid
-  server.post('/api/payroll/run', async (req: FastifyRequest, reply: FastifyReply) => {
-    const { companyId, payScheduleId } = req.body as any;
-    payLog.info(`Running payroll for schedule ${payScheduleId}`);
-    const runRes = await checkService.runPayroll(companyId, payScheduleId);
-    if (!runRes.success || !runRes.data) {
-      payLog.error('Payroll run failed:', runRes.error);
-      return reply.status(500).send({ success: false, error: runRes.error?.message });
-    }
-    const { payrollRunId } = runRes.data;
-    // Poll status until 'paid'
-    let status: string = '';
-    do {
-      await new Promise(r => setTimeout(r, 1000));
-      const statRes = await checkService.getPayrollStatus(payrollRunId);
-      status = statRes.success && statRes.data ? statRes.data.status : 'error';
-      payLog.info(`Payroll status for ${payrollRunId}: ${status}`);
-    } while (status !== 'paid');
-    payLog.info(`Payroll ${payrollRunId} completed for company ${companyId}`);
-    return reply.send({ success: true, payrollRunId, status });
-  });
+  // Register payroll routes
+  await server.register(payrollRoutes, { prefix: '/api' });
 }
 
 // Error handler
