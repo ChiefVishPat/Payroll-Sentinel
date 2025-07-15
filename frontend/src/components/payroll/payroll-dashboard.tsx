@@ -34,10 +34,11 @@ import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-pa
 
     const fetcher = (url: string) => apiClient.get(url).then(res => res.data)
 
+    // Allow initial fetch on mount so dashboard loads data automatically
     const swrOpts = {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      revalidateOnMount: false,
+      revalidateOnMount: true,
       revalidateIfStale: false,
       refreshInterval: 0,
     }

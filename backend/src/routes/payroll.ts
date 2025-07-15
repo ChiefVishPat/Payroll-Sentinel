@@ -175,6 +175,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
         .from('employees')
         .select('salary')
         .eq('company_id', companyId)
+        .eq('is_active', true)
 
       const { data: scheduleRows } = await supabase
         .from('pay_schedules')

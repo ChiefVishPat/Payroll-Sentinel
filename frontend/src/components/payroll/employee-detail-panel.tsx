@@ -53,7 +53,7 @@ export default function EmployeeDetailPanel({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="fixed right-0 top-0 h-full w-full max-w-md rounded-none">
+      <DialogContent className="fixed right-0 top-0 h-full w-full max-w-md rounded-none bg-white p-6 text-black">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">Employee Details</h2>
           <DialogClose asChild>
