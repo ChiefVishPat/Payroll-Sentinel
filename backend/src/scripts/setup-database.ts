@@ -4,7 +4,7 @@
  * One-shot script: reads SQL files in src/db/, executes them inside a single
  * transaction, and exits.  Run via:
  *
- *   npm run env:backend -- tsx backend/src/scripts/setup-database.ts
+ *   npm run setup-db
  */
 
 import 'dotenv/config';
@@ -37,6 +37,7 @@ async function main() {
   try {
     console.log('🏗  Applying schema & seed...');
     await pool.query('BEGIN');
+    await pool.query('SET search_path TO public');
     await pool.query(schemaSql);
     if (seedSql.trim()) await pool.query(seedSql);
     await pool.query('COMMIT');

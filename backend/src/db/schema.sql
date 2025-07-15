@@ -1,12 +1,11 @@
 -- Enable UUID & pgcrypto extensions (idempotent)
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 /*──────────────────  CORE TABLES  ──────────────────*/
 
 -- Companies
 CREATE TABLE IF NOT EXISTS companies (
-  id                 UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name               TEXT        NOT NULL,
   ein                TEXT        NOT NULL,
   state              TEXT        NOT NULL,
@@ -17,7 +16,7 @@ CREATE TABLE IF NOT EXISTS companies (
 
 -- Employees  ★ restored
 CREATE TABLE IF NOT EXISTS employees (
-  id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id       UUID        REFERENCES companies(id) ON DELETE CASCADE,
   employee_number  TEXT UNIQUE NOT NULL,
   first_name       TEXT        NOT NULL,
@@ -33,7 +32,7 @@ CREATE TABLE IF NOT EXISTS employees (
 
 -- Payroll runs (high-level pay periods)
 CREATE TABLE IF NOT EXISTS payroll_runs (
-  id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id       UUID        REFERENCES companies(id) ON DELETE CASCADE,
   run_number       TEXT UNIQUE NOT NULL,
   pay_period_start DATE        NOT NULL,
@@ -52,7 +51,7 @@ CREATE TABLE IF NOT EXISTS payroll_runs (
 
 -- Payroll entries  ★ restored
 CREATE TABLE IF NOT EXISTS payroll_entries (
-  id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   payroll_run_id   UUID REFERENCES payroll_runs(id) ON DELETE CASCADE,
   employee_id      UUID REFERENCES employees(id)    ON DELETE CASCADE,
   gross_pay        NUMERIC(10,2) NOT NULL,
@@ -68,7 +67,7 @@ CREATE TABLE IF NOT EXISTS payroll_entries (
 
 -- Bank accounts
 CREATE TABLE IF NOT EXISTS bank_accounts (
-  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id        UUID        REFERENCES companies(id) ON DELETE CASCADE,
   plaid_account_id  TEXT UNIQUE NOT NULL,
   plaid_access_token TEXT       NOT NULL,
@@ -85,7 +84,7 @@ CREATE TABLE IF NOT EXISTS bank_accounts (
 
 -- Risk assessments
 CREATE TABLE IF NOT EXISTS risk_assessments (
-  id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id       UUID REFERENCES companies(id)      ON DELETE CASCADE,
   bank_account_id  UUID REFERENCES bank_accounts(id)  ON DELETE CASCADE,
   payroll_run_id   UUID REFERENCES payroll_runs(id)   ON DELETE CASCADE,
@@ -101,7 +100,7 @@ CREATE TABLE IF NOT EXISTS risk_assessments (
 
 -- Alerts
 CREATE TABLE IF NOT EXISTS alerts (
-  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id        UUID REFERENCES companies(id)         ON DELETE CASCADE,
   risk_assessment_id UUID REFERENCES risk_assessments(id) ON DELETE CASCADE,
   alert_type        TEXT    NOT NULL DEFAULT 'payroll_risk',
@@ -129,14 +128,18 @@ CREATE INDEX IF NOT EXISTS idx_risk_assessments_company_id   ON risk_assessments
 
 /*──────────────  RLS  &  POLICIES  ──────────────*/
 
-ALTER TABLE companies,employees,payroll_runs,payroll_entries,
-             bank_accounts,risk_assessments,alerts
-  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE companies         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE employees         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payroll_runs      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payroll_entries   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bank_accounts     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE risk_assessments  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE alerts            ENABLE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
   -- quick “allow all” policies for dev
-  PERFORM 1 FROM pg_policies WHERE polname='allow_all_companies';
+  PERFORM 1 FROM pg_policies WHERE policyname = 'allow_all_companies';
   IF NOT FOUND THEN
     CREATE POLICY allow_all_companies          ON companies         FOR ALL USING (true);
     CREATE POLICY allow_all_employees         ON employees         FOR ALL USING (true);
@@ -153,23 +156,31 @@ END$$;
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
-  NEW.updated_at = NOW();
+  NEW.updated_at := NOW();
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
+-- Companies
+DROP TRIGGER IF EXISTS trg_updated_companies ON companies;
 CREATE TRIGGER trg_updated_companies
   BEFORE UPDATE ON companies
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+-- Employees
+DROP TRIGGER IF EXISTS trg_updated_employees ON employees;
 CREATE TRIGGER trg_updated_employees
   BEFORE UPDATE ON employees
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+-- Payroll runs
+DROP TRIGGER IF EXISTS trg_updated_payroll_runs ON payroll_runs;
 CREATE TRIGGER trg_updated_payroll_runs
   BEFORE UPDATE ON payroll_runs
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+-- Payroll entries
+DROP TRIGGER IF EXISTS trg_updated_payroll_entries ON payroll_entries;
 CREATE TRIGGER trg_updated_payroll_entries
   BEFORE UPDATE ON payroll_entries
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
