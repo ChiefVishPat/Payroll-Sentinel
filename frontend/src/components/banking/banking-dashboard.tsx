@@ -39,7 +39,8 @@ export default function BankingDashboard() {
   }
   const { data: accounts, isLoading: loadingAccounts, mutate: mutateAccounts } =
     useSWR(() => `/api/banking/accounts?companyId=${companyId}`, fetcher, {
-      refreshInterval: 30000
+      revalidateOnMount: true,
+      revalidateOnFocus: false
     })
   const {
     data: transactions,
@@ -47,11 +48,19 @@ export default function BankingDashboard() {
     isLoading: loadingTx
   } = useSWR(
     () => `/api/banking/transactions?companyId=${companyId}`,
-    fetcher
+    fetcher,
+    {
+      revalidateOnMount: true,
+      revalidateOnFocus: false
+    }
   )
   const { data: status, mutate: mutateStatus } = useSWR(
     () => `/api/banking/status?companyId=${companyId}`,
-    fetcher
+    fetcher,
+    {
+      revalidateOnMount: true,
+      revalidateOnFocus: false
+    }
   )
 
   const [refreshing, setRefreshing] = useState(false)

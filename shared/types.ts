@@ -80,3 +80,18 @@ export interface AccessTokenResponse {
   itemId: string;
   requestId: string;
 }
+
+/**
+ * Employee record
+ */
+export interface Employee {
+  id: string;
+  company_id: string;
+  name: string;
+  title: string;
+  salary: number;
+  status: string;
+  department?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
