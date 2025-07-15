@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { Dialog, DialogTrigger, DialogContent, DialogClose } from '@frontend/components/ui/dialog'
 import { useState } from 'react'
+import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-panel'
 
 /**
  * Payroll dashboard page showing payroll data and employee roster.
@@ -28,6 +29,8 @@ import { useState } from 'react'
   export default function PayrollDashboard() {
     const { companyId } = useCompany()
     const [open, setOpen] = useState(false)
+    const [detailOpen, setDetailOpen] = useState(false)
+    const [selected, setSelected] = useState<Employee | null>(null)
 
     const fetcher = (url: string) => apiClient.get(url).then(res => res.data)
 
@@ -333,7 +336,14 @@ import { useState } from 'react'
               </div>
             ) : (
               (employees?.data || []).map((employee: Employee) => (
-                <div key={employee.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div
+                  key={employee.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100"
+                  onClick={() => {
+                    setSelected(employee)
+                    setDetailOpen(true)
+                  }}
+                >
                   <div className="flex-1">
                     <div className="font-medium">{employee.name}</div>
                     <div className="text-sm text-gray-600">{employee.title}</div>
@@ -355,6 +365,16 @@ import { useState } from 'react'
           </div>
         </CardContent>
       </Card>
+      {selected && (
+        <EmployeeDetailPanel
+          employee={selected}
+          open={detailOpen}
+          onOpenChange={setDetailOpen}
+          onUpdated={async () => {
+            await Promise.all([mutEmp(), mutSum()])
+          }}
+        />
+      )}
     </div>
   )
 }
