@@ -219,7 +219,7 @@ import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-pa
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {summary ? formatCurrency(summary.monthlyPayroll) : '$0'}
+              {formatCurrency(summary?.monthlyPayroll ?? 0)}
             </div>
             <p className="text-xs text-gray-600 mt-1">
               Total monthly cost
@@ -350,7 +350,7 @@ import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-pa
                     <div className="text-sm text-gray-600">{employee.title}</div>
                     {employee.created_at && (
                       <div className="text-xs text-gray-500">
-                        {employee.department || 'General'} • Started {formatDate(employee.created_at)}
+                        {employee.department || 'General'}
                       </div>
                     )}
                   </div>

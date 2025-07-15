@@ -75,14 +75,20 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
     const { companyId, frequency, firstPayday } = request.body;
 
     try {
-      const result = await checkService.createPaySchedule(companyId, frequency, firstPayday);
-      
+      const result = await checkService.createPaySchedule(
+        companyId,
+        frequency,
+        firstPayday
+      );
+
       if (!result.success || !result.data) {
         fastify.log.error('Pay schedule creation failed:', result.error);
-        reply.status(500).send({ error: result.error?.message || 'Unable to schedule payroll' });
+        reply.status(500).send({
+          error: result.error?.message || 'Unable to schedule payroll',
+        });
         return;
       }
-      
+
       const { payScheduleId } = result.data;
       reply.send({ success: true, payScheduleId });
     } catch (error) {
@@ -122,21 +128,24 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
       }
 
       const result = await checkService.runPayroll(companyId, scheduleId);
-      
+
       if (!result.success || !result.data) {
         fastify.log.error('Payroll run failed:', result.error);
-        reply.status(500).send({ error: result.error?.message || 'Unable to run payroll' });
+        reply
+          .status(500)
+          .send({ error: result.error?.message || 'Unable to run payroll' });
         return;
       }
-      
+
       const { payrollRunId } = result.data;
       fastify.log.info(`Payroll run initiated: ${payrollRunId}`);
-      
+
       // Simulate polling for payroll status
       let status = 'pending';
       while (status !== 'paid') {
         await new Promise(res => setTimeout(res, 2000)); // simulate delay
-        const statusResponse = await checkService.getPayrollStatus(payrollRunId);
+        const statusResponse =
+          await checkService.getPayrollStatus(payrollRunId);
         if (statusResponse.success && statusResponse.data) {
           status = statusResponse.data.status;
         } else {
@@ -166,79 +175,106 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
    * Get payroll summary for dashboard
    * @route GET /api/payroll/summary
    */
-  fastify.get('/payroll/summary', async (request, reply) => {
-    const start = Date.now()
-    const { companyId } = request.query as { companyId: string }
-    await ensureSchema(fastify)
+  fastify.get('/payroll/summary/', async (request, reply) => {
+    const start = Date.now();
+    const { companyId } = request.query as { companyId: string };
+    await ensureSchema(fastify);
     try {
       const { data: empRows } = await supabase
         .from('employees')
-        .select('salary')
+        .select('employee_number, annual_salary')
         .eq('company_id', companyId)
-        .eq('is_active', true)
+        .eq('is_active', true);
 
       const { data: scheduleRows } = await supabase
         .from('pay_schedules')
         .select('next_run_date')
         .eq('company_id', companyId)
         .order('next_run_date', { ascending: true })
-        .limit(1)
+        .limit(1);
 
       const { data: runRows } = await supabase
         .from('payroll_runs')
         .select('status')
-        .eq('company_id', companyId)
+        .eq('company_id', companyId);
 
-      const totalEmployees = empRows?.length || 0
+      const totalEmployees = empRows?.length || '0';
       const monthlyPayroll =
-        (empRows?.reduce((t, e) => t + Number(e.salary || 0), 0) || 0) / 12
-      const nextPayroll = scheduleRows?.[0]?.next_run_date || null
-      const pendingRuns = runRows?.filter(r => r.status === 'pending').length || 0
+        (empRows?.reduce((t, e) => t + Number(e.annual_salary || 0), 0) || 0) /
+        12;
+      const nextPayroll = scheduleRows?.[0]?.next_run_date || null;
+      const pendingRuns =
+        runRows?.filter(r => r.status === 'pending').length || 0;
 
-      fastify.log.info({ mod: 'Payroll' }, 'summary fetched in %d ms', Date.now() - start)
-      return reply.send({ totalEmployees, monthlyPayroll, nextPayroll, pendingRuns })
+      fastify.log.info(
+        { mod: 'Payroll' },
+        'summary fetched in %d ms',
+        Date.now() - start
+      );
+      return reply.send({
+        totalEmployees,
+        monthlyPayroll,
+        nextPayroll,
+        pendingRuns,
+      });
     } catch (error) {
-      fastify.log.error({ mod: 'Payroll' }, 'summary error %o', error)
-      return reply.status(500).send({ error: 'failed to fetch summary' })
+      fastify.log.error({ mod: 'Payroll' }, 'summary error %o', error);
+      return reply.status(500).send({ error: 'failed to fetch summary' });
     }
-  })
+  });
 
   /**
    * Get payroll runs
    * @route GET /api/payroll/runs
    */
   fastify.get('/payroll/runs', async (request, reply) => {
-    const { companyId } = request.query as { companyId: string }
-    await ensureSchema(fastify)
+    const { companyId } = request.query as { companyId: string };
+    await ensureSchema(fastify);
     try {
       const { data, error } = await supabase
         .from('payroll_runs')
         .select('*')
         .eq('company_id', companyId)
-        .order('pay_date', { ascending: false })
-      if (error) throw error
-      fastify.log.info({ mod: 'Payroll' }, 'runs fetched')
-      return reply.send({ data })
+        .order('pay_date', { ascending: false });
+      if (error) throw error;
+      fastify.log.info({ mod: 'Payroll' }, 'runs fetched');
+      return reply.send({ data });
     } catch (err) {
-      fastify.log.error({ mod: 'Payroll' }, 'runs error %o', err)
-      return reply.status(500).send({ error: 'failed to fetch runs' })
+      fastify.log.error({ mod: 'Payroll' }, 'runs error %o', err);
+      return reply.status(500).send({ error: 'failed to fetch runs' });
     }
-  })
+  });
+
+  /**
+   * approve pending runs
+   * @route POST /api/payroll/runs/:id/approve
+   */
+  fastify.get('/payroll/runs/:id/approve', async (request, reply) => {
+
+  });
+
+  /**
+   * mark approved run as processed
+   * @route POST /api/payroll/runs/:id/process
+   */
+  fastify.get('/payroll/runs/:id/process', async (request, reply) => {
+
+  });
 
   /**
    * Get employees
    * @route GET /api/payroll/employees
    */
   fastify.get('/payroll/employees', async (request, reply) => {
-    const { companyId } = request.query as { companyId: string }
-    await ensureSchema(fastify)
+    const { companyId } = request.query as { companyId: string };
+    await ensureSchema(fastify);
     try {
       const { data, error } = await supabase
         .from('employees')
         .select('*')
         .eq('company_id', companyId)
-        .order('created_at', { ascending: true })
-      if (error) throw error
+        .order('created_at', { ascending: true });
+      if (error) throw error;
 
       // Map database columns to the simplified front-end shape
       const transformed = (data || []).map(row => ({
@@ -247,16 +283,16 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
         title: row.department || '',
         salary: Number(row.annual_salary || 0),
         status: row.is_active ? 'active' : 'inactive',
-        department: row.department
-      }))
+        department: row.department,
+      }));
 
-      fastify.log.info({ mod: 'Payroll' }, 'employees fetched')
-      return reply.send({ data: transformed })
+      fastify.log.info({ mod: 'Payroll' }, 'employees fetched');
+      return reply.send({ data: transformed });
     } catch (err) {
-      fastify.log.error({ mod: 'Payroll' }, 'employees error %o', err)
-      return reply.status(500).send({ error: 'failed to fetch employees' })
+      fastify.log.error({ mod: 'Payroll' }, 'employees error %o', err);
+      return reply.status(500).send({ error: 'failed to fetch employees' });
     }
-  })
+  });
 
   /**
    * Add a new employee
@@ -264,21 +300,17 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
    * @route POST /api/payroll/employees
    */
   fastify.post('/payroll/employees', async (request, reply) => {
-    const {
-      companyId,
-      name,
-      title,
-      salary,
-      status,
-      department,
-    } = request.body as any
+    const { companyId, name, title, salary, status, department } =
+      request.body as any;
 
-    await ensureSchema(fastify)
+    await ensureSchema(fastify);
 
     try {
-      const [firstName, ...rest] = String(name || '').trim().split(' ')
-      const lastName = rest.join(' ') || ''
-      const email = `${firstName.toLowerCase()}.${lastName.toLowerCase() || 'user'}@example.com`
+      const [firstName, ...rest] = String(name || '')
+        .trim()
+        .split(' ');
+      const lastName = rest.join(' ') || '';
+      const email = `${firstName.toLowerCase()}.${lastName.toLowerCase() || 'user'}@example.com`;
 
       const { error } = await supabase.from('employees').insert({
         company_id: companyId,
@@ -289,30 +321,30 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
         department: department || title,
         annual_salary: salary,
         is_active: String(status) !== 'inactive',
-      })
-      if (error) throw error
-      fastify.log.info({ mod: 'Payroll' }, 'employee added')
-      await reply.send({ success: true })
+      });
+      if (error) throw error;
+      fastify.log.info({ mod: 'Payroll' }, 'employee added');
+      await reply.send({ success: true });
     } catch (err) {
-      fastify.log.error({ mod: 'Payroll' }, 'add employee error %o', err)
-      return reply.status(500).send({ error: 'failed to add employee' })
+      fastify.log.error({ mod: 'Payroll' }, 'add employee error %o', err);
+      return reply.status(500).send({ error: 'failed to add employee' });
     }
-  })
+  });
 
   /**
    * Get details for a single employee
    * @route GET /api/payroll/employees/:id
    */
   fastify.get('/payroll/employees/:id', async (request, reply) => {
-    const { id } = request.params as { id: string }
-    await ensureSchema(fastify)
+    const { id } = request.params as { id: string };
+    await ensureSchema(fastify);
     try {
       const { data, error } = await supabase
         .from('employees')
         .select('*')
         .eq('id', id)
-        .single()
-      if (error) throw error
+        .single();
+      if (error) throw error;
 
       const employee = {
         id: data.id,
@@ -323,64 +355,64 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
         department: data.department,
         created_at: data.created_at,
         updated_at: data.updated_at,
-      }
-      fastify.log.info({ mod: 'Payroll' }, 'employee detail fetched')
-      return reply.send({ data: employee })
+      };
+      fastify.log.info({ mod: 'Payroll' }, 'employee detail fetched');
+      return reply.send({ data: employee });
     } catch (err) {
-      fastify.log.error({ mod: 'Payroll' }, 'employee detail error %o', err)
-      return reply.status(500).send({ error: 'failed to fetch employee' })
+      fastify.log.error({ mod: 'Payroll' }, 'employee detail error %o', err);
+      return reply.status(500).send({ error: 'failed to fetch employee' });
     }
-  })
+  });
 
   /**
    * Update an existing employee
    * @route PUT /api/payroll/employees/:id
    */
   fastify.put('/payroll/employees/:id', async (request, reply) => {
-    const { id } = request.params as { id: string }
-    const { title, salary, status } = request.body as any
-    await ensureSchema(fastify)
+    const { id } = request.params as { id: string };
+    const { title, salary, status } = request.body as any;
+    await ensureSchema(fastify);
     try {
       const updates: Record<string, unknown> = {
         department: title,
         annual_salary: salary,
         is_active: String(status) !== 'inactive',
         updated_at: new Date().toISOString(),
-      }
+      };
       const { error } = await supabase
         .from('employees')
         .update(updates)
-        .eq('id', id)
-      if (error) throw error
+        .eq('id', id);
+      if (error) throw error;
 
-      fastify.log.info({ mod: 'Payroll' }, 'employee updated')
-      return reply.send({ success: true })
+      fastify.log.info({ mod: 'Payroll' }, 'employee updated');
+      return reply.send({ success: true });
     } catch (err) {
-      fastify.log.error({ mod: 'Payroll' }, 'update employee error %o', err)
-      return reply.status(500).send({ error: 'failed to update employee' })
+      fastify.log.error({ mod: 'Payroll' }, 'update employee error %o', err);
+      return reply.status(500).send({ error: 'failed to update employee' });
     }
-  })
+  });
 
   /**
    * Soft-delete (deactivate) an employee
    * @route DELETE /api/payroll/employees/:id
    */
   fastify.delete('/payroll/employees/:id', async (request, reply) => {
-    const { id } = request.params as { id: string }
-    await ensureSchema(fastify)
+    const { id } = request.params as { id: string };
+    await ensureSchema(fastify);
     try {
       const { error } = await supabase
         .from('employees')
         .update({ is_active: false, updated_at: new Date().toISOString() })
-        .eq('id', id)
-      if (error) throw error
+        .eq('id', id);
+      if (error) throw error;
 
-      fastify.log.info({ mod: 'Payroll' }, 'employee deactivated')
-      return reply.send({ success: true })
+      fastify.log.info({ mod: 'Payroll' }, 'employee deactivated');
+      return reply.send({ success: true });
     } catch (err) {
-      fastify.log.error({ mod: 'Payroll' }, 'delete employee error %o', err)
-      return reply.status(500).send({ error: 'failed to remove employee' })
+      fastify.log.error({ mod: 'Payroll' }, 'delete employee error %o', err);
+      return reply.status(500).send({ error: 'failed to remove employee' });
     }
-  })
+  });
 }
 
