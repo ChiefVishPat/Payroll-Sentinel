@@ -1,129 +1,175 @@
--- Enable UUID extension
+-- Enable UUID & pgcrypto extensions (idempotent)
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Companies table
-CREATE TABLE companies (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL,
-    ein VARCHAR(50) NOT NULL,
-    state VARCHAR(2) NOT NULL,
-    check_company_id VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+/*──────────────────  CORE TABLES  ──────────────────*/
+
+-- Companies
+CREATE TABLE IF NOT EXISTS companies (
+  id                 UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name               TEXT        NOT NULL,
+  ein                TEXT        NOT NULL,
+  state              TEXT        NOT NULL,
+  check_company_id   TEXT        NOT NULL,
+  created_at         TIMESTAMPTZ DEFAULT NOW(),
+  updated_at         TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Bank accounts table (linked via Plaid)
-CREATE TABLE bank_accounts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-    plaid_account_id VARCHAR(255) NOT NULL UNIQUE,
-    plaid_access_token VARCHAR(255) NOT NULL,
-    account_name VARCHAR(255) NOT NULL,
-    account_type VARCHAR(50) NOT NULL,
-    account_subtype VARCHAR(50),
-    institution_name VARCHAR(255),
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- Employees  ★ restored
+CREATE TABLE IF NOT EXISTS employees (
+  id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  company_id       UUID        REFERENCES companies(id) ON DELETE CASCADE,
+  employee_number  TEXT UNIQUE NOT NULL,
+  first_name       TEXT        NOT NULL,
+  last_name        TEXT        NOT NULL,
+  email            TEXT UNIQUE NOT NULL,
+  department       TEXT,
+  annual_salary    NUMERIC(10,2),
+  hourly_rate      NUMERIC(8,2),
+  is_active        BOOLEAN DEFAULT TRUE,
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Payroll runs table (linked via Check)
-CREATE TABLE payroll_runs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-    check_payroll_id VARCHAR(255) NOT NULL UNIQUE,
-    pay_date DATE NOT NULL,
-    total_amount DECIMAL(12, 2) NOT NULL,
-    status VARCHAR(50) NOT NULL DEFAULT 'pending',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- Payroll runs (high-level pay periods)
+CREATE TABLE IF NOT EXISTS payroll_runs (
+  id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  company_id       UUID        REFERENCES companies(id) ON DELETE CASCADE,
+  run_number       TEXT UNIQUE NOT NULL,
+  pay_period_start DATE        NOT NULL,
+  pay_period_end   DATE        NOT NULL,
+  pay_date         DATE        NOT NULL,
+  status           TEXT        NOT NULL DEFAULT 'draft' 
+                 CHECK (status IN ('draft','pending','approved','processed','cancelled')),
+  total_gross      NUMERIC(12,2) DEFAULT 0,
+  total_net        NUMERIC(12,2) DEFAULT 0,
+  total_taxes      NUMERIC(12,2) DEFAULT 0,
+  total_deductions NUMERIC(12,2) DEFAULT 0,
+  employee_count   INTEGER      DEFAULT 0,
+  created_at       TIMESTAMPTZ  DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ  DEFAULT NOW()
 );
 
--- Balance snapshots table
-CREATE TABLE balance_snapshots (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    bank_account_id UUID NOT NULL REFERENCES bank_accounts(id) ON DELETE CASCADE,
-    balance DECIMAL(12, 2) NOT NULL,
-    available_balance DECIMAL(12, 2),
-    snapshot_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- Payroll entries  ★ restored
+CREATE TABLE IF NOT EXISTS payroll_entries (
+  id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  payroll_run_id   UUID REFERENCES payroll_runs(id) ON DELETE CASCADE,
+  employee_id      UUID REFERENCES employees(id)    ON DELETE CASCADE,
+  gross_pay        NUMERIC(10,2) NOT NULL,
+  net_pay          NUMERIC(10,2) NOT NULL,
+  taxes            NUMERIC(10,2) DEFAULT 0,
+  deductions       NUMERIC(10,2) DEFAULT 0,
+  hours            NUMERIC(6,2),
+  status           TEXT DEFAULT 'pending'
+                 CHECK (status IN ('pending','approved','processed','cancelled')),
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Risk assessments table
-CREATE TABLE risk_assessments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-    bank_account_id UUID NOT NULL REFERENCES bank_accounts(id) ON DELETE CASCADE,
-    payroll_run_id UUID NOT NULL REFERENCES payroll_runs(id) ON DELETE CASCADE,
-    current_balance DECIMAL(12, 2) NOT NULL,
-    required_float DECIMAL(12, 2) NOT NULL, -- payroll_amount * 1.10
-    risk_status VARCHAR(20) NOT NULL CHECK (risk_status IN ('safe', 'at_risk', 'critical')),
-    days_until_payroll INTEGER NOT NULL,
-    runway_days INTEGER, -- How many days of cash runway remaining
-    assessed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- Bank accounts
+CREATE TABLE IF NOT EXISTS bank_accounts (
+  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  company_id        UUID        REFERENCES companies(id) ON DELETE CASCADE,
+  plaid_account_id  TEXT UNIQUE NOT NULL,
+  plaid_access_token TEXT       NOT NULL,
+  account_name      TEXT        NOT NULL,
+  account_type      TEXT        NOT NULL,
+  account_subtype   TEXT,
+  institution_name  TEXT,
+  current_balance   NUMERIC(12,2),
+  available_balance NUMERIC(12,2),
+  is_active         BOOLEAN DEFAULT TRUE,
+  created_at        TIMESTAMPTZ DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Alerts table (for idempotency and tracking)
-CREATE TABLE alerts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-    risk_assessment_id UUID NOT NULL REFERENCES risk_assessments(id) ON DELETE CASCADE,
-    alert_type VARCHAR(50) NOT NULL DEFAULT 'payroll_risk',
-    status VARCHAR(20) NOT NULL DEFAULT 'sent',
-    slack_message_ts VARCHAR(255), -- Slack message timestamp for threading
-    message_content TEXT,
-    sent_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    -- Ensure we don't send duplicate alerts for the same risk assessment
-    UNIQUE(risk_assessment_id, alert_type)
+-- Risk assessments
+CREATE TABLE IF NOT EXISTS risk_assessments (
+  id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  company_id       UUID REFERENCES companies(id)      ON DELETE CASCADE,
+  bank_account_id  UUID REFERENCES bank_accounts(id)  ON DELETE CASCADE,
+  payroll_run_id   UUID REFERENCES payroll_runs(id)   ON DELETE CASCADE,
+  current_balance  NUMERIC(12,2) NOT NULL,
+  required_float   NUMERIC(12,2) NOT NULL,
+  risk_status      TEXT NOT NULL
+                 CHECK (risk_status IN ('safe','at_risk','critical')),
+  days_until_payroll INTEGER NOT NULL,
+  runway_days      INTEGER,
+  assessed_at      TIMESTAMPTZ DEFAULT NOW(),
+  created_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Indexes for performance
-CREATE INDEX idx_companies_created_at ON companies(created_at);
-CREATE INDEX idx_bank_accounts_company_id ON bank_accounts(company_id);
-CREATE INDEX idx_bank_accounts_plaid_account_id ON bank_accounts(plaid_account_id);
-CREATE INDEX idx_payroll_runs_company_id ON payroll_runs(company_id);
-CREATE INDEX idx_payroll_runs_pay_date ON payroll_runs(pay_date);
-CREATE INDEX idx_balance_snapshots_bank_account_id ON balance_snapshots(bank_account_id);
-CREATE INDEX idx_balance_snapshots_snapshot_date ON balance_snapshots(snapshot_date);
-CREATE INDEX idx_risk_assessments_company_id ON risk_assessments(company_id);
-CREATE INDEX idx_risk_assessments_assessed_at ON risk_assessments(assessed_at);
-CREATE INDEX idx_alerts_company_id ON alerts(company_id);
-CREATE INDEX idx_alerts_sent_at ON alerts(sent_at);
+-- Alerts
+CREATE TABLE IF NOT EXISTS alerts (
+  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  company_id        UUID REFERENCES companies(id)         ON DELETE CASCADE,
+  risk_assessment_id UUID REFERENCES risk_assessments(id) ON DELETE CASCADE,
+  alert_type        TEXT    NOT NULL DEFAULT 'payroll_risk',
+  status            TEXT    NOT NULL DEFAULT 'sent',
+  slack_message_ts  TEXT,
+  message_content   TEXT,
+  sent_at           TIMESTAMPTZ DEFAULT NOW(),
+  created_at        TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (risk_assessment_id, alert_type)
+);
 
--- Row Level Security policies (basic setup)
-ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
-ALTER TABLE bank_accounts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE payroll_runs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE balance_snapshots ENABLE ROW LEVEL SECURITY;
-ALTER TABLE risk_assessments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE alerts ENABLE ROW LEVEL SECURITY;
+/*──────────────────────  INDEXES  ──────────────────────*/
 
--- For demo purposes, we'll use a simple policy that allows all operations
--- In production, you'd want more sophisticated policies based on user roles
-CREATE POLICY "Allow all operations for now" ON companies FOR ALL USING (true);
-CREATE POLICY "Allow all operations for now" ON bank_accounts FOR ALL USING (true);
-CREATE POLICY "Allow all operations for now" ON payroll_runs FOR ALL USING (true);
-CREATE POLICY "Allow all operations for now" ON balance_snapshots FOR ALL USING (true);
-CREATE POLICY "Allow all operations for now" ON risk_assessments FOR ALL USING (true);
-CREATE POLICY "Allow all operations for now" ON alerts FOR ALL USING (true);
+CREATE INDEX IF NOT EXISTS idx_employees_company_id          ON employees(company_id);
+CREATE INDEX IF NOT EXISTS idx_employees_active              ON employees(is_active);
 
--- Update triggers for updated_at timestamps
-CREATE OR REPLACE FUNCTION update_updated_at_column()
+CREATE INDEX IF NOT EXISTS idx_payroll_runs_company_id       ON payroll_runs(company_id);
+CREATE INDEX IF NOT EXISTS idx_payroll_runs_status           ON payroll_runs(status);
+
+CREATE INDEX IF NOT EXISTS idx_payroll_entries_payroll_run_id ON payroll_entries(payroll_run_id);
+CREATE INDEX IF NOT EXISTS idx_payroll_entries_employee_id    ON payroll_entries(employee_id);
+
+CREATE INDEX IF NOT EXISTS idx_bank_accounts_company_id      ON bank_accounts(company_id);
+CREATE INDEX IF NOT EXISTS idx_risk_assessments_company_id   ON risk_assessments(company_id);
+
+/*──────────────  RLS  &  POLICIES  ──────────────*/
+
+ALTER TABLE companies,employees,payroll_runs,payroll_entries,
+             bank_accounts,risk_assessments,alerts
+  ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+  -- quick “allow all” policies for dev
+  PERFORM 1 FROM pg_policies WHERE polname='allow_all_companies';
+  IF NOT FOUND THEN
+    CREATE POLICY allow_all_companies          ON companies         FOR ALL USING (true);
+    CREATE POLICY allow_all_employees         ON employees         FOR ALL USING (true);
+    CREATE POLICY allow_all_pruns            ON payroll_runs      FOR ALL USING (true);
+    CREATE POLICY allow_all_pentries         ON payroll_entries   FOR ALL USING (true);
+    CREATE POLICY allow_all_bank_accounts    ON bank_accounts     FOR ALL USING (true);
+    CREATE POLICY allow_all_risk_assessments ON risk_assessments  FOR ALL USING (true);
+    CREATE POLICY allow_all_alerts           ON alerts            FOR ALL USING (true);
+  END IF;
+END$$;
+
+/*──────────────  updated_at trigger  ──────────────*/
+
+CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
+  NEW.updated_at = NOW();
+  RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
-CREATE TRIGGER update_companies_updated_at BEFORE UPDATE ON companies
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER trg_updated_companies
+  BEFORE UPDATE ON companies
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
-CREATE TRIGGER update_bank_accounts_updated_at BEFORE UPDATE ON bank_accounts
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER trg_updated_employees
+  BEFORE UPDATE ON employees
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
-CREATE TRIGGER update_payroll_runs_updated_at BEFORE UPDATE ON payroll_runs
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER trg_updated_payroll_runs
+  BEFORE UPDATE ON payroll_runs
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER trg_updated_payroll_entries
+  BEFORE UPDATE ON payroll_entries
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();

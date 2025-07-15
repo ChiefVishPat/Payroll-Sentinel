@@ -1,0 +1,14 @@
+name: Update DB types
+on: [push]
+jobs:
+  gen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npx supabase login --token ${{ secrets.SUPABASE_PAT }}
+      - run: npx supabase link --project-ref ${{ secrets.SUPABASE_REF }}
+      - run: npm run gen:types
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "ci: update database.types.ts"
