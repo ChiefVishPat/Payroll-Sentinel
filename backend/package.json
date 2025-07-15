@@ -16,7 +16,10 @@
     "type-check": "tsc --noEmit",
     "verify-supabase": "tsx src/scripts/verify-supabase.ts",
     "test-db-insert": "tsx src/scripts/test-db-insert.ts",
-    "test-raw-sql": "tsx src/scripts/test-raw-sql.ts"
+    "test-raw-sql": "tsx src/scripts/test-raw-sql.ts",
+    "env:backend": "cross-env DOTENV_CONFIG_PATH=.env NODE_OPTIONS=\"--require dotenv/config\"",
+    "setup-db": "npm run env:backend -- tsx src/scripts/setup-database.ts",
+    "gen:types": "npm run env:backend -- supabase gen types typescript --schema public"
   },
   "dependencies": {
     "@fastify/cors": "^8.5.0",
@@ -31,6 +34,7 @@
     "dotenv-flow": "^4.0.1",
     "fastify": "^4.26.0",
     "node-cron": "^3.0.3",
+    "pg": "^8.16.3",
     "plaid": "^12.0.0",
     "winston": "^3.17.0",
     "zod": "^3.22.4"
@@ -41,10 +45,12 @@
     "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
     "@vitest/coverage-v8": "^1.5.0",
+    "cross-env": "^7.0.3",
     "eslint": "^8.56.0",
     "pino-pretty": "^13.0.0",
     "prettier": "^3.6.0",
-    "tsx": "^4.7.1",
+    "supabase": "^2.30.4",
+    "tsx": "^4.20.3",
     "typescript": "^5.5.0",
     "vitest": "^1.5.0"
   },

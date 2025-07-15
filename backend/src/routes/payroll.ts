@@ -1,94 +1,84 @@
-import { FastifyInstance } from 'fastify'
-import { CheckService } from '@backend/services/check'
-import { supabase } from '@backend/db/client'
-import fs from 'fs'
+import { FastifyInstance } from 'fastify';
+import fs from 'fs';
+import path from 'path';
+import { supabase } from '@backend/db/client';
+import { CheckService } from '@backend/services/check';
+
+/**
+ * Ensure required database tables and columns exist.
+ * This helper checks for the employees table and key columns
+ * and creates them if missing using raw SQL via Supabase RPC.
+ */
+async function ensureSchema(fastify: FastifyInstance): Promise<void> {
+  // Check if employees table exists
+  const { error: tableError } = await supabase
+    .from('employees')
+    .select('id')
+    .limit(1);
+
+  if (tableError?.code === '42P01') {
+    const createTableSQL = `
+      CREATE TABLE employees (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        company_id uuid REFERENCES companies(id) ON DELETE CASCADE,
+        employee_number text UNIQUE NOT NULL,
+        first_name text NOT NULL,
+        last_name text NOT NULL,
+        email text UNIQUE NOT NULL,
+        department text,
+        start_date date,
+        annual_salary numeric(10,2),
+        hourly_rate numeric(8,2),
+        is_active boolean DEFAULT true,
+        created_at timestamp with time zone DEFAULT now(),
+        updated_at timestamp with time zone DEFAULT now()
+      );`;
+
+    const { error: createError } = await supabase.rpc('execute_sql', {
+      sql: createTableSQL,
+    });
+
+    if (createError) {
+      fastify.log.error('Failed to create employees table', createError);
+    } else {
+      const logPath = path.resolve(__dirname, '../..', 'logs', 'SCHEMA_CHANGES.md');
+      const entry = `- ${new Date().toISOString()}: created employees table\n`;
+      fs.appendFileSync(logPath, entry);
+    }
+  }
+
+  // Verify department column
+  const { error: deptError } = await supabase
+    .from('employees')
+    .select('department')
+    .limit(1);
+  if (deptError?.code === '42703') {
+    const { error: alterError } = await supabase.rpc('execute_sql', {
+      sql: 'ALTER TABLE employees ADD COLUMN department text;'
+    });
+    if (alterError) fastify.log.error('Failed to add department column', alterError);
+  }
+
+  // Verify start_date column
+  const { error: startDateError } = await supabase
+    .from('employees')
+    .select('start_date')
+    .limit(1);
+  if (startDateError?.code === '42703') {
+    const { error: alterError } = await supabase.rpc('execute_sql', {
+      sql: 'ALTER TABLE employees ADD COLUMN start_date date;'
+    });
+    if (alterError) fastify.log.error('Failed to add start_date column', alterError);
+  }
+}
 
 /**
  * Payroll routes for managing payroll operations
  * Includes creating pay schedules and running payroll
  */
 export default async function payrollRoutes(fastify: FastifyInstance) {
-  const checkService = (fastify as any).services?.checkService
-    ? (fastify as any).services.checkService as CheckService
-    : new CheckService({
-        apiKey: process.env.CHECK_API_KEY || '',
-        environment:
-          (process.env.CHECK_ENVIRONMENT as 'sandbox' | 'production') || 'sandbox',
-      })
-
-  /** Ensure required tables exist. */
-  async function ensureSchema() {
-    try {
-      await supabase.from('employees').select('id').limit(1)
-    } catch (err: any) {
-      if (err?.message?.includes('relation') || err?.code === '42P01') {
-        await supabase.rpc('execute_sql', {
-          sql: `create table if not exists employees (
-            id uuid primary key default uuid_generate_v4(),
-            company_id uuid references companies(id) on delete cascade,
-            name text,
-            title text,
-            salary numeric,
-            status text,
-            department text,
-            start_date date,
-            created_at timestamp with time zone default now(),
-            updated_at timestamp with time zone default now()
-          );`
-        })
-        fs.appendFileSync(
-          'backend/logs/SCHEMA_CHANGES.md',
-          `- ${new Date().toISOString()} created employees table\n`
-        )
-      }
-    }
-    try {
-      await supabase.from('employees').select('department').limit(1)
-    } catch (err: any) {
-      if (err?.message?.includes('column') || err?.code === '42703') {
-        await supabase.rpc('execute_sql', {
-          sql: 'alter table employees add column if not exists department text;'
-        })
-        fs.appendFileSync(
-          'backend/logs/SCHEMA_CHANGES.md',
-          `- ${new Date().toISOString()} added employees.department column\n`
-        )
-      }
-    }
-    try {
-      await supabase.from('employees').select('start_date').limit(1)
-    } catch (err: any) {
-      if (err?.message?.includes('column') || err?.code === '42703') {
-        await supabase.rpc('execute_sql', {
-          sql: 'alter table employees add column if not exists start_date date;'
-        })
-        fs.appendFileSync(
-          'backend/logs/SCHEMA_CHANGES.md',
-          `- ${new Date().toISOString()} added employees.start_date column\n`
-        )
-      }
-    }
-    try {
-      await supabase.from('pay_schedules').select('id').limit(1)
-    } catch (err: any) {
-      if (err?.message?.includes('relation') || err?.code === '42P01') {
-        await supabase.rpc('execute_sql', {
-          sql: `create table if not exists pay_schedules (
-            id uuid primary key default uuid_generate_v4(),
-            company_id uuid references companies(id) on delete cascade,
-            frequency text,
-            next_run_date date,
-            created_at timestamp with time zone default now(),
-            updated_at timestamp with time zone default now()
-          );`
-        })
-        fs.appendFileSync(
-          'backend/logs/SCHEMA_CHANGES.md',
-          `- ${new Date().toISOString()} created pay_schedules table\n`
-        )
-      }
-    }
-  }
+  await ensureSchema(fastify);
+  const checkService = fastify.services.checkService as CheckService;
 
   /**
    * Schedule payroll for a company
