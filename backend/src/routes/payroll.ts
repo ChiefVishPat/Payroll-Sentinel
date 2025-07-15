@@ -114,7 +114,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
       payScheduleId?: string;
     };
 
-    await ensureSchema();
+    await ensureSchema(fastify);
 
     try {
       let scheduleId = payScheduleId;
@@ -182,7 +182,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
   fastify.get('/payroll/summary', async (request, reply) => {
     const start = Date.now()
     const { companyId } = request.query as { companyId: string }
-    await ensureSchema()
+    await ensureSchema(fastify)
     try {
       const { data: empRows } = await supabase
         .from('employees')
@@ -221,7 +221,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/payroll/runs', async (request, reply) => {
     const { companyId } = request.query as { companyId: string }
-    await ensureSchema()
+    await ensureSchema(fastify)
     try {
       const { data, error } = await supabase
         .from('payroll_runs')

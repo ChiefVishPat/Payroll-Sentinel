@@ -21,37 +21,44 @@ import {
 import { Dialog, DialogTrigger, DialogContent, DialogClose } from '@frontend/components/ui/dialog'
 import { useState } from 'react'
 
-export default function PayrollDashboard() {
-  const { companyId } = useCompany()
-  const [open, setOpen] = useState(false)
+/**
+ * Payroll dashboard page showing payroll data and employee roster.
+ * SWR auto refresh is disabled so the modal form doesn't reset while typing.
+ */
+  export default function PayrollDashboard() {
+    const { companyId } = useCompany()
+    const [open, setOpen] = useState(false)
 
-  if (!companyId) {
-    return <CompanySelector />
-  }
-  const fetcher = (url: string) => apiClient.get(url).then(res => res.data)
+    const fetcher = (url: string) => apiClient.get(url).then(res => res.data)
 
-  const swrOpts = {
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false,
-    refreshInterval: 0,
-  }
+    const swrOpts = {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      revalidateOnMount: false,
+      revalidateIfStale: false,
+      refreshInterval: 0,
+    }
 
-  const { data: payrollRuns, isLoading: loadingRuns, mutate: mutRuns } =
-    useSWR(
-      () => `/api/payroll/runs?companyId=${companyId}`,
+    const { data: payrollRuns, isLoading: loadingRuns, mutate: mutRuns } =
+      useSWR(
+        companyId ? `/api/payroll/runs?companyId=${companyId}` : null,
+        fetcher,
+        swrOpts
+      )
+    const { data: employees, isLoading: loadingEmp, mutate: mutEmp } = useSWR(
+      companyId ? `/api/payroll/employees?companyId=${companyId}` : null,
       fetcher,
       swrOpts
     )
-  const { data: employees, isLoading: loadingEmp, mutate: mutEmp } = useSWR(
-    () => `/api/payroll/employees?companyId=${companyId}`,
-    fetcher,
-    swrOpts
-  )
-  const { data: summary, isLoading: loadingSummary, mutate: mutSum } = useSWR(
-    () => `/api/payroll/summary?companyId=${companyId}`,
-    fetcher,
-    swrOpts
-  )
+    const { data: summary, isLoading: loadingSummary, mutate: mutSum } = useSWR(
+      companyId ? `/api/payroll/summary?companyId=${companyId}` : null,
+      fetcher,
+      swrOpts
+    )
+
+    if (!companyId) {
+      return <CompanySelector />
+    }
 
   const loading = loadingRuns || loadingEmp || loadingSummary
 
