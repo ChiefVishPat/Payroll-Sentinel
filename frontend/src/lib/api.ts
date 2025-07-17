@@ -53,6 +53,12 @@ apiClient.interceptors.response.use(
 export const api = {
   // Health check
   health: () => apiClient.get('/health'),
+
+  // Company endpoints
+  companies: {
+    list: () => apiClient.get('/api/companies'),
+    get: (id: string) => apiClient.get(`/api/companies/${id}`),
+  },
   
   // Risk endpoints
   risk: {
