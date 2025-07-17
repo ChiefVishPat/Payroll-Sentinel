@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { Dialog, DialogTrigger, DialogContent, DialogClose } from '@frontend/components/ui/dialog'
 import { useState } from 'react'
+import { DEPARTMENTS, TITLES } from '@frontend/lib/job-data'
 import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-panel'
 
 /**
@@ -161,16 +162,28 @@ import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-pa
                   required
                 />
                 <input
+                  list="title-options"
                   name="title"
                   placeholder="Title"
                   className="w-full border p-2 rounded text-black"
                   required
                 />
+                <datalist id="title-options">
+                  {TITLES.map(t => (
+                    <option key={t} value={t} />
+                  ))}
+                </datalist>
                 <input
+                  list="department-options"
                   name="department"
                   placeholder="Department"
                   className="w-full border p-2 rounded text-black"
                 />
+                <datalist id="department-options">
+                  {DEPARTMENTS.map(d => (
+                    <option key={d} value={d} />
+                  ))}
+                </datalist>
                 <input
                   name="salary"
                   type="number"

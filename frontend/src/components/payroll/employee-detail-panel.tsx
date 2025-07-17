@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogClose } from '@frontend/components/ui/dialog'
 import { Button } from '@frontend/components/ui/button'
+import { DEPARTMENTS, TITLES } from '@frontend/lib/job-data'
 import type { Employee } from '@frontend/shared/types'
 import { api } from '@frontend/lib/api'
 import { useCompany } from '@frontend/context/CompanyContext'
@@ -24,6 +25,7 @@ export default function EmployeeDetailPanel({
   const { companyId } = useCompany()
   const [editMode, setEditMode] = useState(false)
   const [title, setTitle] = useState(employee.title)
+  const [department, setDepartment] = useState(employee.department || '')
   const [salary, setSalary] = useState(employee.salary)
   const [status, setStatus] = useState(employee.status)
   const [loading, setLoading] = useState(false)
@@ -36,6 +38,7 @@ export default function EmployeeDetailPanel({
       .then(res => {
         const e = res.data.data as Employee
         setTitle(e.title)
+        setDepartment(e.department || '')
         setSalary(e.salary)
         setStatus(e.status)
       })
@@ -46,7 +49,11 @@ export default function EmployeeDetailPanel({
     console.debug(`[Payroll] UPDATE employee ${employee.name}`)
     setLoading(true)
     try {
-      await api.payroll.updateEmployee(employee.id, { title, salary, status }, companyId || undefined)
+      await api.payroll.updateEmployee(
+        employee.id,
+        { title, salary, status, department },
+        companyId || undefined
+      )
       setEditMode(false)
       onUpdated()
     } finally {
@@ -86,11 +93,30 @@ export default function EmployeeDetailPanel({
             className="space-y-4"
           >
             <input
+              list="title-options"
               value={title}
+              placeholder="Title"
               onChange={e => setTitle(e.target.value)}
               className="w-full border p-2 rounded text-black"
               required
             />
+            <datalist id="title-options">
+              {TITLES.map(t => (
+                <option key={t} value={t} />
+              ))}
+            </datalist>
+            <input
+              list="department-options"
+              value={department}
+              placeholder="Department"
+              onChange={e => setDepartment(e.target.value)}
+              className="w-full border p-2 rounded text-black"
+            />
+            <datalist id="department-options">
+              {DEPARTMENTS.map(d => (
+                <option key={d} value={d} />
+              ))}
+            </datalist>
             <input
               type="number"
               step="0.01"
@@ -115,12 +141,14 @@ export default function EmployeeDetailPanel({
             </div>
           </form>
         ) : (
-          <div className="space-y-2">
-            <div className="font-medium text-lg">{employee.name}</div>
-            <div>{employee.title}</div>
-            <div>{employee.department}</div>
-            <div>Salary: ${employee.salary.toLocaleString()}</div>
-            <div>Status: {employee.status}</div>
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold">{employee.name}</h3>
+            <div className="space-y-1 text-sm">
+              <div>{employee.title || '-'}</div>
+              <div>{employee.department || '-'}</div>
+              <div>Salary: ${employee.salary.toLocaleString()}</div>
+              <div>Status: {employee.status}</div>
+            </div>
             <div className="flex gap-2 mt-4">
               <Button size="sm" onClick={() => {console.debug(`[Payroll] EDIT employee ${employee.name}`); setEditMode(true) }}>Edit</Button>
               <Button size="sm" variant="destructive" onClick={remove}>Remove</Button>

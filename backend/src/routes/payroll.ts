@@ -57,6 +57,18 @@ async function ensureSchema(fastify: FastifyInstance): Promise<void> {
     });
     if (alterError) fastify.log.error('Failed to add department column', alterError);
   }
+
+  // Verify title column
+  const { error: titleError } = await supabase
+    .from('employees')
+    .select('title')
+    .limit(1);
+  if (titleError?.code === '42703') {
+    const { error: alterError } = await supabase.rpc('execute_sql', {
+      sql: 'ALTER TABLE employees ADD COLUMN title text;'
+    });
+    if (alterError) fastify.log.error('Failed to add title column', alterError);
+  }
 }
 
 /**
@@ -244,10 +256,10 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
       const transformed = (data || []).map(row => ({
         id: row.id,
         name: `${row.first_name} ${row.last_name}`.trim(),
-        title: row.department || '',
+        title: row.title || '',
         salary: Number(row.annual_salary || 0),
         status: row.is_active ? 'active' : 'inactive',
-        department: row.department
+        department: row.department,
       }))
 
       fastify.log.info({ mod: 'Payroll' }, 'employees fetched')
@@ -286,7 +298,8 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
         first_name: firstName,
         last_name: lastName,
         email,
-        department: department || title,
+        title,
+        department,
         annual_salary: salary,
         is_active: String(status) !== 'inactive',
       })
@@ -320,7 +333,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
       const employee = {
         id: data.id,
         name: `${data.first_name} ${data.last_name}`.trim(),
-        title: data.department || '',
+        title: data.title || '',
         salary: Number(data.annual_salary || 0),
         status: data.is_active ? 'active' : 'inactive',
         department: data.department,
@@ -342,11 +355,12 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
   fastify.put('/payroll/employees/:id', async (request, reply) => {
     const { id } = request.params as { id: string }
     const { companyId } = request.query as { companyId?: string }
-    const { title, salary, status } = request.body as any
+    const { title, salary, status, department } = request.body as any
     await ensureSchema(fastify)
     try {
       const updates: Record<string, unknown> = {
-        department: title,
+        title,
+        department,
         annual_salary: salary,
         is_active: String(status) !== 'inactive',
         updated_at: new Date().toISOString(),
