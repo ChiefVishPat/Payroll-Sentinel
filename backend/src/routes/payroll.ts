@@ -1,82 +1,23 @@
 import { FastifyInstance } from 'fastify';
-import fs from 'fs';
-import path from 'path';
 import { supabase } from '@backend/db/client';
+import { applyMigrations } from '@backend/db/migrations';
 import { CheckService } from '@backend/services/check';
 
 /**
- * Ensure required database tables and columns exist.
- * This helper checks for the employees table and key columns
- * and creates them if missing using raw SQL via Supabase RPC.
+ * Ensure the database schema exists by applying all migrations.
+ * Migrations are idempotent so running this on each request is safe.
  */
-async function ensureSchema(fastify: FastifyInstance): Promise<void> {
-  // Check if employees table exists
-  const { error: tableError } = await supabase
-    .from('employees')
-    .select('id')
-    .limit(1);
-
-  if (tableError?.code === '42P01') {
-    const createTableSQL = `
-      CREATE TABLE employees (
-        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-        company_id uuid REFERENCES companies(id) ON DELETE CASCADE,
-        employee_number text UNIQUE NOT NULL,
-        first_name text NOT NULL,
-        last_name text NOT NULL,
-        email text UNIQUE NOT NULL,
-        department text,
-        annual_salary numeric(10,2),
-        hourly_rate numeric(8,2),
-        is_active boolean DEFAULT true,
-        created_at timestamp with time zone DEFAULT now(),
-        updated_at timestamp with time zone DEFAULT now()
-      );`;
-
-    const { error: createError } = await supabase.rpc('execute_sql', {
-      sql: createTableSQL,
-    });
-
-    if (createError) {
-      fastify.log.error('Failed to create employees table', createError);
-    } else {
-      const logPath = path.resolve(__dirname, '../..', 'logs', 'SCHEMA_CHANGES.md');
-      const entry = `- ${new Date().toISOString()}: created employees table\n`;
-      fs.appendFileSync(logPath, entry);
-    }
-  }
-
-  // Verify department column
-  const { error: deptError } = await supabase
-    .from('employees')
-    .select('department')
-    .limit(1);
-  if (deptError?.code === '42703') {
-    const { error: alterError } = await supabase.rpc('execute_sql', {
-      sql: 'ALTER TABLE employees ADD COLUMN department text;'
-    });
-    if (alterError) fastify.log.error('Failed to add department column', alterError);
-  }
-
-  // Verify title column
-  const { error: titleError } = await supabase
-    .from('employees')
-    .select('title')
-    .limit(1);
-  if (titleError?.code === '42703') {
-    const { error: alterError } = await supabase.rpc('execute_sql', {
-      sql: 'ALTER TABLE employees ADD COLUMN title text;'
-    });
-    if (alterError) fastify.log.error('Failed to add title column', alterError);
-  }
+async function ensureSchema(): Promise<void> {
+  await applyMigrations();
 }
+
 
 /**
  * Payroll routes for managing payroll operations
  * Includes creating pay schedules and running payroll
  */
 export default async function payrollRoutes(fastify: FastifyInstance) {
-  await ensureSchema(fastify);
+  await ensureSchema();
   const checkService = fastify.services.checkService as CheckService;
 
   /**
@@ -113,7 +54,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
       payScheduleId?: string;
     };
 
-    await ensureSchema(fastify);
+    await ensureSchema();
 
     try {
       let scheduleId = payScheduleId;
@@ -181,7 +122,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
   fastify.get('/payroll/summary', async (request, reply) => {
     const start = Date.now()
     const { companyId } = request.query as { companyId: string }
-    await ensureSchema(fastify)
+    await ensureSchema()
     try {
       const { data: empRows } = await supabase
         .from('employees')
@@ -221,7 +162,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/payroll/runs', async (request, reply) => {
     const { companyId } = request.query as { companyId: string }
-    await ensureSchema(fastify)
+    await ensureSchema()
     try {
       const { data, error } = await supabase
         .from('payroll_runs')
@@ -248,7 +189,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
       payPeriodEnd: string
       payDate: string
     }
-    await ensureSchema(fastify)
+    await ensureSchema()
     try {
       const runNumber = `run_${Date.now()}`
       const { data, error } = await supabase
@@ -284,7 +225,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
       payPeriodEnd: string
       payDate: string
     }>
-    await ensureSchema(fastify)
+    await ensureSchema()
     try {
       const { data: existing, error: findError } = await supabase
         .from('payroll_runs')
@@ -323,7 +264,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
    */
   fastify.delete('/payroll/runs/:id', async (request, reply) => {
     const { id } = request.params as { id: string }
-    await ensureSchema(fastify)
+    await ensureSchema()
     try {
       const { data: existing, error: findError } = await supabase
         .from('payroll_runs')
@@ -350,7 +291,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
    */
   fastify.post('/payroll/runs/:id/approve', async (request, reply) => {
     const { id } = request.params as { id: string }
-    await ensureSchema(fastify)
+    await ensureSchema()
     try {
       const { data: existing, error: findError } = await supabase
         .from('payroll_runs')
@@ -382,7 +323,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
    */
   fastify.post('/payroll/runs/:id/revert', async (request, reply) => {
     const { id } = request.params as { id: string }
-    await ensureSchema(fastify)
+    await ensureSchema()
     try {
       const { data: existing, error: findError } = await supabase
         .from('payroll_runs')
@@ -414,7 +355,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
    */
   fastify.post('/payroll/runs/:id/process', async (request, reply) => {
     const { id } = request.params as { id: string }
-    await ensureSchema(fastify)
+    await ensureSchema()
     try {
       const { data, error } = await supabase
         .from('payroll_runs')
@@ -437,7 +378,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/payroll/employees', async (request, reply) => {
     const { companyId } = request.query as { companyId: string }
-    await ensureSchema(fastify)
+    await ensureSchema()
     try {
       const { data, error } = await supabase
         .from('employees')
@@ -479,7 +420,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
       department,
     } = request.body as any
 
-    await ensureSchema(fastify)
+    await ensureSchema()
 
     try {
       const [firstName, ...rest] = String(name || '').trim().split(' ')
@@ -513,7 +454,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
   fastify.get('/payroll/employees/:id', async (request, reply) => {
     const { id } = request.params as { id: string }
     const { companyId } = request.query as { companyId?: string }
-    await ensureSchema(fastify)
+    await ensureSchema()
     try {
       const query = supabase
         .from('employees')
@@ -550,7 +491,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
     const { id } = request.params as { id: string }
     const { companyId } = request.query as { companyId?: string }
     const { title, salary, status, department } = request.body as any
-    await ensureSchema(fastify)
+    await ensureSchema()
     try {
       const updates: Record<string, unknown> = {
         title,
@@ -582,7 +523,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
   fastify.delete('/payroll/employees/:id', async (request, reply) => {
     const { id } = request.params as { id: string }
     const { companyId } = request.query as { companyId?: string }
-    await ensureSchema(fastify)
+    await ensureSchema()
     try {
       const query = supabase
         .from('employees')

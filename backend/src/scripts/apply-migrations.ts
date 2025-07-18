@@ -5,11 +5,11 @@
  * Usage: npm run migrate
  */
 import '@backend/loadEnv';
-import { ensurePayrollSchema } from '../db/migrations';
+import { applyMigrations } from '../db/migrations';
 
 async function run(): Promise<void> {
   try {
-    await ensurePayrollSchema();
+    await applyMigrations();
     console.log('✅ Schema migrations applied');
   } catch (err) {
     console.error('❌ Failed to apply migrations', err);
