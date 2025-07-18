@@ -24,6 +24,7 @@ export interface Employee {
   first_name: string;
   last_name: string;
   email: string;
+  title?: string;
   department?: string;
   annual_salary?: number;
   hourly_rate?: number;
