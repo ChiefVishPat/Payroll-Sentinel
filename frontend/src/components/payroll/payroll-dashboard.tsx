@@ -22,6 +22,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogClose } from '@frontend/com
 import { useState } from 'react'
 import { DEPARTMENTS, TITLES } from '@frontend/lib/job-data'
 import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-panel'
+import RunDetailPanel from '@frontend/components/payroll/run-detail-panel'
 
 /**
  * Payroll dashboard page showing payroll data and employee roster.
@@ -32,6 +33,10 @@ import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-pa
     const [open, setOpen] = useState(false)
     const [detailOpen, setDetailOpen] = useState(false)
     const [selected, setSelected] = useState<Employee | null>(null)
+    const [runPanelOpen, setRunPanelOpen] = useState(false)
+    const [selectedRun, setSelectedRun] = useState<PayrollRun | null>(null)
+    const [createOpen, setCreateOpen] = useState(false)
+    const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'processed' | 'draft'>('all')
 
     const fetcher = (url: string) => apiClient.get(url).then(res => res.data)
 
@@ -44,12 +49,14 @@ import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-pa
       refreshInterval: 0,
     }
 
-    const { data: payrollRuns, isLoading: loadingRuns, mutate: mutRuns } =
-      useSWR(
-        companyId ? `/api/payroll/runs?companyId=${companyId}` : null,
-        fetcher,
-        swrOpts
-      )
+    const runsUrl = companyId
+      ? `/api/payroll/runs?companyId=${companyId}${filter !== 'all' ? `&status=${filter}` : ''}`
+      : null
+    const { data: payrollRuns, isLoading: loadingRuns, mutate: mutRuns } = useSWR(
+      runsUrl,
+      fetcher,
+      swrOpts
+    )
     const { data: employees, isLoading: loadingEmp, mutate: mutEmp } = useSWR(
       companyId ? `/api/payroll/employees?companyId=${companyId}` : null,
       fetcher,
@@ -124,6 +131,42 @@ import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-pa
           <p className="text-gray-600">Manage payroll runs and employees</p>
         </div>
         <div className="flex gap-2">
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <span className="text-xl">➕</span> New Run
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="text-black">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">New Payroll Run</h2>
+                <DialogClose asChild>
+                  <Button variant="ghost" size="sm">Close</Button>
+                </DialogClose>
+              </div>
+              <form
+                onSubmit={async e => {
+                  e.preventDefault()
+                  const form = new FormData(e.currentTarget)
+                  await api.payroll.createRun({
+                    companyId,
+                    payPeriodStart: form.get('start'),
+                    payPeriodEnd: form.get('end'),
+                    payDate: form.get('payDate'),
+                  })
+                  await Promise.all([mutRuns(), mutSum()])
+                  setCreateOpen(false)
+                  e.currentTarget.reset()
+                }}
+                className="space-y-4"
+              >
+                <input name="start" type="date" className="w-full border p-2 rounded text-black" required />
+                <input name="end" type="date" className="w-full border p-2 rounded text-black" required />
+                <input name="payDate" type="date" className="w-full border p-2 rounded text-black" required />
+                <Button type="submit">Create</Button>
+              </form>
+            </DialogContent>
+          </Dialog>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
@@ -278,6 +321,18 @@ import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-pa
           <CardDescription>
             Recent and upcoming payroll runs
           </CardDescription>
+          <div className="mt-2 flex gap-2">
+            {['all','pending','approved','processed','draft'].map(s => (
+              <Button
+                key={s}
+                size="sm"
+                variant={filter === s ? 'default' : 'outline'}
+                onClick={() => setFilter(s as any)}
+              >
+                {s}
+              </Button>
+            ))}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -287,7 +342,14 @@ import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-pa
               </div>
             ) : (
               (payrollRuns?.data || []).map((run: PayrollRun) => (
-                <div key={run.id} className="flex items-center justify-between p-4 border rounded">
+                <div
+                  key={run.id}
+                  className="flex items-center justify-between p-4 border rounded cursor-pointer hover:bg-gray-50"
+                  onClick={() => {
+                    setSelectedRun(run)
+                    setRunPanelOpen(true)
+                  }}
+                >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <div className={`px-2 py-1 text-xs rounded ${getStatusColor(run.status)}`}>
@@ -386,6 +448,16 @@ import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-pa
           onOpenChange={setDetailOpen}
           onUpdated={async () => {
             await Promise.all([mutEmp(), mutSum()])
+          }}
+        />
+      )}
+      {selectedRun && (
+        <RunDetailPanel
+          run={selectedRun}
+          open={runPanelOpen}
+          onOpenChange={setRunPanelOpen}
+          onUpdated={async () => {
+            await Promise.all([mutRuns(), mutSum()])
           }}
         />
       )}
