@@ -86,6 +86,15 @@ export const api = {
     getEmployees: (companyId: string = 'demo-company') => apiClient.get(`/api/payroll/employees?companyId=${companyId}`),
     getSummary: (companyId: string = 'demo-company') => apiClient.get(`/api/payroll/summary?companyId=${companyId}`),
     addEmployee: (data: Record<string, unknown>) => apiClient.post('/api/payroll/employees', data),
+    getEmployee: (id: string, companyId: string = 'demo-company') =>
+      apiClient.get(`/api/payroll/employees/${id}?companyId=${companyId}`),
+    updateEmployee: (
+      id: string,
+      data: Record<string, unknown>,
+      companyId: string = 'demo-company'
+    ) => apiClient.put(`/api/payroll/employees/${id}?companyId=${companyId}`, data),
+    removeEmployee: (id: string, companyId: string = 'demo-company') =>
+      apiClient.delete(`/api/payroll/employees/${id}?companyId=${companyId}`),
     runPayroll: (data: Record<string, unknown>) => apiClient.post('/api/payroll/run', data),
     getUpcoming: (companyId: string = 'demo-company') => apiClient.get(`/api/payroll/upcoming?companyId=${companyId}`),
     getStats: (companyId: string = 'demo-company') => apiClient.get(`/api/payroll/stats?companyId=${companyId}`),
