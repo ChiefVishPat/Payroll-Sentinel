@@ -83,6 +83,11 @@ export const api = {
   // Payroll endpoints
   payroll: {
     getRuns: (companyId: string = 'demo-company') => apiClient.get(`/api/payroll/runs?companyId=${companyId}`),
+    createRun: (data: Record<string, unknown>) => apiClient.post('/api/payroll/runs', data),
+    updateRun: (id: string, data: Record<string, unknown>, companyId: string = 'demo-company') =>
+      apiClient.put(`/api/payroll/runs/${id}?companyId=${companyId}`, data),
+    deleteRun: (id: string, companyId: string = 'demo-company') =>
+      apiClient.delete(`/api/payroll/runs/${id}?companyId=${companyId}`),
     getEmployees: (companyId: string = 'demo-company') => apiClient.get(`/api/payroll/employees?companyId=${companyId}`),
     getSummary: (companyId: string = 'demo-company') => apiClient.get(`/api/payroll/summary?companyId=${companyId}`),
     addEmployee: (data: Record<string, unknown>) => apiClient.post('/api/payroll/employees', data),
@@ -99,6 +104,7 @@ export const api = {
     getUpcoming: (companyId: string = 'demo-company') => apiClient.get(`/api/payroll/upcoming?companyId=${companyId}`),
     getStats: (companyId: string = 'demo-company') => apiClient.get(`/api/payroll/stats?companyId=${companyId}`),
     approveRun: (runId: string, companyId: string = 'demo-company') => apiClient.post(`/api/payroll/runs/${runId}/approve`, { companyId }),
+    revertRun: (runId: string, companyId: string = 'demo-company') => apiClient.post(`/api/payroll/runs/${runId}/revert`, { companyId }),
     processRun: (runId: string, companyId: string = 'demo-company') => apiClient.post(`/api/payroll/runs/${runId}/process`, { companyId }),
   },
   
