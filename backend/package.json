@@ -19,7 +19,7 @@
     "test-raw-sql": "tsx src/scripts/test-raw-sql.ts",
     "env:backend": "cross-env DOTENV_CONFIG_PATH=.env NODE_OPTIONS=\"--require dotenv/config\"",
     "setup-db": "npm run env:backend -- tsx src/scripts/setup-database.ts",
-    "gen:types": "npm run env:backend -- supabase gen types typescript --schema public",
+    "gen:types": "npm run env:backend -- supabase gen types typescript --schema public --linked > src/db/database.types.ts",
     "migrate": "npm run env:backend -- tsx src/scripts/apply-migrations.ts"
   },
   "dependencies": {
