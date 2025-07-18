@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS employees (
   first_name       TEXT        NOT NULL,
   last_name        TEXT        NOT NULL,
   email            TEXT UNIQUE NOT NULL,
+  title            TEXT,
   department       TEXT,
   annual_salary    NUMERIC(10,2),
   hourly_rate      NUMERIC(8,2),
