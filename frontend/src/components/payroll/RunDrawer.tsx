@@ -8,7 +8,7 @@ import { formatCurrency, formatDate } from '@frontend/lib/utils'
 import { Loader } from 'lucide-react'
 import { useCompany } from '@frontend/context/CompanyContext'
 import type { PayrollRun } from '@frontend/types'
-import RunModal from './RunModal'
+import EditRunModal from './EditRunModal'
 
 interface RunDetailProps {
   run: PayrollRun
@@ -96,7 +96,15 @@ export default function RunDrawer({ run, open, onOpenChange, onUpdated }: RunDet
             <div className="flex gap-2 mt-4 flex-wrap">
               {['draft', 'pending'].includes(run.status) && (
                 <>
-                  <Button size="sm" onClick={() => setEditing(true)} disabled={loading}>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      // Close drawer so the edit modal is unobstructed
+                      setEditing(true)
+                      onOpenChange(false)
+                    }}
+                    disabled={loading}
+                  >
                     {loading ? <Loader className="h-4 w-4 animate-spin" /> : 'Edit'}
                   </Button>
                   <Button size="sm" variant="destructive" onClick={remove} disabled={loading}>
@@ -126,7 +134,7 @@ export default function RunDrawer({ run, open, onOpenChange, onUpdated }: RunDet
           </div>
         </DialogContent>
       </Dialog>
-      <RunModal
+      <EditRunModal
         open={editing}
         onOpenChange={setEditing}
         onSaved={onUpdated}
