@@ -190,11 +190,18 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
    * @route POST /api/payroll/runs
    */
   fastify.post('/payroll/runs', async (request, reply) => {
-    const { companyId, payPeriodStart, payPeriodEnd, payDate } = request.body as {
+    const {
+      companyId,
+      payPeriodStart,
+      payPeriodEnd,
+      payDate,
+      draft = true,
+    } = request.body as {
       companyId: string
       payPeriodStart: string
       payPeriodEnd: string
       payDate: string
+      draft?: boolean
     }
     await ensureSchema()
     try {
@@ -219,6 +226,8 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
 
       const checkRun = result.data
 
+      const status = draft ? 'draft' : 'pending'
+
       const { data, error } = await supabase
         .from('payroll_runs')
         .insert({
@@ -233,12 +242,27 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
           total_taxes: checkRun.totalTaxes,
           total_deductions: checkRun.totalDeductions,
           employee_count: checkRun.employeeCount,
-          status: 'draft',
+          status,
         })
         .select()
         .single()
-
-      if (error) throw error
+      if (error) {
+        if (error.code === '23505') {
+          const { data: recent } = await supabase
+            .from('payroll_runs')
+            .select('created_at')
+            .eq('company_id', companyId)
+            .eq('run_number', runNumber)
+            .maybeSingle()
+          if (
+            recent &&
+            new Date(recent.created_at).getTime() > Date.now() - 10000
+          ) {
+            return reply.status(409).send({ error: 'duplicate run' })
+          }
+        }
+        throw error
+      }
       fastify.log.info({ mod: 'Payroll' }, 'run created')
       return reply.send({ data })
     } catch (err) {

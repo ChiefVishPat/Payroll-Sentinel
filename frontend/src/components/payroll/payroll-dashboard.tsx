@@ -22,7 +22,8 @@ import { Dialog, DialogTrigger, DialogContent, DialogClose } from '@frontend/com
 import { useState } from 'react'
 import { DEPARTMENTS, TITLES } from '@frontend/lib/job-data'
 import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-panel'
-import RunDetailPanel from '@frontend/components/payroll/run-detail-panel'
+import RunDrawer from '@frontend/components/payroll/RunDrawer'
+import RunModal from '@frontend/components/payroll/RunModal'
 
 /**
  * Payroll dashboard page showing payroll data and employee roster.
@@ -49,9 +50,7 @@ import RunDetailPanel from '@frontend/components/payroll/run-detail-panel'
       refreshInterval: 0,
     }
 
-    const runsUrl = companyId
-      ? `/api/payroll/runs?companyId=${companyId}${filter !== 'all' ? `&status=${filter}` : ''}`
-      : null
+    const runsUrl = companyId ? `/api/payroll/runs?companyId=${companyId}` : null
     const { data: payrollRuns, isLoading: loadingRuns, mutate: mutRuns } = useSWR(
       runsUrl,
       fetcher,
@@ -131,75 +130,9 @@ import RunDetailPanel from '@frontend/components/payroll/run-detail-panel'
           <p className="text-gray-600">Manage payroll runs and employees</p>
         </div>
         <div className="flex gap-2">
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <span className="text-xl">➕</span> New Run
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="text-black">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">New Payroll Run</h2>
-                <DialogClose asChild>
-                  <Button variant="ghost" size="sm">Close</Button>
-                </DialogClose>
-              </div>
-              <form
-                onSubmit={async e => {
-                  e.preventDefault()
-                  const form = new FormData(e.currentTarget)
-                  await api.payroll.createRun({
-                    companyId,
-                    payPeriodStart: form.get('start'),
-                    payPeriodEnd: form.get('end'),
-                    payDate: form.get('payDate'),
-                  })
-                  await Promise.all([mutRuns(), mutSum()])
-                  setCreateOpen(false)
-                  e.currentTarget.reset()
-                }}
-                className="space-y-4"
-              >
-                <div>
-                  <label htmlFor="start" className="block text-sm font-medium mb-1">
-                    Period Start
-                  </label>
-                  <input
-                    id="start"
-                    name="start"
-                    type="date"
-                    className="w-full border p-2 rounded text-black"
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="end" className="block text-sm font-medium mb-1">
-                    Period End
-                  </label>
-                  <input
-                    id="end"
-                    name="end"
-                    type="date"
-                    className="w-full border p-2 rounded text-black"
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="payDate" className="block text-sm font-medium mb-1">
-                    Pay Date
-                  </label>
-                  <input
-                    id="payDate"
-                    name="payDate"
-                    type="date"
-                    className="w-full border p-2 rounded text-black"
-                    required
-                  />
-                </div>
-                <Button type="submit">Create</Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setCreateOpen(true)} className="flex items-center gap-2">
+            <span className="text-xl">➕</span> New Run
+          </Button>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
@@ -369,12 +302,18 @@ import RunDetailPanel from '@frontend/components/payroll/run-detail-panel'
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {(payrollRuns?.data || []).length === 0 ? (
+            {(
+              (payrollRuns?.data || []).filter(r =>
+                filter === 'all' ? true : r.status === filter
+              ).length === 0
+            ) ? (
               <div className="text-center py-8 text-gray-500">
                 No payroll runs found
               </div>
             ) : (
-              (payrollRuns?.data || []).map((run: PayrollRun) => (
+              (payrollRuns?.data || [])
+                .filter(run => (filter === 'all' ? true : run.status === filter))
+                .map((run: PayrollRun) => (
                 <div
                   key={run.id}
                   className="flex items-center justify-between p-4 border rounded cursor-pointer hover:bg-gray-50"
@@ -487,7 +426,7 @@ import RunDetailPanel from '@frontend/components/payroll/run-detail-panel'
         />
       )}
       {selectedRun && (
-        <RunDetailPanel
+        <RunDrawer
           run={selectedRun}
           open={runPanelOpen}
           onOpenChange={setRunPanelOpen}
@@ -496,6 +435,13 @@ import RunDetailPanel from '@frontend/components/payroll/run-detail-panel'
           }}
         />
       )}
+      <RunModal
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onSaved={async () => {
+          await Promise.all([mutRuns(), mutSum()])
+        }}
+      />
     </div>
   )
 }

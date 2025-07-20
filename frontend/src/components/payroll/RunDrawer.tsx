@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Dialog, DialogContent, DialogClose } from '@frontend/components/ui/dialog'
 import { Button } from '@frontend/components/ui/button'
 import { api } from '@frontend/lib/api'
 import { formatCurrency, formatDate } from '@frontend/lib/utils'
 import { useCompany } from '@frontend/context/CompanyContext'
 import type { PayrollRun } from '@frontend/types'
+import RunModal from './RunModal'
 
 interface RunDetailProps {
   run: PayrollRun
@@ -16,36 +17,10 @@ interface RunDetailProps {
 }
 
 /** Drawer panel showing a single payroll run and actions */
-export default function RunDetailPanel({ run, open, onOpenChange, onUpdated }: RunDetailProps) {
+export default function RunDrawer({ run, open, onOpenChange, onUpdated }: RunDetailProps) {
   const { companyId } = useCompany()
-  const [editMode, setEditMode] = useState(false)
-  const [start, setStart] = useState(run.pay_period_start)
-  const [end, setEnd] = useState(run.pay_period_end)
-  const [payDate, setPayDate] = useState(run.pay_date)
+  const [editing, setEditing] = useState(false)
   const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (!open) return
-    setEditMode(false)
-    setStart(run.pay_period_start)
-    setEnd(run.pay_period_end)
-    setPayDate(run.pay_date)
-  }, [open, run])
-
-  const save = async () => {
-    setLoading(true)
-    try {
-      await api.payroll.updateRun(
-        run.id,
-        { payPeriodStart: start, payPeriodEnd: end, payDate },
-        companyId || undefined
-      )
-      onUpdated()
-      setEditMode(false)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const remove = async () => {
     if (!confirm('Discard this run?')) return
@@ -90,6 +65,7 @@ export default function RunDetailPanel({ run, open, onOpenChange, onUpdated }: R
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="fixed right-0 top-0 h-full w-full max-w-md rounded-none bg-white p-6 text-black">
         <div className="flex justify-between items-center mb-4">
@@ -99,44 +75,7 @@ export default function RunDetailPanel({ run, open, onOpenChange, onUpdated }: R
           </DialogClose>
         </div>
 
-        {editMode ? (
-          <form
-            onSubmit={e => {
-              e.preventDefault()
-              save()
-            }}
-            className="space-y-4"
-          >
-            <input
-              type="date"
-              value={start}
-              onChange={e => setStart(e.target.value)}
-              className="w-full border p-2 rounded"
-              required
-            />
-            <input
-              type="date"
-              value={end}
-              onChange={e => setEnd(e.target.value)}
-              className="w-full border p-2 rounded"
-              required
-            />
-            <input
-              type="date"
-              value={payDate}
-              onChange={e => setPayDate(e.target.value)}
-              className="w-full border p-2 rounded"
-              required
-            />
-            <div className="flex gap-2">
-              <Button type="submit" disabled={loading}>Save</Button>
-              <Button variant="outline" type="button" onClick={() => setEditMode(false)}>
-                Cancel
-              </Button>
-            </div>
-          </form>
-        ) : (
-          <div className="space-y-2">
+        <div className="space-y-2">
             <div className="font-medium">
               Period: {run.pay_period_start} to {run.pay_period_end}
             </div>
@@ -145,10 +84,10 @@ export default function RunDetailPanel({ run, open, onOpenChange, onUpdated }: R
             <div className="text-sm">Employees: {run.employee_count}</div>
             <div className="text-sm">Status: {run.status}</div>
             <div className="flex gap-2 mt-4 flex-wrap">
-              {run.status === 'draft' && (
+              {['draft', 'pending'].includes(run.status) && (
                 <>
-                  <Button size="sm" onClick={() => setEditMode(true)}>Edit</Button>
-                  <Button size="sm" variant="destructive" onClick={remove}>Discard</Button>
+                  <Button size="sm" onClick={() => setEditing(true)}>Edit</Button>
+                  <Button size="sm" variant="destructive" onClick={remove}>Delete</Button>
                 </>
               )}
               {run.status === 'pending' && (
@@ -168,5 +107,12 @@ export default function RunDetailPanel({ run, open, onOpenChange, onUpdated }: R
         )}
       </DialogContent>
     </Dialog>
+    <RunModal
+      open={editing}
+      onOpenChange={setEditing}
+      onSaved={onUpdated}
+      run={run}
+    />
+    </>
   )
 }

@@ -42,6 +42,10 @@ ALTER TABLE payroll_runs ALTER COLUMN pay_date SET NOT NULL;
 ALTER TABLE payroll_runs ALTER COLUMN status SET DEFAULT 'draft';
 ALTER TABLE payroll_runs ALTER COLUMN status SET NOT NULL;
 
+-- Remove old unique constraint if present
+ALTER TABLE payroll_runs
+  DROP CONSTRAINT IF EXISTS payroll_runs_run_number_key;
+
 -- Ensure status check constraint
 DO $$
 BEGIN
@@ -57,16 +61,17 @@ BEGIN
 END;
 $$;
 
--- Ensure run_number uniqueness
+-- Ensure run_number and company_id uniqueness
 DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint
-    WHERE conname = 'payroll_runs_run_number_key'
+    WHERE conname = 'payroll_runs_run_number_company_id_key'
       AND conrelid = 'payroll_runs'::regclass
   ) THEN
     ALTER TABLE payroll_runs
-      ADD CONSTRAINT payroll_runs_run_number_key UNIQUE (run_number);
+      ADD CONSTRAINT payroll_runs_run_number_company_id_key
+        UNIQUE (run_number, company_id);
   END IF;
 END;
 $$;
