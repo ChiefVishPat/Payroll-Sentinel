@@ -7,6 +7,8 @@ ALTER TABLE payroll_runs
 ALTER TABLE payroll_runs
   ADD COLUMN IF NOT EXISTS pay_period_end DATE;
 ALTER TABLE payroll_runs
+  ADD COLUMN IF NOT EXISTS check_payroll_id TEXT;
+ALTER TABLE payroll_runs
   ADD COLUMN IF NOT EXISTS total_gross NUMERIC(12,2) DEFAULT 0;
 ALTER TABLE payroll_runs
   ADD COLUMN IF NOT EXISTS total_net NUMERIC(12,2) DEFAULT 0;
@@ -29,7 +31,8 @@ BEGIN
       WHERE total_gross = 0;
     ALTER TABLE payroll_runs DROP COLUMN total_amount;
   END IF;
-END$$;
+END;
+$$;
 
 -- Set constraints and defaults
 ALTER TABLE payroll_runs ALTER COLUMN run_number SET NOT NULL;
@@ -51,7 +54,8 @@ BEGIN
       ADD CONSTRAINT payroll_runs_status_check
         CHECK (status IN ('draft','pending','approved','processed','cancelled'));
   END IF;
-END$$;
+END;
+$$;
 
 -- Ensure run_number uniqueness
 DO $$
@@ -64,7 +68,8 @@ BEGIN
     ALTER TABLE payroll_runs
       ADD CONSTRAINT payroll_runs_run_number_key UNIQUE (run_number);
   END IF;
-END$$;
+END;
+$$;
 
 -- Log for migration runner
 SELECT '[migration] payroll_runs columns ensured' AS info;

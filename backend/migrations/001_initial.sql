@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS employees (
 CREATE TABLE IF NOT EXISTS payroll_runs (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id       UUID        REFERENCES companies(id) ON DELETE CASCADE,
+  check_payroll_id TEXT,
   run_number       TEXT UNIQUE NOT NULL,
   pay_period_start DATE        NOT NULL,
   pay_period_end   DATE        NOT NULL,
@@ -150,7 +151,8 @@ BEGIN
     CREATE POLICY allow_all_risk_assessments ON risk_assessments  FOR ALL USING (true);
     CREATE POLICY allow_all_alerts           ON alerts            FOR ALL USING (true);
   END IF;
-END$$;
+END;
+$$;
 
 /*──────────────  updated_at trigger  ──────────────*/
 
