@@ -160,9 +160,42 @@ import RunDetailPanel from '@frontend/components/payroll/run-detail-panel'
                 }}
                 className="space-y-4"
               >
-                <input name="start" type="date" className="w-full border p-2 rounded text-black" required />
-                <input name="end" type="date" className="w-full border p-2 rounded text-black" required />
-                <input name="payDate" type="date" className="w-full border p-2 rounded text-black" required />
+                <div>
+                  <label htmlFor="start" className="block text-sm font-medium mb-1">
+                    Period Start
+                  </label>
+                  <input
+                    id="start"
+                    name="start"
+                    type="date"
+                    className="w-full border p-2 rounded text-black"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="end" className="block text-sm font-medium mb-1">
+                    Period End
+                  </label>
+                  <input
+                    id="end"
+                    name="end"
+                    type="date"
+                    className="w-full border p-2 rounded text-black"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="payDate" className="block text-sm font-medium mb-1">
+                    Pay Date
+                  </label>
+                  <input
+                    id="payDate"
+                    name="payDate"
+                    type="date"
+                    className="w-full border p-2 rounded text-black"
+                    required
+                  />
+                </div>
                 <Button type="submit">Create</Button>
               </form>
             </DialogContent>
