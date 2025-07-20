@@ -40,13 +40,31 @@ ALTER TABLE payroll_runs ALTER COLUMN status SET DEFAULT 'draft';
 ALTER TABLE payroll_runs ALTER COLUMN status SET NOT NULL;
 
 -- Ensure status check constraint
-ALTER TABLE payroll_runs
-  ADD CONSTRAINT IF NOT EXISTS payroll_runs_status_check
-    CHECK (status IN ('draft','pending','approved','processed','cancelled'));
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'payroll_runs_status_check'
+      AND conrelid = 'payroll_runs'::regclass
+  ) THEN
+    ALTER TABLE payroll_runs
+      ADD CONSTRAINT payroll_runs_status_check
+        CHECK (status IN ('draft','pending','approved','processed','cancelled'));
+  END IF;
+END$$;
 
 -- Ensure run_number uniqueness
-ALTER TABLE payroll_runs
-  ADD CONSTRAINT IF NOT EXISTS payroll_runs_run_number_key UNIQUE (run_number);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'payroll_runs_run_number_key'
+      AND conrelid = 'payroll_runs'::regclass
+  ) THEN
+    ALTER TABLE payroll_runs
+      ADD CONSTRAINT payroll_runs_run_number_key UNIQUE (run_number);
+  END IF;
+END$$;
 
 -- Log for migration runner
 SELECT '[migration] payroll_runs columns ensured' AS info;
