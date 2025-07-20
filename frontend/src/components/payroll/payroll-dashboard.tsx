@@ -347,7 +347,11 @@ import RunModal from '@frontend/components/payroll/RunModal'
                     {run.status === 'pending' && (
                       <Button
                         size="sm"
-                        onClick={() => approvePayroll(run.id)}
+                        onClick={e => {
+                          // Prevent the row click handler from opening the drawer
+                          e.stopPropagation()
+                          approvePayroll(run.id)
+                        }}
                         className="flex items-center gap-1"
                       >
                         <CheckCircle className="h-4 w-4" />
@@ -357,7 +361,11 @@ import RunModal from '@frontend/components/payroll/RunModal'
                     {run.status === 'approved' && (
                       <Button
                         size="sm"
-                        onClick={() => processPayroll(run.id)}
+                        onClick={e => {
+                          // Prevent the row click handler from opening the drawer
+                          e.stopPropagation()
+                          processPayroll(run.id)
+                        }}
                         className="flex items-center gap-1"
                       >
                         <Play className="h-4 w-4" />
