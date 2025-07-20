@@ -37,10 +37,12 @@ export default function RunModal({ open, onOpenChange, onSaved, run }: RunModalP
 
   useEffect(() => {
     if (!open) return
-    setStart(run?.pay_period_start || '')
-    setEnd(run?.pay_period_end || '')
-    setPayDate(run?.pay_date || '')
-    setGross(run ? String(run.total_gross) : '')
+    // Support both new and legacy field names so edits work pre-migration
+    const r: any = run || {}
+    setStart(r.pay_period_start ?? r.payPeriodStart ?? '')
+    setEnd(r.pay_period_end ?? r.payPeriodEnd ?? '')
+    setPayDate(r.pay_date ?? r.payDate ?? '')
+    setGross(run ? String(r.total_gross ?? r.totalAmount ?? 0) : '')
     if (employees && !isEdit) {
       setSelected(employees.data.map((e: Employee) => e.id))
     }

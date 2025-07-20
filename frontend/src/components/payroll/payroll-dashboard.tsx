@@ -328,14 +328,19 @@ import RunModal from '@frontend/components/payroll/RunModal'
                         {run.status}
                       </div>
                       <div className="font-medium">
-                        {run.pay_period_start} to {run.pay_period_end}
+                        {(() => {
+                          const r: any = run
+                          const start = r.pay_period_start ?? r.payPeriodStart
+                          const end = r.pay_period_end ?? r.payPeriodEnd
+                          return `${start} to ${end}`
+                        })()}
                       </div>
                     </div>
                     <div className="text-sm text-gray-600">
-                      {formatCurrency(run.total_gross)} for {run.employee_count} employees
+                      {formatCurrency((run as any).total_gross ?? (run as any).totalAmount)} for {run.employee_count} employees
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      Scheduled: {formatDate(run.pay_date)}
+                      Scheduled: {formatDate((run as any).pay_date ?? (run as any).payDate)}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 ml-4">

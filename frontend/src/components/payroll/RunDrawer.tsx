@@ -77,11 +77,20 @@ export default function RunDrawer({ run, open, onOpenChange, onUpdated }: RunDet
         </div>
 
         <div className="space-y-2">
-            <div className="font-medium">
-              Period: {run.pay_period_start} to {run.pay_period_end}
-            </div>
-            <div className="text-sm">Pay Date: {formatDate(run.pay_date)}</div>
-            <div className="text-sm">Amount: {formatCurrency(run.total_gross)}</div>
+            {(() => {
+              const r: any = run
+              const start = r.pay_period_start ?? r.payPeriodStart
+              const end = r.pay_period_end ?? r.payPeriodEnd
+              const payDate = r.pay_date ?? r.payDate
+              const gross = r.total_gross ?? r.totalAmount
+              return (
+                <>
+                  <div className="font-medium">Period: {start} to {end}</div>
+                  <div className="text-sm">Pay Date: {formatDate(payDate)}</div>
+                  <div className="text-sm">Amount: {formatCurrency(gross)}</div>
+                </>
+              )
+            })()}
             <div className="text-sm">Employees: {run.employee_count}</div>
             <div className="text-sm">Status: {run.status}</div>
             <div className="flex gap-2 mt-4 flex-wrap">
