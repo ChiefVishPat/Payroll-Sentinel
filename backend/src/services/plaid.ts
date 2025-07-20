@@ -314,31 +314,61 @@ export class PlaidService extends BaseService {
   }
 
   /**
-   * Firehose a sandbox transaction (deposit or withdrawal)
-   * Only works in sandbox environment
+   * Simulate a transaction on a sandbox item using Plaid's firehose endpoint.
+   *
    * @param accessToken - Plaid access token
    * @param amount - Transaction amount
    * @param date - Transaction date (YYYY-MM-DD)
-   * @param description - Transaction description
+   * @param name - Transaction description/name
+   * @param direction - credit (deposit) or debit
+   * @returns Request identifier from Plaid
    */
   async simulateTransaction(
     accessToken: string,
     amount: number,
     date: string,
-    description: string
-  ): Promise<ServiceResponse<void>> {
+    name: string,
+    direction: 'credit' | 'debit' = 'credit'
+  ): Promise<ServiceResponse<string>> {
     if (this.plaidConfig.environment !== 'sandbox') {
       throw new Error('Sandbox simulation only available in sandbox environment');
     }
+
     return this.executeWithErrorHandling(async () => {
-      const resp = await this.client.sandboxTransactionsFirehose({
-        access_token: accessToken,
-        amount,
-        date,
-        authorization: description,
-      });
-      return;
-    }, `sandbox firehose transaction`);
+      const resp = await fetch(
+        'https://sandbox.plaid.com/sandbox/transactions/firehose',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'PLAID-CLIENT-ID': this.plaidConfig.clientId,
+            'PLAID-SECRET': this.plaidConfig.secret,
+            'Plaid-Version': '2020-09-14',
+          },
+          body: JSON.stringify({
+            access_token: accessToken,
+            client_transaction_id: this.generateRequestId(),
+            amount,
+            date,
+            name,
+            direction,
+          }),
+        }
+      );
+
+      const data = await resp.json();
+      if (!resp.ok) {
+        const err = new Error(data.error_message || 'Plaid request failed');
+        (err as any).details = data;
+        throw err;
+      }
+
+      this.logger.info(
+        { mod: 'Plaid' },
+        `Deposit simulated ${data.request_id}`
+      );
+      return data.request_id as string;
+    }, 'sandbox firehose transaction');
   }
 
   /**

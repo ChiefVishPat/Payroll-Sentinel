@@ -10,16 +10,17 @@ import { api, apiClient } from '@frontend/lib/api'
 import { useCompany } from '@frontend/context/CompanyContext'
 import CompanySelector from '@frontend/components/CompanySelector'
 import { BankAccount, Transaction } from '@frontend/types'
-import { 
-  CreditCard, 
-  Building, 
-  RefreshCw, 
+import {
+  CreditCard,
+  Building,
+  RefreshCw,
   Plus,
   TrendingUp,
   TrendingDown,
   DollarSign,
   Calendar
 } from 'lucide-react'
+import AddFundsModal from '@frontend/components/banking/AddFundsModal'
 
 /**
  * Simple SWR fetcher using the shared Axios client.
@@ -66,6 +67,8 @@ export default function BankingDashboard() {
   const [refreshing, setRefreshing] = useState(false)
   const [linkToken, setLinkToken] = useState<string | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
+  const [depositing, setDepositing] = useState(false)
+  const [selectedAccount, setSelectedAccount] = useState<string | null>(null)
 
   const loading = loadingAccounts || loadingTx || !status
 
@@ -138,32 +141,20 @@ export default function BankingDashboard() {
 
   const getTotalBalance = () => {
     if (!accounts) return 0
-    return accounts.reduce((total, account) => {
+    return accounts.reduce((total: number, account: any) => {
       return total + (account.type === 'credit' ? 0 : (account as any).balance)
     }, 0)
   }
 
   const getTotalAvailable = () => {
     if (!accounts) return 0
-    return accounts.reduce((total, account) => {
+    return accounts.reduce((total: number, account: any) => {
       return total + (account as any).availableBalance
     }, 0)
   }
 
-  const addFunds = async (accountId: string) => {
-    const amountStr = window.prompt('Amount to deposit:')
-    if (!amountStr) return
-    const amount = parseFloat(amountStr)
-    if (isNaN(amount) || amount <= 0) {
-      alert('Invalid amount')
-      return
-    }
-    try {
-      await api.banking.addFunds(accountId, amount, companyId)
-      await Promise.all([mutateAccounts(), mutateTransactions()])
-    } catch (error) {
-      console.error('Failed to add funds:', error)
-    }
+  const addFunds = (accountId: string) => {
+    setSelectedAccount(accountId)
   }
 
   if (loading) {
@@ -217,7 +208,7 @@ export default function BankingDashboard() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="dark:bg-gray-800">
+        <Card className={`dark:bg-gray-800 ${depositing ? 'opacity-50' : ''}`}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
             <DollarSign className="h-4 w-4 text-green-600" />
@@ -288,13 +279,13 @@ export default function BankingDashboard() {
           <div className="space-y-4">
             {!accounts || accounts.length === 0 ? (
               <div className="flex items-center justify-between p-4 border rounded w-full">
-                <div className="font-medium">No bank connection yet</div>
+                <div className="font-medium">No bank accounts yet – link one to get started.</div>
                 <Button onClick={connectAccount} disabled={isConnecting || !plaidReady}>
                   Link Bank Account
                 </Button>
               </div>
             ) : (
-              accounts.map(account => (
+              accounts.map((account: any) => (
                 <div key={account.id} className="flex items-center justify-between p-4 border rounded dark:border-gray-700">
                   <div className="flex items-center gap-4">
                     <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded">
@@ -316,7 +307,16 @@ export default function BankingDashboard() {
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       Updated: {formatDate((account as any).lastUpdated)}
                     </div>
-                    <Button size="sm" variant="outline" onClick={() => addFunds(account.id)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={depositing}
+                      onClick={() => addFunds(account.id)}
+                      className="flex items-center gap-2"
+                    >
+                      {depositing && selectedAccount === account.id ? (
+                        <span className="h-4 w-4 animate-spin border-b-2 border-gray-600 rounded-full"></span>
+                      ) : null}
                       Add Funds
                     </Button>
                   </div>
@@ -326,6 +326,19 @@ export default function BankingDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {selectedAccount && (
+        <AddFundsModal
+          accountId={selectedAccount}
+          companyId={companyId}
+          open={!!selectedAccount}
+          onOpenChange={o => {
+            if (!o) setSelectedAccount(null)
+          }}
+          onStarted={() => setDepositing(true)}
+          onFinished={() => setDepositing(false)}
+        />
+      )}
 
       {/* Recent Transactions */}
       <Card className="dark:bg-gray-800">
@@ -339,10 +352,10 @@ export default function BankingDashboard() {
           <div className="space-y-4">
             {!transactions || transactions.length === 0 ? (
               <div className="p-4 text-center text-gray-500 border rounded dark:border-gray-700">
-                No recent transactions
+                No recent transactions.
               </div>
             ) : (
-              transactions.map((transaction) => (
+              transactions.map((transaction: any) => (
                 <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded ${transaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100'}`}>
@@ -363,7 +376,7 @@ export default function BankingDashboard() {
                       {transaction.amount >= 0 ? '+' : ''}{formatCurrency(transaction.amount)}
                     </div>
                     <div className="text-xs text-gray-500">
-                      Account: {accounts?.find(a => a.id === transaction.accountId)?.name || 'Unknown'}
+                      Account: {accounts?.find((a: any) => a.id === transaction.accountId)?.name || 'Unknown'}
                     </div>
                   </div>
                 </div>

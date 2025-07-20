@@ -187,10 +187,12 @@ async function bankingRoutes(fastify: FastifyInstance) {
    * @param req.body.amount - Amount in USD to deposit
    */
   fastify.post('/banking/deposit', async (req, reply) => {
-    const { companyId, accountId, amount } = req.body as {
+    const { companyId, accountId, amount, name, date } = req.body as {
       companyId: string;
       accountId: string;
       amount: number;
+      name: string;
+      date: string;
     };
 
     const { data, error } = await supabase
@@ -204,28 +206,20 @@ async function bankingRoutes(fastify: FastifyInstance) {
       return reply.status(404).send({ success: false, error: 'Account not found' });
     }
 
-    const today = new Date().toISOString().slice(0, 10);
     const res = await plaidService.simulateTransaction(
       data.plaid_access_token,
       amount,
-      today,
-      'Demo deposit'
+      date,
+      name,
+      'credit'
     );
 
-    if (!res.success) {
+    if (!res.success || !res.data) {
       fastify.log.error('Plaid: deposit simulation failed:', res.error);
       return reply.status(500).send({ success: false, error: res.error?.message });
     }
 
-    const balRes = await plaidService.getAccountBalance(
-      data.plaid_access_token,
-      accountId
-    );
-
-    return reply.send({
-      success: true,
-      balance: balRes.success && balRes.data ? balRes.data.current : null,
-    });
+    return reply.send({ success: true, requestId: res.data });
   });
 
   /**

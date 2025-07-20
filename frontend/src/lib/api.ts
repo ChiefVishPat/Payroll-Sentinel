@@ -111,8 +111,20 @@ export const api = {
     refresh: (companyId: string = 'demo-company') => apiClient.post('/api/banking/refresh', { companyId }),
     linkToken: (userId: string = 'demo-user', companyId: string = 'demo-company') => apiClient.post('/api/banking/link-token', { userId, companyId }),
     exchangeToken: (publicToken: string, companyId: string = 'demo-company') => apiClient.post('/api/banking/exchange-token', { publicToken, companyId }),
-    addFunds: (accountId: string, amount: number, companyId: string = 'demo-company') =>
-      apiClient.post('/api/banking/deposit', { accountId, amount, companyId }),
+    addFunds: (
+      accountId: string,
+      amount: number,
+      companyId: string = 'demo-company',
+      name: string,
+      date: string
+    ) =>
+      apiClient.post('/api/banking/deposit', {
+        accountId,
+        amount,
+        companyId,
+        name,
+        date,
+      }),
   },
   
   // Monitoring endpoints
