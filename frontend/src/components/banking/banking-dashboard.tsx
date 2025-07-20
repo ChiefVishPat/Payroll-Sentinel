@@ -150,6 +150,22 @@ export default function BankingDashboard() {
     }, 0)
   }
 
+  const addFunds = async (accountId: string) => {
+    const amountStr = window.prompt('Amount to deposit:')
+    if (!amountStr) return
+    const amount = parseFloat(amountStr)
+    if (isNaN(amount) || amount <= 0) {
+      alert('Invalid amount')
+      return
+    }
+    try {
+      await api.banking.addFunds(accountId, amount, companyId)
+      await Promise.all([mutateAccounts(), mutateTransactions()])
+    } catch (error) {
+      console.error('Failed to add funds:', error)
+    }
+  }
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -290,8 +306,8 @@ export default function BankingDashboard() {
                       <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{account.type} account</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className={`text-lg font-semibold ${account.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}> 
+                  <div className="text-right space-y-1">
+                    <div className={`text-lg font-semibold ${account.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {formatCurrency((account as any).balance)}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -300,6 +316,9 @@ export default function BankingDashboard() {
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       Updated: {formatDate((account as any).lastUpdated)}
                     </div>
+                    <Button size="sm" variant="outline" onClick={() => addFunds(account.id)}>
+                      Add Funds
+                    </Button>
                   </div>
                 </div>
               ))

@@ -179,6 +179,56 @@ async function bankingRoutes(fastify: FastifyInstance) {
   });
 
   /**
+   * Deposit funds into a sandbox account
+   * Looks up the Plaid access token by accountId and companyId
+   * @route POST /api/banking/deposit
+   * @param req.body.companyId - Company identifier
+   * @param req.body.accountId - Plaid account ID to deposit into
+   * @param req.body.amount - Amount in USD to deposit
+   */
+  fastify.post('/banking/deposit', async (req, reply) => {
+    const { companyId, accountId, amount } = req.body as {
+      companyId: string;
+      accountId: string;
+      amount: number;
+    };
+
+    const { data, error } = await supabase
+      .from('bank_accounts')
+      .select('plaid_access_token')
+      .eq('company_id', companyId)
+      .eq('plaid_account_id', accountId)
+      .maybeSingle();
+    if (error || !data) {
+      fastify.log.error('Supabase: account lookup failed', error);
+      return reply.status(404).send({ success: false, error: 'Account not found' });
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const res = await plaidService.simulateTransaction(
+      data.plaid_access_token,
+      amount,
+      today,
+      'Demo deposit'
+    );
+
+    if (!res.success) {
+      fastify.log.error('Plaid: deposit simulation failed:', res.error);
+      return reply.status(500).send({ success: false, error: res.error?.message });
+    }
+
+    const balRes = await plaidService.getAccountBalance(
+      data.plaid_access_token,
+      accountId
+    );
+
+    return reply.send({
+      success: true,
+      balance: balRes.success && balRes.data ? balRes.data.current : null,
+    });
+  });
+
+  /**
    * Get linked bank accounts with real-time balances
    * @route GET /api/banking/accounts
    */
