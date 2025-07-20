@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogClose } from '@frontend/components/ui/dial
 import { Button } from '@frontend/components/ui/button'
 import { api } from '@frontend/lib/api'
 import { formatCurrency, formatDate } from '@frontend/lib/utils'
+import { Loader } from 'lucide-react'
 import { useCompany } from '@frontend/context/CompanyContext'
 import type { PayrollRun } from '@frontend/types'
 import RunModal from './RunModal'
@@ -86,17 +87,27 @@ export default function RunDrawer({ run, open, onOpenChange, onUpdated }: RunDet
             <div className="flex gap-2 mt-4 flex-wrap">
               {['draft', 'pending'].includes(run.status) && (
                 <>
-                  <Button size="sm" onClick={() => setEditing(true)}>Edit</Button>
-                  <Button size="sm" variant="destructive" onClick={remove}>Delete</Button>
+                  <Button size="sm" onClick={() => setEditing(true)} disabled={loading}>
+                    {loading ? <Loader className="h-4 w-4 animate-spin" /> : 'Edit'}
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={remove} disabled={loading}>
+                    {loading ? <Loader className="h-4 w-4 animate-spin" /> : 'Delete'}
+                  </Button>
                 </>
               )}
               {run.status === 'pending' && (
-                <Button size="sm" onClick={approve}>Approve</Button>
+                <Button size="sm" onClick={approve} disabled={loading}>
+                  {loading ? <Loader className="h-4 w-4 animate-spin" /> : 'Approve'}
+                </Button>
               )}
               {run.status === 'approved' && (
                 <>
-                  <Button size="sm" onClick={process}>Process</Button>
-                  <Button size="sm" variant="outline" onClick={revert}>Revert</Button>
+                  <Button size="sm" onClick={process} disabled={loading}>
+                    {loading ? <Loader className="h-4 w-4 animate-spin" /> : 'Process'}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={revert} disabled={loading}>
+                    {loading ? <Loader className="h-4 w-4 animate-spin" /> : 'Revert'}
+                  </Button>
                 </>
               )}
               {run.status === 'processed' && (
@@ -104,15 +115,14 @@ export default function RunDrawer({ run, open, onOpenChange, onUpdated }: RunDet
               )}
             </div>
           </div>
-        )}
-      </DialogContent>
-    </Dialog>
-    <RunModal
-      open={editing}
-      onOpenChange={setEditing}
-      onSaved={onUpdated}
-      run={run}
-    />
+        </DialogContent>
+      </Dialog>
+      <RunModal
+        open={editing}
+        onOpenChange={setEditing}
+        onSaved={onUpdated}
+        run={run}
+      />
     </>
   )
 }
