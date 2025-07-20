@@ -8,19 +8,20 @@ import { formatCurrency, formatDate } from '@frontend/lib/utils'
 import { Loader } from 'lucide-react'
 import { useCompany } from '@frontend/context/CompanyContext'
 import type { PayrollRun } from '@frontend/types'
-import RunModal from './RunModal'
+// The edit modal is handled at the dashboard level to avoid nested dialogs
 
 interface RunDetailProps {
   run: PayrollRun
   open: boolean
   onOpenChange: (open: boolean) => void
   onUpdated: () => void
+  /** Trigger editing of this run */
+  onEdit: (run: PayrollRun) => void
 }
 
 /** Drawer panel showing a single payroll run and actions */
-export default function RunDrawer({ run, open, onOpenChange, onUpdated }: RunDetailProps) {
+export default function RunDrawer({ run, open, onOpenChange, onUpdated, onEdit }: RunDetailProps) {
   const { companyId } = useCompany()
-  const [editing, setEditing] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const remove = async () => {
@@ -96,7 +97,14 @@ export default function RunDrawer({ run, open, onOpenChange, onUpdated }: RunDet
             <div className="flex gap-2 mt-4 flex-wrap">
               {['draft', 'pending'].includes(run.status) && (
                 <>
-                  <Button size="sm" onClick={() => setEditing(true)} disabled={loading}>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      onOpenChange(false)
+                      onEdit(run)
+                    }}
+                    disabled={loading}
+                  >
                     {loading ? <Loader className="h-4 w-4 animate-spin" /> : 'Edit'}
                   </Button>
                   <Button size="sm" variant="destructive" onClick={remove} disabled={loading}>
@@ -126,12 +134,6 @@ export default function RunDrawer({ run, open, onOpenChange, onUpdated }: RunDet
           </div>
         </DialogContent>
       </Dialog>
-      <RunModal
-        open={editing}
-        onOpenChange={setEditing}
-        onSaved={onUpdated}
-        run={run}
-      />
     </>
   )
 }

@@ -34,10 +34,12 @@ import RunModal from '@frontend/components/payroll/RunModal'
     const [open, setOpen] = useState(false)
     const [detailOpen, setDetailOpen] = useState(false)
     const [selected, setSelected] = useState<Employee | null>(null)
-    const [runPanelOpen, setRunPanelOpen] = useState(false)
-    const [selectedRun, setSelectedRun] = useState<PayrollRun | null>(null)
-    const [createOpen, setCreateOpen] = useState(false)
-    const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'processed' | 'draft'>('all')
+  const [runPanelOpen, setRunPanelOpen] = useState(false)
+  const [selectedRun, setSelectedRun] = useState<PayrollRun | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [editRun, setEditRun] = useState<PayrollRun | null>(null)
+  const [editOpen, setEditOpen] = useState(false)
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'processed' | 'draft'>('all')
 
     const fetcher = (url: string) => apiClient.get(url).then(res => res.data)
 
@@ -446,6 +448,10 @@ import RunModal from '@frontend/components/payroll/RunModal'
           onUpdated={async () => {
             await Promise.all([mutRuns(), mutSum()])
           }}
+          onEdit={run => {
+            setEditRun(run)
+            setEditOpen(true)
+          }}
         />
       )}
       <RunModal
@@ -455,6 +461,19 @@ import RunModal from '@frontend/components/payroll/RunModal'
           await Promise.all([mutRuns(), mutSum()])
         }}
       />
+      {editRun && (
+        <RunModal
+          open={editOpen}
+          onOpenChange={o => {
+            setEditOpen(o)
+            if (!o) setEditRun(null)
+          }}
+          onSaved={async () => {
+            await Promise.all([mutRuns(), mutSum()])
+          }}
+          run={editRun}
+        />
+      )}
     </div>
   )
 }
