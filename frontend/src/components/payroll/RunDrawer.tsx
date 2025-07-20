@@ -8,7 +8,7 @@ import { formatCurrency, formatDate } from '@frontend/lib/utils'
 import { Loader } from 'lucide-react'
 import { useCompany } from '@frontend/context/CompanyContext'
 import type { PayrollRun } from '@frontend/types'
-import EditRunModal from './EditRunModal'
+import RunModal from './RunModal'
 
 interface RunDetailProps {
   run: PayrollRun
@@ -134,7 +134,7 @@ export default function RunDrawer({ run, open, onOpenChange, onUpdated }: RunDet
           </div>
         </DialogContent>
       </Dialog>
-      <EditRunModal
+      <RunModal
         open={editing}
         onOpenChange={setEditing}
         onSaved={onUpdated}

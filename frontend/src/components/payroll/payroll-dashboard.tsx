@@ -23,7 +23,7 @@ import { useState } from 'react'
 import { DEPARTMENTS, TITLES } from '@frontend/lib/job-data'
 import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-panel'
 import RunDrawer from '@frontend/components/payroll/RunDrawer'
-import CreateRunModal from '@frontend/components/payroll/CreateRunModal'
+import RunModal from '@frontend/components/payroll/RunModal'
 
 /**
  * Payroll dashboard page showing payroll data and employee roster.
@@ -448,7 +448,7 @@ import CreateRunModal from '@frontend/components/payroll/CreateRunModal'
           }}
         />
       )}
-      <CreateRunModal
+      <RunModal
         open={createOpen}
         onOpenChange={setCreateOpen}
         onSaved={async () => {

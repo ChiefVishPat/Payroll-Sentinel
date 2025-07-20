@@ -6,20 +6,22 @@ import { Dialog, DialogContent, DialogClose } from '@frontend/components/ui/dial
 import { Button } from '@frontend/components/ui/button'
 import { api, apiClient } from '@frontend/lib/api'
 import { useCompany } from '@frontend/context/CompanyContext'
-import type { Employee } from '@frontend/types'
+import type { PayrollRun, Employee } from '@frontend/types'
 import { Loader } from 'lucide-react'
 
-interface CreateRunModalProps {
+interface RunModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSaved: () => void
+  run?: PayrollRun
 }
 
 const fetcher = (url: string) => apiClient.get(url).then(res => res.data)
 
-/** Modal form for creating a new payroll run. */
-export default function CreateRunModal({ open, onOpenChange, onSaved }: CreateRunModalProps) {
+/** Modal for creating or editing a payroll run */
+export default function RunModal({ open, onOpenChange, onSaved, run }: RunModalProps) {
   const { companyId } = useCompany()
+  const isEdit = !!run
 
   const { data: employees } = useSWR(
     open && companyId ? `/api/payroll/employees?companyId=${companyId}` : null,
@@ -33,20 +35,23 @@ export default function CreateRunModal({ open, onOpenChange, onSaved }: CreateRu
   const [gross, setGross] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Initialize fields when modal opens
   useEffect(() => {
     if (!open) return
-    if (employees) {
+    // Support both new and legacy field names so edits work pre-migration
+    const r: any = run || {}
+    setStart(r.pay_period_start ?? r.payPeriodStart ?? '')
+    setEnd(r.pay_period_end ?? r.payPeriodEnd ?? '')
+    setPayDate(r.pay_date ?? r.payDate ?? '')
+    setGross(run ? String(r.total_gross ?? r.totalAmount ?? 0) : '')
+    if (employees && !isEdit) {
       setSelected(employees.data.map((e: Employee) => e.id))
     }
-    setStart('')
-    setEnd('')
-    setPayDate('')
-    setGross('')
-  }, [open, employees])
+  }, [open, run, employees, isEdit])
 
   const toggle = (id: string) => {
-    setSelected(prev => (prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]))
+    setSelected(prev =>
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    )
   }
   const selectAll = () => {
     if (employees) setSelected(employees.data.map((e: Employee) => e.id))
@@ -57,15 +62,23 @@ export default function CreateRunModal({ open, onOpenChange, onSaved }: CreateRu
     if (!companyId) return
     setLoading(true)
     try {
-      await api.payroll.createRun({
-        companyId,
-        payPeriodStart: start,
-        payPeriodEnd: end,
-        payDate,
-        employeeIds: selected,
-        totalGross: Number(gross) || 0,
-        draft,
-      })
+      if (isEdit && run) {
+        await api.payroll.updateRun(
+          run.id,
+          { payPeriodStart: start, payPeriodEnd: end, payDate, totalGross: Number(gross) || 0 },
+          companyId
+        )
+      } else {
+        await api.payroll.createRun({
+          companyId,
+          payPeriodStart: start,
+          payPeriodEnd: end,
+          payDate,
+          employeeIds: selected,
+          totalGross: Number(gross) || 0,
+          draft,
+        })
+      }
       onSaved()
       onOpenChange(false)
     } finally {
@@ -77,7 +90,9 @@ export default function CreateRunModal({ open, onOpenChange, onSaved }: CreateRu
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="text-black">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">New Payroll Run</h2>
+          <h2 className="text-lg font-semibold">
+            {isEdit ? 'Edit Payroll Run' : 'New Payroll Run'}
+          </h2>
           <DialogClose asChild>
             <Button variant="ghost" size="sm">Close</Button>
           </DialogClose>
@@ -161,12 +176,28 @@ export default function CreateRunModal({ open, onOpenChange, onSaved }: CreateRu
             </div>
           )}
           <div className="flex gap-2">
-            <Button type="button" disabled={loading} onClick={() => submit(true)}>
-              {loading ? <Loader className="animate-spin" /> : 'Save Draft'}
-            </Button>
-            <Button type="button" disabled={loading} onClick={() => submit(false)}>
-              {loading ? <Loader className="animate-spin" /> : 'Submit'}
-            </Button>
+            {isEdit ? (
+              <Button type="submit" disabled={loading}>
+                {loading ? <Loader className="animate-spin" /> : 'Save'}
+              </Button>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => submit(true)}
+                >
+                  {loading ? <Loader className="animate-spin" /> : 'Save Draft'}
+                </Button>
+                <Button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => submit(false)}
+                >
+                  {loading ? <Loader className="animate-spin" /> : 'Submit'}
+                </Button>
+              </>
+            )}
           </div>
         </form>
       </DialogContent>
