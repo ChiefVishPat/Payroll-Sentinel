@@ -195,12 +195,14 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
       payPeriodStart,
       payPeriodEnd,
       payDate,
+      totalGross,
       draft = true,
     } = request.body as {
       companyId: string
       payPeriodStart: string
       payPeriodEnd: string
       payDate: string
+      totalGross?: number
       draft?: boolean
     }
     await ensureSchema()
@@ -237,7 +239,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
           pay_period_start: payPeriodStart,
           pay_period_end: payPeriodEnd,
           pay_date: payDate,
-          total_gross: checkRun.totalGross,
+          total_gross: typeof totalGross === 'number' ? totalGross : checkRun.totalGross,
           total_net: checkRun.totalNet,
           total_taxes: checkRun.totalTaxes,
           total_deductions: checkRun.totalDeductions,
@@ -278,26 +280,28 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
   fastify.put('/payroll/runs/:id', async (request, reply) => {
     const { id } = request.params as { id: string }
     const { companyId } = request.query as { companyId?: string }
-    const { payPeriodStart, payPeriodEnd, payDate } = request.body as Partial<{
+    const { payPeriodStart, payPeriodEnd, payDate, totalGross } = request.body as Partial<{
       payPeriodStart: string
       payPeriodEnd: string
       payDate: string
+      totalGross: number
     }>
     await ensureSchema()
     try {
       const { data: existing, error: findError } = await supabase
         .from('payroll_runs')
-        .select('status')
+        .select('status, company_id')
         .eq('id', id)
         .single()
       if (findError) throw findError
-      if (existing?.status !== 'draft')
-        return reply.status(400).send({ error: 'only draft runs editable' })
+      if (!['draft', 'pending'].includes(existing?.status || ''))
+        return reply.status(400).send({ error: 'run not editable' })
 
       const update: Record<string, any> = {}
       if (payPeriodStart) update.pay_period_start = payPeriodStart
       if (payPeriodEnd) update.pay_period_end = payPeriodEnd
       if (payDate) update.pay_date = payDate
+      if (typeof totalGross === 'number') update.total_gross = totalGross
       update.updated_at = new Date().toISOString()
 
       const { data, error } = await supabase

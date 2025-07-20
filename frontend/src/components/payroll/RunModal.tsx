@@ -32,6 +32,7 @@ export default function RunModal({ open, onOpenChange, onSaved, run }: RunModalP
   const [end, setEnd] = useState('')
   const [payDate, setPayDate] = useState('')
   const [selected, setSelected] = useState<string[]>([])
+  const [gross, setGross] = useState('')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export default function RunModal({ open, onOpenChange, onSaved, run }: RunModalP
     setStart(run?.pay_period_start || '')
     setEnd(run?.pay_period_end || '')
     setPayDate(run?.pay_date || '')
+    setGross(run ? String(run.total_gross) : '')
     if (employees && !isEdit) {
       setSelected(employees.data.map((e: Employee) => e.id))
     }
@@ -61,7 +63,7 @@ export default function RunModal({ open, onOpenChange, onSaved, run }: RunModalP
       if (isEdit && run) {
         await api.payroll.updateRun(
           run.id,
-          { payPeriodStart: start, payPeriodEnd: end, payDate },
+          { payPeriodStart: start, payPeriodEnd: end, payDate, totalGross: Number(gross) || 0 },
           companyId
         )
       } else {
@@ -71,6 +73,7 @@ export default function RunModal({ open, onOpenChange, onSaved, run }: RunModalP
           payPeriodEnd: end,
           payDate,
           employeeIds: selected,
+          totalGross: Number(gross) || 0,
           draft,
         })
       }
@@ -134,6 +137,20 @@ export default function RunModal({ open, onOpenChange, onSaved, run }: RunModalP
               type="date"
               value={payDate}
               onChange={e => setPayDate(e.target.value)}
+              className="w-full border p-2 rounded"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="gross" className="block text-sm font-medium mb-1">
+              Gross Amount
+            </label>
+            <input
+              id="gross"
+              type="number"
+              step="0.01"
+              value={gross}
+              onChange={e => setGross(e.target.value)}
               className="w-full border p-2 rounded"
               required
             />
