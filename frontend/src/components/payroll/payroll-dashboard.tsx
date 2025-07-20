@@ -355,13 +355,15 @@ import RunDetailPanel from '@frontend/components/payroll/run-detail-panel'
                       <div className={`px-2 py-1 text-xs rounded ${getStatusColor(run.status)}`}>
                         {run.status}
                       </div>
-                      <div className="font-medium">{run.payPeriod}</div>
+                      <div className="font-medium">
+                        {run.pay_period_start} to {run.pay_period_end}
+                      </div>
                     </div>
                     <div className="text-sm text-gray-600">
-                      {formatCurrency(run.totalAmount)} for {run.employeeCount} employees
+                      {formatCurrency(run.total_gross)} for {run.employee_count} employees
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      Scheduled: {formatDate(run.scheduledDate)}
+                      Scheduled: {formatDate(run.pay_date)}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 ml-4">

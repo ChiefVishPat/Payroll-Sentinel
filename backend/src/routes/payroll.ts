@@ -103,8 +103,15 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
       await supabase.from('payroll_runs').insert({
         company_id: companyId,
         check_payroll_id: payrollRunId,
+        run_number: `run_${Date.now()}`,
+        pay_period_start: new Date().toISOString().split('T')[0],
+        pay_period_end: new Date().toISOString().split('T')[0],
         pay_date: new Date().toISOString().split('T')[0],
-        total_amount: 0,
+        total_gross: 0,
+        total_net: 0,
+        total_taxes: 0,
+        total_deductions: 0,
+        employee_count: 0,
         status,
       });
 

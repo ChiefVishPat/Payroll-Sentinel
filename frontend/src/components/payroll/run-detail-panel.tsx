@@ -19,17 +19,17 @@ interface RunDetailProps {
 export default function RunDetailPanel({ run, open, onOpenChange, onUpdated }: RunDetailProps) {
   const { companyId } = useCompany()
   const [editMode, setEditMode] = useState(false)
-  const [start, setStart] = useState(run.payPeriod)
-  const [end, setEnd] = useState(run.payPeriod)
-  const [payDate, setPayDate] = useState(run.scheduledDate)
+  const [start, setStart] = useState(run.pay_period_start)
+  const [end, setEnd] = useState(run.pay_period_end)
+  const [payDate, setPayDate] = useState(run.pay_date)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (!open) return
     setEditMode(false)
-    setStart(run.payPeriod)
-    setEnd(run.payPeriod)
-    setPayDate(run.scheduledDate)
+    setStart(run.pay_period_start)
+    setEnd(run.pay_period_end)
+    setPayDate(run.pay_date)
   }, [open, run])
 
   const save = async () => {
@@ -137,10 +137,12 @@ export default function RunDetailPanel({ run, open, onOpenChange, onUpdated }: R
           </form>
         ) : (
           <div className="space-y-2">
-            <div className="font-medium">Period: {run.payPeriod}</div>
-            <div className="text-sm">Pay Date: {formatDate(run.scheduledDate)}</div>
-            <div className="text-sm">Amount: {formatCurrency(run.totalAmount)}</div>
-            <div className="text-sm">Employees: {run.employeeCount}</div>
+            <div className="font-medium">
+              Period: {run.pay_period_start} to {run.pay_period_end}
+            </div>
+            <div className="text-sm">Pay Date: {formatDate(run.pay_date)}</div>
+            <div className="text-sm">Amount: {formatCurrency(run.total_gross)}</div>
+            <div className="text-sm">Employees: {run.employee_count}</div>
             <div className="text-sm">Status: {run.status}</div>
             <div className="flex gap-2 mt-4 flex-wrap">
               {run.status === 'draft' && (

@@ -25,6 +25,10 @@ export async function applyMigrations(): Promise<void> {
       throw new Error(`Failed to apply migration ${file}: ${error.message}`);
     }
 
+    if (file === '20230719_add_full_columns_to_payroll_runs.sql') {
+      console.info('[migration] payroll_runs columns ensured');
+    }
+
     fs.appendFileSync(
       logPath,
       `- ${new Date().toISOString()}: applied ${file}\n`
