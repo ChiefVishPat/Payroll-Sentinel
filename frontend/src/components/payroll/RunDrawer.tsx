@@ -96,7 +96,15 @@ export default function RunDrawer({ run, open, onOpenChange, onUpdated }: RunDet
             <div className="flex gap-2 mt-4 flex-wrap">
               {['draft', 'pending'].includes(run.status) && (
                 <>
-                  <Button size="sm" onClick={() => setEditing(true)} disabled={loading}>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      // Close drawer so the edit modal is unobstructed
+                      setEditing(true)
+                      onOpenChange(false)
+                    }}
+                    disabled={loading}
+                  >
                     {loading ? <Loader className="h-4 w-4 animate-spin" /> : 'Edit'}
                   </Button>
                   <Button size="sm" variant="destructive" onClick={remove} disabled={loading}>
