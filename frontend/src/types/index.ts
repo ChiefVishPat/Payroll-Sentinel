@@ -54,7 +54,7 @@ export interface PayrollRun {
   total_taxes: number
   total_deductions: number
   employee_count: number
-  check_payroll_id?: string | null
+  check_payroll_id: string
   created_at?: string
   updated_at?: string
   entries: PayrollEntry[]

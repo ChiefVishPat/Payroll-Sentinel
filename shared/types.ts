@@ -37,7 +37,7 @@ export interface BankAccount {
 export interface PayrollRun {
   id: string;
   company_id: string;
-  check_payroll_id?: string | null;
+  check_payroll_id: string;
   run_number: string;
   pay_period_start: string;
   pay_period_end: string;

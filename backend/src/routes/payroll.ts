@@ -199,18 +199,45 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
     await ensureSchema()
     try {
       const runNumber = `run_${Date.now()}`
+
+      // Create draft run in the mocked Check service to obtain an ID and totals
+      const result = await checkService.createPayrollRun(
+        companyId,
+        payPeriodStart,
+        payPeriodEnd,
+        payDate
+      )
+
+      if (!result.success || !result.data) {
+        fastify.log.error(
+          { mod: 'Payroll' },
+          'create run check service error %o',
+          result.error
+        )
+        throw new Error(result.error?.message || 'check service failed')
+      }
+
+      const checkRun = result.data
+
       const { data, error } = await supabase
         .from('payroll_runs')
         .insert({
           company_id: companyId,
+          check_payroll_id: checkRun.id,
           run_number: runNumber,
           pay_period_start: payPeriodStart,
           pay_period_end: payPeriodEnd,
           pay_date: payDate,
+          total_gross: checkRun.totalGross,
+          total_net: checkRun.totalNet,
+          total_taxes: checkRun.totalTaxes,
+          total_deductions: checkRun.totalDeductions,
+          employee_count: checkRun.employeeCount,
           status: 'draft',
         })
         .select()
         .single()
+
       if (error) throw error
       fastify.log.info({ mod: 'Payroll' }, 'run created')
       return reply.send({ data })
