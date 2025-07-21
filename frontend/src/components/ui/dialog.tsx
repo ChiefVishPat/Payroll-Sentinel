@@ -12,11 +12,11 @@ export const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Portal>
-    <DialogPrimitive.Overlay className="fixed inset-0 bg-black/40" />
+    <DialogPrimitive.Overlay className="fixed inset-0 bg-[var(--c-overlay)]" />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-1/2 top-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-md bg-white p-6 shadow',
+        'fixed left-1/2 top-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-md border border-[var(--c-border)] bg-[var(--c-surface-2)] p-6 shadow-[0_2px_8px_rgba(13,17,23,.60)]',
         'focus:outline-none',
         className
       )}

@@ -3,19 +3,19 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@frontend/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-accent)/60] disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-slate-900 text-slate-50 hover:bg-slate-900/90",
+        default: "bg-[var(--c-accent)] text-white hover:bg-[var(--c-accent-hover)]",
         destructive:
-          "bg-red-500 text-slate-50 hover:bg-red-500/90",
+          "bg-[var(--c-error)] text-white hover:bg-[var(--c-error-hover)]",
         outline:
-          "border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900",
+          "border border-[var(--c-border)] bg-[var(--c-surface-1)] hover:bg-[var(--c-surface-3)] text-[var(--c-text)]",
         secondary:
-          "bg-slate-100 text-slate-900 hover:bg-slate-100/80",
-        ghost: "hover:bg-slate-100 hover:text-slate-900",
-        link: "text-slate-900 underline-offset-4 hover:underline",
+          "bg-[var(--c-surface-2)] text-[var(--c-text)] hover:bg-[var(--c-surface-3)]",
+        ghost: "hover:bg-[var(--c-surface-3)] text-[var(--c-text)]",
+        link: "text-[var(--c-accent)] underline-offset-4 hover:underline",
       },
       size: {
         default: "h-10 px-4 py-2",
