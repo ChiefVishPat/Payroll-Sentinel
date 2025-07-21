@@ -104,7 +104,9 @@ export default function RunDrawer({ run, open, onOpenChange, onUpdated }: RunDet
                 </>
               )
             })()}
-            <div className="text-sm">Employees: {run.employee_count}</div>
+            <div className="text-sm">
+              Employees: {run.employee_count}
+            </div>
             <div className="text-sm">Status: {run.status}</div>
             <div className="flex gap-2 mt-4 flex-wrap">
               {['draft', 'pending'].includes(run.status) && (
