@@ -43,11 +43,20 @@ export interface CashFlowProjection {
 
 export interface PayrollRun {
   id: string
-  payPeriod: string
-  scheduledDate: string
-  status: 'draft' | 'pending' | 'approved' | 'processed' | 'failed'
-  totalAmount: number
-  employeeCount: number
+  company_id: string
+  run_number: string
+  pay_period_start: string
+  pay_period_end: string
+  pay_date: string
+  status: 'draft' | 'pending' | 'approved' | 'processed' | 'cancelled'
+  total_gross: number
+  total_net: number
+  total_taxes: number
+  total_deductions: number
+  employee_count: number
+  check_payroll_id: string
+  created_at?: string
+  updated_at?: string
   entries: PayrollEntry[]
 }
 
