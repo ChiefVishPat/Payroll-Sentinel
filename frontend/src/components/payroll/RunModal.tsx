@@ -100,7 +100,7 @@ export default function RunModal({ open, onOpenChange, onSaved, run }: RunModalP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="text-black">
+      <DialogContent className="text-[var(--c-text)]">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">
             {isEdit ? 'Edit Payroll Run' : 'New Payroll Run'}
@@ -125,7 +125,7 @@ export default function RunModal({ open, onOpenChange, onSaved, run }: RunModalP
               type="date"
               value={start}
               onChange={e => setStart(e.target.value)}
-              className="w-full border p-2 rounded"
+              className="w-full rounded border border-[var(--c-border)] bg-[var(--c-surface-1)] p-2 text-[var(--c-text)]"
               required
             />
           </div>
@@ -138,7 +138,7 @@ export default function RunModal({ open, onOpenChange, onSaved, run }: RunModalP
               type="date"
               value={end}
               onChange={e => setEnd(e.target.value)}
-              className="w-full border p-2 rounded"
+              className="w-full rounded border border-[var(--c-border)] bg-[var(--c-surface-1)] p-2 text-[var(--c-text)]"
               required
             />
           </div>
@@ -151,7 +151,7 @@ export default function RunModal({ open, onOpenChange, onSaved, run }: RunModalP
               type="date"
               value={payDate}
               onChange={e => setPayDate(e.target.value)}
-              className="w-full border p-2 rounded"
+              className="w-full rounded border border-[var(--c-border)] bg-[var(--c-surface-1)] p-2 text-[var(--c-text)]"
               required
             />
           </div>
@@ -165,12 +165,12 @@ export default function RunModal({ open, onOpenChange, onSaved, run }: RunModalP
               step="0.01"
               value={gross}
               onChange={e => setGross(e.target.value)}
-              className="w-full border p-2 rounded"
+              className="w-full rounded border border-[var(--c-border)] bg-[var(--c-surface-1)] p-2 text-[var(--c-text)]"
               required
             />
           </div>
           {employees && (
-            <div className="border p-2 rounded max-h-40 overflow-auto space-y-1">
+            <div className="border border-[var(--c-border)] bg-[var(--c-surface-1)] p-2 rounded max-h-40 overflow-auto space-y-1">
               <div className="flex justify-between mb-2 text-sm">
                 <button type="button" onClick={selectAll}>Select all</button>
                 <button type="button" onClick={deselectAll}>Deselect all</button>

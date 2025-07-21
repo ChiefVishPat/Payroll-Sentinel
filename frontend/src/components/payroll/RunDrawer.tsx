@@ -80,7 +80,7 @@ export default function RunDrawer({ run, open, onOpenChange, onUpdated }: RunDet
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* Drawer-style content positioned on the right without the default modal transforms */}
       <DialogContent
-        className="fixed right-0 top-0 left-auto translate-x-0 translate-y-0 h-full w-full max-w-md rounded-none bg-white p-6 text-black"
+        className="fixed right-0 top-0 left-auto translate-x-0 translate-y-0 h-full w-full max-w-md rounded-none border-l border-[var(--c-border)] p-6 text-[var(--c-text)]"
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">Payroll Run</h2>
@@ -148,7 +148,7 @@ export default function RunDrawer({ run, open, onOpenChange, onUpdated }: RunDet
                 </>
               )}
               {run.status === 'processed' && (
-                <span className="text-green-600 flex items-center">Processed</span>
+                <span className="text-[var(--c-success)] flex items-center">Processed</span>
               )}
             </div>
           </div>

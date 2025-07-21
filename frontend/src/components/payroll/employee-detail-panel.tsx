@@ -76,7 +76,9 @@ export default function EmployeeDetailPanel({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="fixed right-0 top-0 left-auto translate-x-0 translate-y-0 h-full w-full max-w-md rounded-none bg-white p-6 text-black">
+      <DialogContent
+        className="fixed right-0 top-0 left-auto translate-x-0 translate-y-0 h-full w-full max-w-md rounded-none border-l border-[var(--c-border)] p-6 text-[var(--c-text)]"
+      >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">Employee Details</h2>
           <DialogClose asChild>
@@ -97,7 +99,7 @@ export default function EmployeeDetailPanel({
               value={title}
               placeholder="Title"
               onChange={e => setTitle(e.target.value)}
-              className="w-full border p-2 rounded text-black"
+            className="w-full rounded border border-[var(--c-border)] bg-[var(--c-surface-1)] p-2 text-[var(--c-text)]"
               required
             />
             <datalist id="title-options">
@@ -110,7 +112,7 @@ export default function EmployeeDetailPanel({
               value={department}
               placeholder="Department"
               onChange={e => setDepartment(e.target.value)}
-              className="w-full border p-2 rounded text-black"
+            className="w-full rounded border border-[var(--c-border)] bg-[var(--c-surface-1)] p-2 text-[var(--c-text)]"
             />
             <datalist id="department-options">
               {DEPARTMENTS.map(d => (
@@ -122,13 +124,13 @@ export default function EmployeeDetailPanel({
               step="0.01"
               value={salary}
               onChange={e => setSalary(parseFloat(e.target.value))}
-              className="w-full border p-2 rounded text-black"
+              className="w-full rounded border border-[var(--c-border)] bg-[var(--c-surface-1)] p-2 text-[var(--c-text)]"
               required
             />
             <select
               value={status}
               onChange={e => setStatus(e.target.value)}
-              className="w-full border p-2 rounded text-black"
+              className="w-full rounded border border-[var(--c-border)] bg-[var(--c-surface-1)] p-2 text-[var(--c-text)]"
             >
               <option value="active">active</option>
               <option value="inactive">inactive</option>
