@@ -105,6 +105,8 @@ export const api = {
     getStats: (companyId: string = 'demo-company') => apiClient.get(`/api/payroll/stats?companyId=${companyId}`),
     approveRun: (runId: string, companyId: string = 'demo-company') => apiClient.post(`/api/payroll/runs/${runId}/approve`, { companyId }),
     revertRun: (runId: string, companyId: string = 'demo-company') => apiClient.post(`/api/payroll/runs/${runId}/revert`, { companyId }),
+    submitRun: (runId: string, companyId: string = 'demo-company') =>
+      apiClient.post(`/api/payroll/runs/${runId}/submit`, { companyId }),
     processRun: (runId: string, companyId: string = 'demo-company') => apiClient.post(`/api/payroll/runs/${runId}/process`, { companyId }),
   },
   

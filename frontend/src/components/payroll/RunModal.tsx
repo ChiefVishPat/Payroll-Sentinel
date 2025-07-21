@@ -86,6 +86,18 @@ export default function RunModal({ open, onOpenChange, onSaved, run }: RunModalP
     }
   }
 
+  const submitExisting = async () => {
+    if (!run || !companyId) return
+    setLoading(true)
+    try {
+      await api.payroll.submitRun(run.id, companyId)
+      onSaved()
+      onOpenChange(false)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="text-black">
@@ -177,9 +189,16 @@ export default function RunModal({ open, onOpenChange, onSaved, run }: RunModalP
           )}
           <div className="flex gap-2">
             {isEdit ? (
-              <Button type="submit" disabled={loading}>
-                {loading ? <Loader className="animate-spin" /> : 'Save'}
-              </Button>
+              <>
+                <Button type="submit" disabled={loading}>
+                  {loading ? <Loader className="animate-spin" /> : 'Save'}
+                </Button>
+                {run?.status === 'draft' && (
+                  <Button type="button" disabled={loading} onClick={submitExisting}>
+                    {loading ? <Loader className="animate-spin" /> : 'Submit'}
+                  </Button>
+                )}
+              </>
             ) : (
               <>
                 <Button

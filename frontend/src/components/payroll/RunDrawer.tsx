@@ -65,6 +65,16 @@ export default function RunDrawer({ run, open, onOpenChange, onUpdated }: RunDet
     }
   }
 
+  const submit = async () => {
+    setLoading(true)
+    try {
+      await api.payroll.submitRun(run.id, companyId || undefined)
+      onUpdated()
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -113,6 +123,11 @@ export default function RunDrawer({ run, open, onOpenChange, onUpdated }: RunDet
                   <Button size="sm" variant="destructive" onClick={remove} disabled={loading}>
                     {loading ? <Loader className="h-4 w-4 animate-spin" /> : 'Delete'}
                   </Button>
+                  {run.status === 'draft' && (
+                    <Button size="sm" onClick={submit} disabled={loading}>
+                      {loading ? <Loader className="h-4 w-4 animate-spin" /> : 'Submit'}
+                    </Button>
+                  )}
                 </>
               )}
               {run.status === 'pending' && (
