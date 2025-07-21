@@ -31,6 +31,9 @@ const fetcher = (url: string) =>
  * Dashboard view for banking data.
  * Shows linked accounts and recent transactions using SWR to poll the backend.
  */
+/**
+ * Dashboard to manage linked bank accounts and view recent transactions.
+ */
 export default function BankingDashboard() {
   const { companyId } = useCompany()
 
@@ -157,8 +160,8 @@ export default function BankingDashboard() {
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 rounded w-3/4 bg-[var(--c-surface-3)]"></div>
+                <div className="h-8 rounded w-1/2 bg-[var(--c-surface-3)]"></div>
               </CardHeader>
             </Card>
           ))}
@@ -171,8 +174,8 @@ export default function BankingDashboard() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Banking</h1>
-          <p className="text-gray-600">Manage bank accounts and transactions</p>
+          <h1 className="text-2xl font-bold text-[var(--c-text)]">Banking</h1>
+          <p className="text-[var(--c-text-subtle)]">Manage bank accounts and transactions</p>
         </div>
         <div className="flex gap-2">
           <Button 
@@ -201,61 +204,61 @@ export default function BankingDashboard() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="dark:bg-gray-800">
+        <Card className="bg-[var(--c-surface-1)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
+            <DollarSign className="h-4 w-4 text-[var(--c-success)]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-[var(--c-success)]">
               {formatCurrency(getTotalBalance())}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[var(--c-text-subtle)] mt-1">
               Across {accounts?.length || 0} accounts
             </p>
           </CardContent>
         </Card>
 
-        <Card className="dark:bg-gray-800">
+        <Card className="bg-[var(--c-surface-1)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Available Funds</CardTitle>
-            <CreditCard className="h-4 w-4 text-blue-600" />
+            <CreditCard className="h-4 w-4 text-[var(--c-info)]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-[var(--c-info)]">
               {formatCurrency(getTotalAvailable())}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[var(--c-text-subtle)] mt-1">
               Available to spend
             </p>
           </CardContent>
         </Card>
 
-        <Card className="dark:bg-gray-800">
+        <Card className="bg-[var(--c-surface-1)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Connection Status</CardTitle>
-            <Building className="h-4 w-4 text-green-600" />
+            <Building className="h-4 w-4 text-[var(--c-success)]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-[var(--c-success)]">
               {status?.connected ? 'Connected' : 'Disconnected'}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[var(--c-text-subtle)] mt-1">
               Last sync: {status?.lastSync ? formatDate(status.lastSync) : 'Never'}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="dark:bg-gray-800">
+        <Card className="bg-[var(--c-surface-1)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
-            <Calendar className="h-4 w-4 text-purple-600" />
+            <Calendar className="h-4 w-4 text-[var(--c-accent)]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-2xl font-bold text-[var(--c-accent)]">
               {transactions?.length || 0}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[var(--c-text-subtle)] mt-1">
               Transactions this month
             </p>
           </CardContent>
@@ -263,7 +266,7 @@ export default function BankingDashboard() {
       </div>
 
       {/* Bank Accounts */}
-      <Card className="dark:bg-gray-800">
+      <Card className="bg-[var(--c-surface-1)]">
         <CardHeader>
           <CardTitle>Bank Accounts</CardTitle>
           <CardDescription>Connected bank accounts and balances</CardDescription>
@@ -279,25 +282,28 @@ export default function BankingDashboard() {
               </div>
             ) : (
               accounts.map(account => (
-                <div key={account.id} className="flex items-center justify-between p-4 border rounded dark:border-gray-700">
+                <div
+                  key={account.id}
+                  className="flex items-center justify-between p-4 border border-[var(--c-border)] rounded bg-[var(--c-surface-1)]"
+                >
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded">
-                      <CreditCard className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+                    <div className="rounded p-2 bg-[var(--c-surface-2)]">
+                      <CreditCard className="h-6 w-6 text-[var(--c-text-subtle)]" />
                     </div>
                     <div>
                       <div className="font-medium">{account.name}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">{account.institutionName}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{account.type} account</div>
+                      <div className="text-sm text-[var(--c-text-subtle)]">{account.institutionName}</div>
+                      <div className="text-xs capitalize text-[var(--c-text-disabled)]">{account.type} account</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className={`text-lg font-semibold ${account.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}> 
+                    <div className={`text-lg font-semibold ${account.balance >= 0 ? 'text-[var(--c-success)]' : 'text-[var(--c-error)]'}`}>
                       {formatCurrency((account as any).balance)}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="text-sm text-[var(--c-text-subtle)]">
                       Available: {formatCurrency((account as any).availableBalance)}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                    <div className="text-xs text-[var(--c-text-disabled)]">
                       Updated: {formatDate((account as any).lastUpdated)}
                     </div>
                   </div>
@@ -309,7 +315,7 @@ export default function BankingDashboard() {
       </Card>
 
       {/* Recent Transactions */}
-      <Card className="dark:bg-gray-800">
+      <Card className="bg-[var(--c-surface-1)]">
         <CardHeader>
           <CardTitle>Recent Transactions</CardTitle>
           <CardDescription>
@@ -319,31 +325,38 @@ export default function BankingDashboard() {
         <CardContent>
           <div className="space-y-4">
             {!transactions || transactions.length === 0 ? (
-              <div className="p-4 text-center text-gray-500 border rounded dark:border-gray-700">
+              <div className="p-4 text-center text-[var(--c-text-disabled)] border border-[var(--c-border)] rounded">
                 No recent transactions
               </div>
             ) : (
               transactions.map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div
+                  key={transaction.id}
+                  className="flex items-center justify-between p-3 rounded border border-[var(--c-border)] bg-[var(--c-surface-1)]"
+                >
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded ${transaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100'}`}>
+                    <div
+                      className={`p-2 rounded ${transaction.type === 'credit' ? 'bg-[var(--c-success)]/20' : 'bg-[var(--c-error)]/20'}`}
+                    >
                       {transaction.type === 'credit' ? (
-                        <TrendingUp className="h-4 w-4 text-green-600" />
+                        <TrendingUp className="h-4 w-4 text-[var(--c-success)]" />
                       ) : (
-                        <TrendingDown className="h-4 w-4 text-red-600" />
+                        <TrendingDown className="h-4 w-4 text-[var(--c-error)]" />
                       )}
                     </div>
                     <div>
                       <div className="font-medium">{transaction.description}</div>
-                      <div className="text-sm text-gray-600">{transaction.category}</div>
-                      <div className="text-xs text-gray-500">{formatDate(transaction.date)}</div>
+                      <div className="text-sm text-[var(--c-text-subtle)]">{transaction.category}</div>
+                      <div className="text-xs text-[var(--c-text-disabled)]">{formatDate(transaction.date)}</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className={`font-semibold ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <div
+                      className={`font-semibold ${transaction.amount >= 0 ? 'text-[var(--c-success)]' : 'text-[var(--c-error)]'}`}
+                    >
                       {transaction.amount >= 0 ? '+' : ''}{formatCurrency(transaction.amount)}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-[var(--c-text-disabled)]">
                       Account: {accounts?.find(a => a.id === transaction.accountId)?.name || 'Unknown'}
                     </div>
                   </div>
