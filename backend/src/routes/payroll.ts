@@ -133,7 +133,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
     try {
       const { data: empRows } = await supabase
         .from('employees')
-        .select('salary')
+        .select('annual_salary')
         .eq('company_id', companyId)
         .eq('is_active', true)
 
@@ -151,7 +151,8 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
 
       const totalEmployees = empRows?.length || 0
       const monthlyPayroll =
-        (empRows?.reduce((t, e) => t + Number(e.salary || 0), 0) || 0) / 12
+        (empRows?.reduce((t, e) => t + Number(e.annual_salary || 0), 0) || 0) /
+        12
       const nextPayroll = scheduleRows?.[0]?.next_run_date || null
       const pendingRuns = runRows?.filter(r => r.status === 'pending').length || 0
 
