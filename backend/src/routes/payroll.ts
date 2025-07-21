@@ -348,6 +348,38 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
   })
 
   /**
+   * Submit a draft payroll run for approval
+   * @route POST /api/payroll/runs/:id/submit
+   */
+  fastify.post('/payroll/runs/:id/submit', async (request, reply) => {
+    const { id } = request.params as { id: string }
+    await ensureSchema()
+    try {
+      const { data: existing, error: findError } = await supabase
+        .from('payroll_runs')
+        .select('status')
+        .eq('id', id)
+        .single()
+      if (findError) throw findError
+      if (existing?.status !== 'draft')
+        return reply.status(400).send({ error: 'run not draft' })
+
+      const { data, error } = await supabase
+        .from('payroll_runs')
+        .update({ status: 'pending', updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single()
+      if (error) throw error
+      fastify.log.info({ mod: 'Payroll' }, 'run submitted')
+      return reply.send({ data })
+    } catch (err) {
+      fastify.log.error({ mod: 'Payroll' }, 'submit run error %o', err)
+      return reply.status(500).send({ error: 'failed to submit run' })
+    }
+  })
+
+  /**
    * Approve a pending payroll run
    * @route POST /api/payroll/runs/:id/approve
    */
