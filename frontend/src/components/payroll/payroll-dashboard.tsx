@@ -398,7 +398,7 @@ export default function PayrollDashboard() {
                         {formatCurrency(
                           (run as any).total_gross ?? (run as any).totalAmount,
                         )}{" "}
-                        for {run.employee_count} employees
+                        for {summary?.totalEmployees ?? run.employee_count} employees
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
                         Scheduled:{" "}
