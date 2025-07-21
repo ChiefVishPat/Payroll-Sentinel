@@ -17,6 +17,9 @@ import {
   XCircle
 } from 'lucide-react'
 
+/**
+ * Dashboard presenting risk metrics and alerts for the selected company.
+ */
 export default function RiskDashboard() {
   const { companyId } = useCompany()
 
@@ -130,8 +133,8 @@ export default function RiskDashboard() {
           {[...Array(3)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 rounded w-3/4 bg-[var(--c-surface-3)]"></div>
+                <div className="h-8 rounded w-1/2 bg-[var(--c-surface-3)]"></div>
               </CardHeader>
             </Card>
           ))}
@@ -140,15 +143,19 @@ export default function RiskDashboard() {
     )
   }
 
-  const riskLevelColor = riskStatus?.overallRisk === 'high' ? 'text-red-600' : 
-                       riskStatus?.overallRisk === 'medium' ? 'text-yellow-600' : 'text-green-600'
+  const riskLevelColor =
+    riskStatus?.overallRisk === 'high'
+      ? 'text-[var(--c-error)]'
+      : riskStatus?.overallRisk === 'medium'
+      ? 'text-[var(--c-warning)]'
+      : 'text-[var(--c-success)]'
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Risk Analysis</h1>
-          <p className="text-gray-600">Monitor and assess financial risks</p>
+          <h1 className="text-2xl font-bold text-[var(--c-text)]">Risk Analysis</h1>
+          <p className="text-[var(--c-text-subtle)]">Monitor and assess financial risks</p>
         </div>
         <Button 
           onClick={triggerAssessment} 
@@ -171,7 +178,7 @@ export default function RiskDashboard() {
             <div className={`text-2xl font-bold ${riskLevelColor}`}>
               {riskStatus?.overallRisk?.charAt(0).toUpperCase() + riskStatus?.overallRisk?.slice(1)}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[var(--c-text-subtle)] mt-1">
               Risk Score: {riskStatus?.score}/100
             </p>
           </CardContent>
@@ -186,7 +193,7 @@ export default function RiskDashboard() {
             <div className="text-2xl font-bold text-yellow-600">
               {alerts.filter(a => !a.acknowledged).length}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[var(--c-text-subtle)] mt-1">
               Unacknowledged alerts
             </p>
           </CardContent>
@@ -201,7 +208,7 @@ export default function RiskDashboard() {
             <div className="text-2xl font-bold text-blue-600">
               {riskStatus?.lastAssessment ? formatDateTime(riskStatus.lastAssessment).split(',')[0] : 'N/A'}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[var(--c-text-subtle)] mt-1">
               {riskStatus?.lastAssessment ? formatDateTime(riskStatus.lastAssessment).split(',')[1] : 'No recent assessment'}
             </p>
           </CardContent>
@@ -219,10 +226,13 @@ export default function RiskDashboard() {
         <CardContent>
           <div className="space-y-4">
             {riskStatus?.factors?.map((factor: any, index: number) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 rounded border border-[var(--c-border)] bg-[var(--c-surface-1)]"
+              >
                 <div>
                   <div className="font-medium">{factor.category}</div>
-                  <div className="text-sm text-gray-600">Impact: {factor.impact}</div>
+                  <div className="text-sm text-[var(--c-text-subtle)]">Impact: {factor.impact}</div>
                 </div>
                 <div className="text-right">
                   <div className="font-semibold">{factor.score}/100</div>
@@ -247,30 +257,33 @@ export default function RiskDashboard() {
         <CardContent>
           <div className="space-y-4">
             {alerts.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="py-8 text-center text-[var(--c-text-disabled)]">
                 No active alerts
               </div>
             ) : (
               alerts.map((alert) => (
-                <div key={alert.id} className="flex items-start justify-between p-4 border rounded">
+                <div
+                  key={alert.id}
+                  className="flex items-start justify-between p-4 border border-[var(--c-border)] rounded bg-[var(--c-surface-1)]"
+                >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <div className={`px-2 py-1 text-xs rounded ${getRiskColor(alert.level)}`}>
                         {alert.level}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-[var(--c-text-disabled)]">
                         {alert.type.replace('_', ' ')}
                       </div>
                     </div>
                     <div className="font-medium">{alert.title}</div>
-                    <div className="text-sm text-gray-600 mt-1">{alert.description}</div>
-                    <div className="text-xs text-gray-500 mt-2">
+                    <div className="text-sm text-[var(--c-text-subtle)] mt-1">{alert.description}</div>
+                    <div className="text-xs text-[var(--c-text-disabled)] mt-2">
                       {formatDateTime(alert.timestamp)}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 ml-4">
                     {alert.acknowledged ? (
-                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <CheckCircle className="h-5 w-5 text-[var(--c-success)]" />
                     ) : (
                       <Button
                         size="sm"

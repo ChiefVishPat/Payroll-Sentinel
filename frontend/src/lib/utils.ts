@@ -37,13 +37,13 @@ export function formatPercentage(value: number): string {
 export function getRiskColor(level: 'low' | 'medium' | 'high'): string {
   switch (level) {
     case 'low':
-      return 'text-green-600 bg-green-50'
+      return 'text-[var(--c-success)] bg-[var(--c-surface-3)]'
     case 'medium':
-      return 'text-yellow-600 bg-yellow-50'
+      return 'text-[var(--c-warning)] bg-[var(--c-surface-3)]'
     case 'high':
-      return 'text-red-600 bg-red-50'
+      return 'text-[var(--c-error)] bg-[var(--c-surface-3)]'
     default:
-      return 'text-gray-600 bg-gray-50'
+      return 'text-[var(--c-text-subtle)] bg-[var(--c-surface-3)]'
   }
 }
 
@@ -53,15 +53,15 @@ export function getStatusColor(status: string): string {
     case 'healthy':
     case 'connected':
     case 'approved':
-      return 'text-green-600 bg-green-50'
+      return 'text-[var(--c-success)] bg-[var(--c-surface-3)]'
     case 'pending':
     case 'processing':
-      return 'text-yellow-600 bg-yellow-50'
+      return 'text-[var(--c-warning)] bg-[var(--c-surface-3)]'
     case 'error':
     case 'failed':
     case 'disconnected':
-      return 'text-red-600 bg-red-50'
+      return 'text-[var(--c-error)] bg-[var(--c-surface-3)]'
     default:
-      return 'text-gray-600 bg-gray-50'
+      return 'text-[var(--c-text-subtle)] bg-[var(--c-surface-3)]'
   }
 }

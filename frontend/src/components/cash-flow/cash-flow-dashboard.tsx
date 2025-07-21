@@ -18,6 +18,9 @@ import {
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
 
+/**
+ * Dashboard view showing cash flow summaries and projections.
+ */
 export default function CashFlowDashboard() {
   const { companyId } = useCompany()
 
@@ -96,27 +99,31 @@ export default function CashFlowDashboard() {
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-              </CardHeader>
-            </Card>
+          <Card key={i} className="animate-pulse">
+            <CardHeader>
+              <div className="h-4 rounded w-3/4 bg-[var(--c-surface-3)]"></div>
+              <div className="h-8 rounded w-1/2 bg-[var(--c-surface-3)]"></div>
+            </CardHeader>
+          </Card>
           ))}
         </div>
       </div>
     )
   }
 
-  const runwayColor = (summary?.runway || 0) > 3 ? 'text-green-600' : 
-                     (summary?.runway || 0) > 1 ? 'text-yellow-600' : 'text-red-600'
+  const runwayColor =
+    (summary?.runway || 0) > 3
+      ? 'text-[var(--c-success)]'
+      : (summary?.runway || 0) > 1
+      ? 'text-[var(--c-warning)]'
+      : 'text-[var(--c-error)]'
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Cash Flow</h1>
-          <p className="text-gray-600">Monitor and forecast cash flow</p>
+          <h1 className="text-2xl font-bold text-[var(--c-text)]">Cash Flow</h1>
+          <p className="text-[var(--c-text-subtle)]">Monitor and forecast cash flow</p>
         </div>
         <Button 
           onClick={recalculateProjections} 
@@ -133,13 +140,13 @@ export default function CashFlowDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
+            <DollarSign className="h-4 w-4 text-[var(--c-success)]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-[var(--c-success)]">
               {formatCurrency(summary?.currentBalance || 0)}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[var(--c-text-subtle)] mt-1">
               Available funds
             </p>
           </CardContent>
@@ -148,13 +155,13 @@ export default function CashFlowDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Projected Balance</CardTitle>
-            <TrendingUp className="h-4 w-4 text-blue-600" />
+            <TrendingUp className="h-4 w-4 text-[var(--c-info)]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-[var(--c-info)]">
               {formatCurrency(summary?.projectedBalance || 0)}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[var(--c-text-subtle)] mt-1">
               30-day projection
             </p>
           </CardContent>
@@ -163,13 +170,13 @@ export default function CashFlowDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Monthly Burn Rate</CardTitle>
-            <TrendingDown className="h-4 w-4 text-red-600" />
+            <TrendingDown className="h-4 w-4 text-[var(--c-error)]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl font-bold text-[var(--c-error)]">
               {formatCurrency(summary?.burnRate || 0)}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[var(--c-text-subtle)] mt-1">
               Average monthly expenses
             </p>
           </CardContent>
@@ -184,7 +191,7 @@ export default function CashFlowDashboard() {
             <div className={`text-2xl font-bold ${runwayColor}`}>
               {summary?.runway?.toFixed(1) || '0.0'} months
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-[var(--c-text-subtle)] mt-1">
               At current burn rate
             </p>
           </CardContent>
@@ -305,16 +312,21 @@ export default function CashFlowDashboard() {
               { date: '2025-01-06', description: 'Software Subscriptions', amount: -2500, type: 'expense' },
               { date: '2025-01-05', description: 'Client Payment - XYZ Ltd', amount: 15000, type: 'income' }
             ].map((transaction, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 rounded border border-[var(--c-border)] bg-[var(--c-surface-1)]"
+              >
                 <div>
                   <div className="font-medium">{transaction.description}</div>
-                  <div className="text-sm text-gray-600">{formatDate(transaction.date)}</div>
+                  <div className="text-sm text-[var(--c-text-subtle)]">{formatDate(transaction.date)}</div>
                 </div>
                 <div className="text-right">
-                  <div className={`font-semibold ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div
+                    className={`font-semibold ${transaction.amount > 0 ? 'text-[var(--c-success)]' : 'text-[var(--c-error)]'}`}
+                  >
                     {transaction.amount > 0 ? '+' : ''}{formatCurrency(transaction.amount)}
                   </div>
-                  <div className="text-sm text-gray-500 capitalize">{transaction.type}</div>
+                  <div className="text-sm capitalize text-[var(--c-text-disabled)]">{transaction.type}</div>
                 </div>
               </div>
             ))}

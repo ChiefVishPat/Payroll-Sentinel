@@ -160,8 +160,8 @@ export default function PayrollDashboard() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Payroll</h1>
-          <p className="text-gray-600">Manage payroll runs and employees</p>
+          <h1 className="text-2xl font-bold text-[var(--c-text)]">Payroll</h1>
+          <p className="text-[var(--c-text-subtle)]">Manage payroll runs and employees</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -176,7 +176,7 @@ export default function PayrollDashboard() {
                 <span className="text-xl">➕</span> Add Employee
               </Button>
             </DialogTrigger>
-            <DialogContent className="text-black">
+            <DialogContent className="text-[var(--c-text)]">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">Add Employee</h2>
                 <DialogClose asChild>
@@ -206,14 +206,14 @@ export default function PayrollDashboard() {
                 <input
                   name="name"
                   placeholder="Name"
-                  className="w-full border p-2 rounded text-black"
+                  className="w-full rounded border border-[var(--c-border)] bg-[var(--c-surface-1)] p-2 text-[var(--c-text)]"
                   required
                 />
                 <input
                   list="title-options"
                   name="title"
                   placeholder="Title"
-                  className="w-full border p-2 rounded text-black"
+                  className="w-full rounded border border-[var(--c-border)] bg-[var(--c-surface-1)] p-2 text-[var(--c-text)]"
                   required
                 />
                 <datalist id="title-options">
@@ -225,7 +225,7 @@ export default function PayrollDashboard() {
                   list="department-options"
                   name="department"
                   placeholder="Department"
-                  className="w-full border p-2 rounded text-black"
+                  className="w-full rounded border border-[var(--c-border)] bg-[var(--c-surface-1)] p-2 text-[var(--c-text)]"
                 />
                 <datalist id="department-options">
                   {DEPARTMENTS.map((d) => (
@@ -237,12 +237,12 @@ export default function PayrollDashboard() {
                   type="number"
                   step="0.01"
                   placeholder="Salary"
-                  className="w-full border p-2 rounded text-black"
+                  className="w-full rounded border border-[var(--c-border)] bg-[var(--c-surface-1)] p-2 text-[var(--c-text)]"
                   required
                 />
                 <select
                   name="status"
-                  className="w-full border p-2 rounded text-black"
+                  className="w-full rounded border border-[var(--c-border)] bg-[var(--c-surface-1)] p-2 text-[var(--c-text)]"
                 >
                   <option value="active">active</option>
                   <option value="inactive">inactive</option>
@@ -278,67 +278,67 @@ export default function PayrollDashboard() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="dark:bg-gray-800">
+        <Card className="bg-[var(--c-surface-1)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Total Employees
             </CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
+            <Users className="h-4 w-4 text-[var(--c-info)]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-[var(--c-info)]">
               {summary?.totalEmployees || 0}
             </div>
-            <p className="text-xs text-gray-600 mt-1">Total employees</p>
+            <p className="text-xs text-[var(--c-text-subtle)] mt-1">Total employees</p>
           </CardContent>
         </Card>
 
-        <Card className="dark:bg-gray-800">
+        <Card className="bg-[var(--c-surface-1)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Monthly Payroll
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
+            <DollarSign className="h-4 w-4 text-[var(--c-success)]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-[var(--c-success)]">
               {summary ? formatCurrency(summary.monthlyPayroll) : "$0"}
             </div>
-            <p className="text-xs text-gray-600 mt-1">Total monthly cost</p>
+            <p className="text-xs text-[var(--c-text-subtle)] mt-1">Total monthly cost</p>
           </CardContent>
         </Card>
 
-        <Card className="dark:bg-gray-800">
+        <Card className="bg-[var(--c-surface-1)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Next Payroll</CardTitle>
-            <Calendar className="h-4 w-4 text-purple-600" />
+            <Calendar className="h-4 w-4 text-[var(--c-accent)]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-2xl font-bold text-[var(--c-accent)]">
               {summary?.nextPayroll
                 ? formatDate(summary.nextPayroll)
                 : "Not scheduled"}
             </div>
-            <p className="text-xs text-gray-600 mt-1">Scheduled date</p>
+            <p className="text-xs text-[var(--c-text-subtle)] mt-1">Scheduled date</p>
           </CardContent>
         </Card>
 
-        <Card className="dark:bg-gray-800">
+        <Card className="bg-[var(--c-surface-1)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Runs</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-600" />
+            <Clock className="h-4 w-4 text-[var(--c-warning)]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
+            <div className="text-2xl font-bold text-[var(--c-warning)]">
               {summary?.pendingRuns ?? 0}
             </div>
-            <p className="text-xs text-gray-600 mt-1">Awaiting approval</p>
+            <p className="text-xs text-[var(--c-text-subtle)] mt-1">Awaiting approval</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Payroll Runs */}
-      <Card className="dark:bg-gray-800">
+      <Card className="bg-[var(--c-surface-1)]">
         <CardHeader>
           <CardTitle>Payroll Runs</CardTitle>
           <CardDescription>Recent and upcoming payroll runs</CardDescription>
@@ -360,7 +360,7 @@ export default function PayrollDashboard() {
             {(payrollRuns?.data || []).filter((r) =>
               filter === "all" ? true : r.status === filter,
             ).length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-[var(--c-text-disabled)]">
                 No payroll runs found
               </div>
             ) : (
@@ -371,7 +371,7 @@ export default function PayrollDashboard() {
                 .map((run: PayrollRun) => (
                   <div
                     key={run.id}
-                    className="flex items-center justify-between p-4 border rounded cursor-pointer hover:bg-gray-50"
+                  className="flex items-center justify-between p-4 border border-[var(--c-border)] rounded cursor-pointer hover:bg-[var(--c-surface-3)]"
                     onClick={() => {
                       setSelectedRun(run);
                       setRunPanelOpen(true);
@@ -394,13 +394,13 @@ export default function PayrollDashboard() {
                           })()}
                         </div>
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-[var(--c-text-subtle)]">
                         {formatCurrency(
                           (run as any).total_gross ?? (run as any).totalAmount,
                         )}{" "}
                         for {summary?.totalEmployees ?? run.employee_count} employees
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-[var(--c-text-disabled)] mt-1">
                         Scheduled:{" "}
                         {formatDate(
                           (run as any).pay_date ?? (run as any).payDate,
@@ -437,7 +437,7 @@ export default function PayrollDashboard() {
                         </Button>
                       )}
                       {run.status === "processed" && (
-                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <CheckCircle className="h-5 w-5 text-[var(--c-success)]" />
                       )}
                     </div>
                   </div>
@@ -448,7 +448,7 @@ export default function PayrollDashboard() {
       </Card>
 
       {/* Employee List */}
-      <Card className="dark:bg-gray-800">
+      <Card className="bg-[var(--c-surface-1)]">
         <CardHeader>
           <CardTitle>Employees</CardTitle>
           <CardDescription>Active employee roster</CardDescription>
@@ -456,14 +456,14 @@ export default function PayrollDashboard() {
         <CardContent>
           <div className="space-y-4">
             {(employees?.data || []).length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-[var(--c-text-disabled)]">
                 No employees found
               </div>
             ) : (
               (employees?.data || []).map((employee: Employee) => (
                 <div
                   key={employee.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100"
+                  className="flex items-center justify-between p-3 rounded border border-[var(--c-border)] bg-[var(--c-surface-1)] cursor-pointer hover:bg-[var(--c-surface-3)]"
                   onClick={() => {
                     setSelected(employee);
                     setDetailOpen(true);
@@ -471,11 +471,11 @@ export default function PayrollDashboard() {
                 >
                   <div className="flex-1">
                     <div className="font-medium">{employee.name}</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-[var(--c-text-subtle)]">
                       {employee.title}
                     </div>
                     {employee.created_at && (
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-[var(--c-text-disabled)]">
                         {employee.department || "General"} • Started{" "}
                         {formatDate(employee.created_at)}
                       </div>
