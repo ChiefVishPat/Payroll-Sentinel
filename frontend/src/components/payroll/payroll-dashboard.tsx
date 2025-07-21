@@ -22,6 +22,8 @@ import { Dialog, DialogTrigger, DialogContent, DialogClose } from '@frontend/com
 import { useState } from 'react'
 import { DEPARTMENTS, TITLES } from '@frontend/lib/job-data'
 import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-panel'
+import RunDrawer from '@frontend/components/payroll/RunDrawer'
+import RunModal from '@frontend/components/payroll/RunModal'
 
 /**
  * Payroll dashboard page showing payroll data and employee roster.
@@ -32,6 +34,10 @@ import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-pa
     const [open, setOpen] = useState(false)
     const [detailOpen, setDetailOpen] = useState(false)
     const [selected, setSelected] = useState<Employee | null>(null)
+    const [runPanelOpen, setRunPanelOpen] = useState(false)
+    const [selectedRun, setSelectedRun] = useState<PayrollRun | null>(null)
+    const [createOpen, setCreateOpen] = useState(false)
+    const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'processed' | 'draft'>('all')
 
     const fetcher = (url: string) => apiClient.get(url).then(res => res.data)
 
@@ -44,12 +50,12 @@ import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-pa
       refreshInterval: 0,
     }
 
-    const { data: payrollRuns, isLoading: loadingRuns, mutate: mutRuns } =
-      useSWR(
-        companyId ? `/api/payroll/runs?companyId=${companyId}` : null,
-        fetcher,
-        swrOpts
-      )
+    const runsUrl = companyId ? `/api/payroll/runs?companyId=${companyId}` : null
+    const { data: payrollRuns, isLoading: loadingRuns, mutate: mutRuns } = useSWR(
+      runsUrl,
+      fetcher,
+      swrOpts
+    )
     const { data: employees, isLoading: loadingEmp, mutate: mutEmp } = useSWR(
       companyId ? `/api/payroll/employees?companyId=${companyId}` : null,
       fetcher,
@@ -124,6 +130,9 @@ import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-pa
           <p className="text-gray-600">Manage payroll runs and employees</p>
         </div>
         <div className="flex gap-2">
+          <Button onClick={() => setCreateOpen(true)} className="flex items-center gap-2">
+            <span className="text-xl">➕</span> New Run
+          </Button>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
@@ -278,35 +287,71 @@ import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-pa
           <CardDescription>
             Recent and upcoming payroll runs
           </CardDescription>
+          <div className="mt-2 flex gap-2">
+            {['all','pending','approved','processed','draft'].map(s => (
+              <Button
+                key={s}
+                size="sm"
+                variant={filter === s ? 'default' : 'outline'}
+                onClick={() => setFilter(s as any)}
+              >
+                {s}
+              </Button>
+            ))}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {(payrollRuns?.data || []).length === 0 ? (
+            {(
+              (payrollRuns?.data || []).filter(r =>
+                filter === 'all' ? true : r.status === filter
+              ).length === 0
+            ) ? (
               <div className="text-center py-8 text-gray-500">
                 No payroll runs found
               </div>
             ) : (
-              (payrollRuns?.data || []).map((run: PayrollRun) => (
-                <div key={run.id} className="flex items-center justify-between p-4 border rounded">
+              (payrollRuns?.data || [])
+                .filter(run => (filter === 'all' ? true : run.status === filter))
+                .map((run: PayrollRun) => (
+                <div
+                  key={run.id}
+                  className="flex items-center justify-between p-4 border rounded cursor-pointer hover:bg-gray-50"
+                  onClick={() => {
+                    setSelectedRun(run)
+                    setRunPanelOpen(true)
+                  }}
+                >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <div className={`px-2 py-1 text-xs rounded ${getStatusColor(run.status)}`}>
                         {run.status}
                       </div>
-                      <div className="font-medium">{run.payPeriod}</div>
+                      <div className="font-medium">
+                        {(() => {
+                          const r: any = run
+                          const start = r.pay_period_start ?? r.payPeriodStart
+                          const end = r.pay_period_end ?? r.payPeriodEnd
+                          return `${start} to ${end}`
+                        })()}
+                      </div>
                     </div>
                     <div className="text-sm text-gray-600">
-                      {formatCurrency(run.totalAmount)} for {run.employeeCount} employees
+                      {formatCurrency((run as any).total_gross ?? (run as any).totalAmount)} for {run.employee_count} employees
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      Scheduled: {formatDate(run.scheduledDate)}
+                      Scheduled: {formatDate((run as any).pay_date ?? (run as any).payDate)}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 ml-4">
                     {run.status === 'pending' && (
                       <Button
                         size="sm"
-                        onClick={() => approvePayroll(run.id)}
+                        onClick={e => {
+                          // Prevent the row click handler from opening the drawer
+                          e.stopPropagation()
+                          approvePayroll(run.id)
+                        }}
                         className="flex items-center gap-1"
                       >
                         <CheckCircle className="h-4 w-4" />
@@ -316,7 +361,11 @@ import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-pa
                     {run.status === 'approved' && (
                       <Button
                         size="sm"
-                        onClick={() => processPayroll(run.id)}
+                        onClick={e => {
+                          // Prevent the row click handler from opening the drawer
+                          e.stopPropagation()
+                          processPayroll(run.id)
+                        }}
                         className="flex items-center gap-1"
                       >
                         <Play className="h-4 w-4" />
@@ -389,6 +438,23 @@ import EmployeeDetailPanel from '@frontend/components/payroll/employee-detail-pa
           }}
         />
       )}
+      {selectedRun && (
+        <RunDrawer
+          run={selectedRun}
+          open={runPanelOpen}
+          onOpenChange={setRunPanelOpen}
+          onUpdated={async () => {
+            await Promise.all([mutRuns(), mutSum()])
+          }}
+        />
+      )}
+      <RunModal
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onSaved={async () => {
+          await Promise.all([mutRuns(), mutSum()])
+        }}
+      />
     </div>
   )
 }

@@ -35,9 +35,21 @@ export interface BankAccount {
  * Payroll run result
  */
 export interface PayrollRun {
-  payrollRunId: string;
-  status: 'pending' | 'paid' | string;
+  id: string;
+  company_id: string;
+  check_payroll_id: string;
+  run_number: string;
+  pay_period_start: string;
+  pay_period_end: string;
+  pay_date: string;
+  status: 'draft' | 'pending' | 'approved' | 'processed' | 'cancelled';
+  total_gross: number;
+  total_net: number;
+  total_taxes: number;
+  total_deductions: number;
+  employee_count: number;
   created_at?: string;
+  updated_at?: string;
 }
 
 /**
