@@ -42,7 +42,7 @@ export interface PayrollRun {
   pay_period_start: string;
   pay_period_end: string;
   pay_date: string;
-  status: 'draft' | 'pending' | 'approved' | 'processed' | 'cancelled';
+  status: "draft" | "pending" | "approved" | "processed" | "cancelled";
   total_gross: number;
   total_net: number;
   total_taxes: number;
@@ -58,7 +58,7 @@ export interface PayrollRun {
 export interface PaySchedule {
   id: string;
   companyId: string;
-  frequency: 'weekly' | 'biweekly' | 'semimonthly' | 'monthly';
+  frequency: "weekly" | "biweekly" | "semimonthly" | "monthly";
   firstPayday: string;
   isActive: boolean;
   created_at: string;
@@ -106,4 +106,14 @@ export interface Employee {
   department?: string | null;
   created_at?: string;
   updated_at?: string;
+}
+
+/**
+ * Dashboard payroll summary
+ */
+export interface PayrollSummary {
+  totalEmployees: number;
+  monthlyPayroll: number;
+  nextPayroll: string | null;
+  pendingRuns: number;
 }
