@@ -1,4 +1,4 @@
-# Warp Sentinel
+# Payroll Sentinel
 
 A slim, always-on watchdog that monitors cash flow against payroll requirements to prevent NSF failures.
 
@@ -14,53 +14,6 @@ Failed payroll ACH pulls lead to:
 - Hours of founder fire-drills
 
 Warp Sentinel prevents these issues by providing early warnings before cash flow problems impact payroll.
-
-## Development Phases
-
-### ✅ Phase 1: Project Setup & Foundation (COMPLETED)
-- ✅ Project structure with workspace configuration
-- ✅ TypeScript configuration with strict settings
-- ✅ ESLint and Prettier setup
-- ✅ Environment configuration with `.env.example`
-- ✅ Test setup with Vitest and 100% coverage requirements
-
-### ✅ Phase 2: Backend Core & Database (COMPLETED)
-- ✅ Fastify server with TypeScript
-- ✅ Supabase database schema and types
-- ✅ Health check endpoints
-- ✅ Companies CRUD API with Swagger documentation
-- ✅ Error handling and logging
-- ✅ Authentication middleware (demo-level)
-
-### 🔄 Phase 3: External API Integrations (NEXT)
-- Plaid service wrapper for bank account monitoring
-- Check service wrapper for payroll data
-- Slack notification service
-
-### 📋 Phase 4: Core Business Logic (UPCOMING)
-- Risk calculation engine
-- Polling job implementation  
-- Alert system with idempotency
-
-### 📋 Phase 5: Frontend Foundation (UPCOMING)
-- React app with TypeScript and Tailwind
-- API client setup
-- Basic routing and layout
-
-### 📋 Phase 6: Dashboard & UI (UPCOMING)
-- Balance monitoring dashboard
-- Charts with Recharts
-- Real-time updates via Supabase
-
-### 📋 Phase 7: Integration & Testing (UPCOMING)
-- End-to-end testing
-- Error handling
-- Performance optimization
-
-### 📋 Phase 8: Deployment & CI/CD (UPCOMING)
-- Fly.io deployment setup
-- GitHub Actions CI/CD
-- Documentation
 
 ## Tech Stack
 
@@ -169,26 +122,12 @@ npm run type-check --workspace=backend
 npm run lint --workspace=backend
 ```
 
-**Full development (when frontend is ready):**
+**Full development:**
 ```bash
-# Start both frontend and backend
+# Start both frontend and backend form root folder
 npm run dev
 ```
 
-### API Documentation
-
-When the backend is running, visit `http://localhost:3001/docs` for the Swagger API documentation.
-
-### Available Endpoints
-
-- `GET /health` - Basic health check
-- `GET /health/db` - Database connectivity check  
-- `GET /health/ready` - Readiness probe
-- `GET /api/companies` - List all companies
-- `POST /api/companies` - Create new company
-- `GET /api/companies/:id` - Get company by ID
-- `PUT /api/companies/:id` - Update company
-- `DELETE /api/companies/:id` - Delete company
 
 ## Environment Variables
 
@@ -205,33 +144,6 @@ When the backend is running, visit `http://localhost:3001/docs` for the Swagger 
 | `NODE_ENV` | Environment (development/production) | ✅ |
 | `PORT` | Server port (default: 3001) | ❌ |
 | `API_SECRET` | Shared secret for demo auth | ✅ |
-
-## Testing
-
-The project maintains 100% test coverage requirements:
-
-```bash
-# Run tests with coverage
-npm run test:coverage --workspace=backend
-
-# Watch mode for development
-npm run test --workspace=backend
-```
-
-## Code Quality
-
-- **TypeScript**: Strict mode with `strictNullChecks=true`
-- **ESLint**: Zero warnings policy (`--max-warnings 0`)
-- **Prettier**: Consistent code formatting
-- **Vitest**: Fast, modern testing framework
-
-## Contributing
-
-1. Make small, focused commits with conventional commit messages (`feat:`, `fix:`, etc.)
-2. Ensure all tests pass and coverage remains at 100%
-3. Follow the existing code style and TypeScript patterns
-4. Update documentation for any new features
-5. Husky runs lint and tests before each commit
 
 ## License
 
