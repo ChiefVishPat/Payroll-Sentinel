@@ -1,7 +1,9 @@
 import { FastifyInstance } from 'fastify';
+import multipart from '@fastify/multipart';
 import { supabase } from '@backend/db/client';
 import { applyMigrations } from '@backend/db/migrations';
 import { CheckService } from '@backend/services/check';
+import { importPayrollData } from '@backend/services/payroll-import';
 
 /**
  * Ensure the database schema exists by applying all migrations.
@@ -17,7 +19,39 @@ async function ensureSchema(): Promise<void> {
  */
 export default async function payrollRoutes(fastify: FastifyInstance) {
   await ensureSchema();
+  // Enable multipart support for CSV uploads
+  await fastify.register(multipart);
   const checkService = fastify.services.checkService as CheckService;
+
+  /**
+   * Import payroll data from a CSV file.
+   * Supports multipart uploads or base64-encoded payloads.
+   * @route POST /api/payroll/import
+   */
+  fastify.post('/payroll/import', async (request, reply) => {
+    const { companyId, file } = request.body as { companyId: string; file?: string };
+    await ensureSchema();
+
+    try {
+      let buffer: Buffer;
+      // Handle multipart form uploads
+      if ((request as any).isMultipart && (request as any).isMultipart()) {
+        const upload = await (request as any).file();
+        buffer = await upload.toBuffer();
+      } else if (file) {
+        buffer = Buffer.from(file, 'base64');
+      } else {
+        return reply.status(400).send({ error: 'No CSV provided' });
+      }
+
+      const result = await importPayrollData(companyId, buffer, fastify.log);
+      fastify.log.info({ mod: 'Payroll' }, 'payroll import complete');
+      return reply.send({ success: true, ...result });
+    } catch (err) {
+      fastify.log.error({ mod: 'Payroll' }, 'payroll import failed %o', err);
+      return reply.status(500).send({ error: 'failed to import payroll data' });
+    }
+  });
 
   /**
    * Schedule payroll for a company
