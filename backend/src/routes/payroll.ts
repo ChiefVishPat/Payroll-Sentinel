@@ -146,7 +146,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
         .from('employees')
         .select('id')
         .eq('company_id', companyId)
-        .eq('is_active', true);
+        .eq('employee_status', 'Active');
 
       // Calculate payroll totals from runs scheduled in the current month
       const now = new Date();
@@ -534,7 +534,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
         name: `${row.first_name} ${row.last_name}`.trim(),
         title: row.title || '',
         salary: Number(row.annual_salary || 0),
-        status: row.is_active ? 'active' : 'inactive',
+        employee_status: row.employee_status?.toLowerCase() === 'active' ? 'active' : 'inactive',
         department: row.department,
       }));
 
@@ -552,7 +552,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
    * @route POST /api/payroll/employees
    */
   fastify.post('/payroll/employees', async (request, reply) => {
-    const { companyId, name, title, salary, status, department } =
+    const { companyId, name, title, salary, employee_status, department } =
       request.body as any;
 
     await ensureSchema();
@@ -573,7 +573,8 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
         title,
         department,
         annual_salary: salary,
-        is_active: String(status) !== 'inactive',
+        employee_status:
+          String(employee_status).toLowerCase() === 'inactive' ? 'Inactive' : 'Active',
       });
       if (error) throw error;
       fastify.log.info({ mod: 'Payroll' }, 'employee added');
@@ -607,7 +608,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
         name: `${data.first_name} ${data.last_name}`.trim(),
         title: data.title || '',
         salary: Number(data.annual_salary || 0),
-        status: data.is_active ? 'active' : 'inactive',
+        employee_status: data.employee_status?.toLowerCase() === 'active' ? 'active' : 'inactive',
         department: data.department,
         created_at: data.created_at,
         updated_at: data.updated_at,
@@ -627,14 +628,15 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
   fastify.put('/payroll/employees/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
     const { companyId } = request.query as { companyId?: string };
-    const { title, salary, status, department } = request.body as any;
+    const { title, salary, employee_status, department } = request.body as any;
     await ensureSchema();
     try {
       const updates: Record<string, unknown> = {
         title,
         department,
         annual_salary: salary,
-        is_active: String(status) !== 'inactive',
+        employee_status:
+          String(employee_status).toLowerCase() === 'inactive' ? 'Inactive' : 'Active',
         updated_at: new Date().toISOString(),
       };
       const query = supabase.from('employees').update(updates).eq('id', id);
@@ -661,7 +663,7 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
     try {
       const query = supabase
         .from('employees')
-        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .update({ employee_status: 'Inactive', updated_at: new Date().toISOString() })
         .eq('id', id);
       if (companyId) query.eq('company_id', companyId);
       const { error } = await query;

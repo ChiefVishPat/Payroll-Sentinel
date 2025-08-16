@@ -14,7 +14,7 @@ interface DatabaseEmployee {
   department: string;
   annual_salary?: number;
   hourly_rate?: number;
-  is_active: boolean;
+  employee_status: string;
   created_at: string;
   updated_at: string;
 }
@@ -75,7 +75,8 @@ export class DatabaseCheckService extends BaseDatabaseService {
 
     const dbFilters: any = {};
     if (filters.companyId) dbFilters.company_id = filters.companyId;
-    if (filters.active !== undefined) dbFilters.is_active = filters.active;
+    if (filters.active !== undefined)
+      dbFilters.employee_status = filters.active ? 'Active' : 'Inactive';
     if (filters.department) dbFilters.department = filters.department;
 
     const result = await this.findMany<DatabaseEmployee>(
@@ -102,7 +103,7 @@ export class DatabaseCheckService extends BaseDatabaseService {
         department: emp.department,
         annualSalary: emp.annual_salary,
         hourlyRate: emp.hourly_rate,
-        isActive: emp.is_active,
+        isActive: emp.employee_status === 'Active',
       })),
       total: (result.data as any).total
     };
@@ -668,7 +669,7 @@ export class DatabaseCheckService extends BaseDatabaseService {
         department: emp.department,
         annualSalary: emp.annual_salary,
         hourlyRate: emp.hourly_rate,
-        isActive: emp.is_active,
+        isActive: emp.employee_status === 'Active',
       },
       metadata: result.metadata || {
         requestId: this.generateRequestId(),

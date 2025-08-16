@@ -16,7 +16,7 @@ interface Employee {
   position: string
   department: string
   salary: number
-  status: 'active' | 'inactive'
+  employee_status: 'active' | 'inactive'
 }
 
 export default function EmployeeUploader({ onSuccess }: EmployeeUploaderProps) {
@@ -27,7 +27,7 @@ export default function EmployeeUploader({ onSuccess }: EmployeeUploaderProps) {
       position: '',
       department: '',
       salary: 0,
-      status: 'active'
+      employee_status: 'active'
     }
   ])
   const [isUploading, setIsUploading] = useState(false)
@@ -40,7 +40,7 @@ export default function EmployeeUploader({ onSuccess }: EmployeeUploaderProps) {
       position: '',
       department: '',
       salary: 0,
-      status: 'active'
+      employee_status: 'active'
     }])
   }
 
@@ -62,7 +62,7 @@ export default function EmployeeUploader({ onSuccess }: EmployeeUploaderProps) {
         position: 'Software Engineer',
         department: 'Engineering',
         salary: 85000,
-        status: 'active'
+        employee_status: 'active'
       },
       {
         name: 'Jane Smith',
@@ -70,7 +70,7 @@ export default function EmployeeUploader({ onSuccess }: EmployeeUploaderProps) {
         position: 'Product Manager',
         department: 'Product',
         salary: 95000,
-        status: 'active'
+        employee_status: 'active'
       },
       {
         name: 'Mike Johnson',
@@ -78,7 +78,7 @@ export default function EmployeeUploader({ onSuccess }: EmployeeUploaderProps) {
         position: 'UX Designer',
         department: 'Design',
         salary: 75000,
-        status: 'active'
+        employee_status: 'active'
       },
       {
         name: 'Sarah Wilson',
@@ -86,7 +86,7 @@ export default function EmployeeUploader({ onSuccess }: EmployeeUploaderProps) {
         position: 'Marketing Manager',
         department: 'Marketing',
         salary: 70000,
-        status: 'active'
+        employee_status: 'active'
       }
     ]
     setEmployees(sampleEmployees)

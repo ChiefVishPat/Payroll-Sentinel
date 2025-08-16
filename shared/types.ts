@@ -102,8 +102,40 @@ export interface Employee {
   name: string;
   title: string;
   salary: number;
-  status: string;
+  employee_status: string;
   department?: string | null;
+  business_unit_code?: string | null;
+  business_unit_name?: string | null;
+  date_of_birth?: string | null;
+  date_of_joining?: string | null;
+  employment_category?: string | null;
+  grade?: string | null;
+  designation?: string | null;
+  continent?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
+ * Detailed payroll entry with salary components
+ */
+export interface PayrollEntry {
+  id: string;
+  payroll_run_id: string;
+  employee_id: string;
+  gross_pay: number;
+  net_pay: number;
+  taxes: number;
+  deductions: number;
+  basic_salary?: number;
+  allowance?: number;
+  statutory_bonus?: number;
+  total_deductions?: number;
+  net_salary?: number;
+  tax_spend?: number;
+  reimbursement_paid?: number;
+  hours?: number;
+  status: string;
   created_at?: string;
   updated_at?: string;
 }

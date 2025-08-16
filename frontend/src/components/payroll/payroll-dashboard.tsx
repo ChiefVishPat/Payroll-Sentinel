@@ -194,7 +194,7 @@ export default function PayrollDashboard() {
                     name: formData.get("name"),
                     title: formData.get("title"),
                     salary: Number(formData.get("salary") || 0),
-                    status: formData.get("status"),
+                    employee_status: formData.get("employee_status"),
                     department: formData.get("department"),
                   });
                   await Promise.all([mutEmp(), mutSum()]);
@@ -241,7 +241,7 @@ export default function PayrollDashboard() {
                   required
                 />
                 <select
-                  name="status"
+                  name="employee_status"
                   className="w-full rounded border border-[var(--c-border)] bg-[var(--c-surface-1)] p-2 text-[var(--c-text)]"
                 >
                   <option value="active">active</option>
@@ -486,9 +486,9 @@ export default function PayrollDashboard() {
                       {formatCurrency(employee.salary)}
                     </div>
                     <div
-                      className={`text-sm px-2 py-1 rounded ${getStatusColor(employee.status)}`}
+                      className={`text-sm px-2 py-1 rounded ${getStatusColor(employee.employee_status)}`}
                     >
-                      {employee.status}
+                      {employee.employee_status}
                     </div>
                   </div>
                 </div>

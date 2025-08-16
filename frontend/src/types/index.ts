@@ -75,7 +75,7 @@ export interface Employee {
   name: string
   title: string
   salary: number
-  status: 'active' | 'inactive'
+  employee_status: 'active' | 'inactive'
   department?: string
 }
 
