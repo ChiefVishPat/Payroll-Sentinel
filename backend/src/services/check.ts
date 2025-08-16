@@ -26,6 +26,14 @@ export interface Employee {
   department?: string;
   annualSalary?: number;
   hourlyRate?: number;
+  businessUnitCode?: string;
+  businessUnitName?: string;
+  dateOfBirth?: string;
+  dateOfJoining?: string;
+  employmentCategory?: string;
+  grade?: string;
+  designation?: string;
+  continent?: string;
   isActive: boolean;
 }
 
@@ -59,6 +67,13 @@ export interface PayrollEntry {
   netPay: number;
   taxes: number;
   deductions: number;
+  basicSalary?: number;
+  allowance?: number;
+  statutoryBonus?: number;
+  totalDeductions?: number;
+  netSalary?: number;
+  taxSpend?: number;
+  reimbursementPaid?: number;
   hours?: number;
   status: 'pending' | 'approved' | 'paid';
 }
@@ -129,6 +144,14 @@ export class CheckService extends BaseService {
         employeeNumber: 'EMP001',
         department: 'Engineering',
         annualSalary: 95000,
+        businessUnitCode: 'ENG',
+        businessUnitName: 'Engineering',
+        dateOfBirth: '1990-01-15',
+        dateOfJoining: '2020-03-01',
+        employmentCategory: 'Full Time',
+        grade: 'G5',
+        designation: 'Senior Engineer',
+        continent: 'NA',
         isActive: true,
       },
       {
@@ -139,6 +162,14 @@ export class CheckService extends BaseService {
         employeeNumber: 'EMP002',
         department: 'Marketing',
         annualSalary: 75000,
+        businessUnitCode: 'MKT',
+        businessUnitName: 'Marketing',
+        dateOfBirth: '1992-07-10',
+        dateOfJoining: '2021-05-15',
+        employmentCategory: 'Full Time',
+        grade: 'G4',
+        designation: 'Marketing Manager',
+        continent: 'NA',
         isActive: true,
       },
       {
@@ -149,6 +180,14 @@ export class CheckService extends BaseService {
         employeeNumber: 'EMP003',
         department: 'Operations',
         hourlyRate: 35,
+        businessUnitCode: 'OPS',
+        businessUnitName: 'Operations',
+        dateOfBirth: '1988-04-20',
+        dateOfJoining: '2019-08-01',
+        employmentCategory: 'Contract',
+        grade: 'G3',
+        designation: 'Coordinator',
+        continent: 'NA',
         isActive: true,
       },
     ];
@@ -267,7 +306,7 @@ export class CheckService extends BaseService {
       
       employees.forEach(employee => {
         let grossPay = 0;
-        
+
         if (employee.annualSalary) {
           // Bi-weekly salary calculation
           grossPay = employee.annualSalary / 26;
@@ -275,13 +314,18 @@ export class CheckService extends BaseService {
           // Assume 40 hours for hourly employees
           grossPay = employee.hourlyRate * 40;
         }
-        
+
+        // Basic salary breakdown using rough proportions
+        const basicSalary = grossPay * 0.7;
+        const allowance = grossPay * 0.2;
+        const statutoryBonus = grossPay * 0.1;
+
         const taxes = grossPay * 0.25; // Simplified tax calculation
         const deductions = grossPay * 0.05; // Simplified deductions
         const netPay = grossPay - taxes - deductions;
-        
+
         totalGross += grossPay;
-        
+
         const entry: PayrollEntry = {
           id: `entry_${Date.now()}_${employee.id}`,
           payrollRunId: '', // Will be set after payroll run creation
@@ -290,13 +334,20 @@ export class CheckService extends BaseService {
           netPay,
           taxes,
           deductions,
+          basicSalary,
+          allowance,
+          statutoryBonus,
+          totalDeductions: deductions,
+          netSalary: netPay,
+          taxSpend: taxes,
+          reimbursementPaid: 0,
           status: 'pending',
         };
-        
+
         if (employee.hourlyRate) {
           entry.hours = 40;
         }
-        
+
         entries.push(entry);
       });
       
