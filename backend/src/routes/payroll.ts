@@ -14,6 +14,27 @@ async function ensureSchema(): Promise<void> {
 }
 
 /**
+ * Safely convert a value to a YYYY-MM-DD string or null.
+ * @param value - Raw date input
+ * @returns Normalized date string or null if invalid
+ */
+function safeDate(value: unknown): string | null {
+  if (!value) return null;
+  const d = new Date(String(value));
+  return isNaN(d.getTime()) ? null : d.toISOString().split('T')[0];
+}
+
+/**
+ * Convert a value to a number with fallback to 0.
+ * @param value - Numeric input
+ * @returns Parsed number or 0
+ */
+function safeNumber(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/**
  * Payroll routes for managing payroll operations
  * Includes creating pay schedules and running payroll
  */
@@ -567,9 +588,18 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
         id: row.id,
         name: `${row.first_name} ${row.last_name}`.trim(),
         title: row.title || '',
-        salary: Number(row.annual_salary || 0),
-        employee_status: row.employee_status?.toLowerCase() === 'active' ? 'active' : 'inactive',
+        salary: safeNumber(row.annual_salary),
+        employee_status:
+          row.employee_status?.toLowerCase() === 'active' ? 'active' : 'inactive',
         department: row.department,
+        business_unit_code: row.business_unit_code || null,
+        business_unit_name: row.business_unit_name || null,
+        date_of_birth: row.date_of_birth || null,
+        date_of_joining: row.date_of_joining || null,
+        employment_category: row.employment_category || null,
+        grade: row.grade || null,
+        designation: row.designation || null,
+        continent: row.continent || null,
       }));
 
       fastify.log.info({ mod: 'Payroll' }, 'employees fetched');
@@ -586,17 +616,39 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
    * @route POST /api/payroll/employees
    */
   fastify.post('/payroll/employees', async (request, reply) => {
-    const { companyId, name, title, salary, employee_status, department } =
-      request.body as any;
+    const {
+      companyId,
+      name,
+      title,
+      salary,
+      employee_status,
+      department,
+      business_unit_code,
+      business_unit_name,
+      date_of_birth,
+      date_of_joining,
+      employment_category,
+      grade,
+      designation,
+      continent,
+    } = request.body as any;
 
-    await ensureSchema();
+      await ensureSchema();
 
-    try {
-      const [firstName, ...rest] = String(name || '')
-        .trim()
-        .split(' ');
+      try {
+        // Basic validation for required fields
+        if (!companyId || !name) {
+          return reply
+            .status(400)
+            .send({ error: 'companyId and name are required' });
+        }
+        const [firstName, ...rest] = String(name || '')
+          .trim()
+          .split(' ');
       const lastName = rest.join(' ') || '';
-      const email = `${firstName.toLowerCase()}.${lastName.toLowerCase() || 'user'}@example.com`;
+      const email = `${firstName.toLowerCase()}.${
+        lastName.toLowerCase() || 'user'
+      }@example.com`;
 
       const { error } = await supabase.from('employees').insert({
         company_id: companyId,
@@ -606,9 +658,19 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
         email,
         title,
         department,
-        annual_salary: salary,
+        annual_salary: safeNumber(salary),
         employee_status:
-          String(employee_status).toLowerCase() === 'inactive' ? 'Inactive' : 'Active',
+          String(employee_status).toLowerCase() === 'inactive'
+            ? 'Inactive'
+            : 'Active',
+        business_unit_code: business_unit_code || null,
+        business_unit_name: business_unit_name || null,
+        date_of_birth: safeDate(date_of_birth),
+        date_of_joining: safeDate(date_of_joining),
+        employment_category: employment_category || null,
+        grade: grade || null,
+        designation: designation || null,
+        continent: continent || null,
       });
       if (error) throw error;
       fastify.log.info({ mod: 'Payroll' }, 'employee added');
@@ -641,9 +703,18 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
         id: data.id,
         name: `${data.first_name} ${data.last_name}`.trim(),
         title: data.title || '',
-        salary: Number(data.annual_salary || 0),
-        employee_status: data.employee_status?.toLowerCase() === 'active' ? 'active' : 'inactive',
+        salary: safeNumber(data.annual_salary),
+        employee_status:
+          data.employee_status?.toLowerCase() === 'active' ? 'active' : 'inactive',
         department: data.department,
+        business_unit_code: data.business_unit_code || null,
+        business_unit_name: data.business_unit_name || null,
+        date_of_birth: data.date_of_birth || null,
+        date_of_joining: data.date_of_joining || null,
+        employment_category: data.employment_category || null,
+        grade: data.grade || null,
+        designation: data.designation || null,
+        continent: data.continent || null,
         created_at: data.created_at,
         updated_at: data.updated_at,
       };
@@ -662,17 +733,47 @@ export default async function payrollRoutes(fastify: FastifyInstance) {
   fastify.put('/payroll/employees/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
     const { companyId } = request.query as { companyId?: string };
-    const { title, salary, employee_status, department } = request.body as any;
+    const {
+      title,
+      salary,
+      employee_status,
+      department,
+      business_unit_code,
+      business_unit_name,
+      date_of_birth,
+      date_of_joining,
+      employment_category,
+      grade,
+      designation,
+      continent,
+    } = request.body as any;
     await ensureSchema();
     try {
       const updates: Record<string, unknown> = {
-        title,
-        department,
-        annual_salary: salary,
-        employee_status:
-          String(employee_status).toLowerCase() === 'inactive' ? 'Inactive' : 'Active',
         updated_at: new Date().toISOString(),
       };
+
+      if (title !== undefined) updates.title = title;
+      if (department !== undefined) updates.department = department;
+      if (salary !== undefined) updates.annual_salary = safeNumber(salary);
+      if (employee_status !== undefined)
+        updates.employee_status =
+          String(employee_status).toLowerCase() === 'inactive'
+            ? 'Inactive'
+            : 'Active';
+      if (business_unit_code !== undefined)
+        updates.business_unit_code = business_unit_code || null;
+      if (business_unit_name !== undefined)
+        updates.business_unit_name = business_unit_name || null;
+      if (date_of_birth !== undefined)
+        updates.date_of_birth = safeDate(date_of_birth);
+      if (date_of_joining !== undefined)
+        updates.date_of_joining = safeDate(date_of_joining);
+      if (employment_category !== undefined)
+        updates.employment_category = employment_category || null;
+      if (grade !== undefined) updates.grade = grade || null;
+      if (designation !== undefined) updates.designation = designation || null;
+      if (continent !== undefined) updates.continent = continent || null;
       const query = supabase.from('employees').update(updates).eq('id', id);
       if (companyId) query.eq('company_id', companyId);
       const { error } = await query;
