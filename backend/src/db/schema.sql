@@ -26,7 +26,17 @@ CREATE TABLE IF NOT EXISTS employees (
   department       TEXT,
   annual_salary    NUMERIC(10,2),
   hourly_rate      NUMERIC(8,2),
-  is_active        BOOLEAN DEFAULT TRUE,
+  -- HR metadata
+  business_unit_code TEXT,
+  business_unit_name TEXT,
+  date_of_birth    DATE,
+  date_of_joining  DATE,
+  employment_category TEXT,
+  grade            TEXT,
+  designation      TEXT,
+  continent        TEXT,
+  -- Employment status from source CSV (e.g. 'Active', 'Inactive')
+  employee_status  TEXT DEFAULT 'Active',
   created_at       TIMESTAMPTZ DEFAULT NOW(),
   updated_at       TIMESTAMPTZ DEFAULT NOW()
 );
@@ -59,6 +69,14 @@ CREATE TABLE IF NOT EXISTS payroll_entries (
   net_pay          NUMERIC(10,2) NOT NULL,
   taxes            NUMERIC(10,2) DEFAULT 0,
   deductions       NUMERIC(10,2) DEFAULT 0,
+  -- Salary components
+  basic_salary     NUMERIC(10,2) DEFAULT 0,
+  allowance        NUMERIC(10,2) DEFAULT 0,
+  statutory_bonus  NUMERIC(10,2) DEFAULT 0,
+  total_deductions NUMERIC(10,2) DEFAULT 0,
+  net_salary       NUMERIC(10,2) DEFAULT 0,
+  tax_spend        NUMERIC(10,2) DEFAULT 0,
+  reimbursement_paid NUMERIC(10,2) DEFAULT 0,
   hours            NUMERIC(6,2),
   status           TEXT DEFAULT 'pending'
                  CHECK (status IN ('pending','approved','processed','cancelled')),
@@ -116,7 +134,7 @@ CREATE TABLE IF NOT EXISTS alerts (
 /*──────────────────────  INDEXES  ──────────────────────*/
 
 CREATE INDEX IF NOT EXISTS idx_employees_company_id          ON employees(company_id);
-CREATE INDEX IF NOT EXISTS idx_employees_active              ON employees(is_active);
+CREATE INDEX IF NOT EXISTS idx_employees_status             ON employees(employee_status);
 
 CREATE INDEX IF NOT EXISTS idx_payroll_runs_company_id       ON payroll_runs(company_id);
 CREATE INDEX IF NOT EXISTS idx_payroll_runs_status           ON payroll_runs(status);

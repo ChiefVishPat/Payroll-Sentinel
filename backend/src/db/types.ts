@@ -28,7 +28,16 @@ export interface Employee {
   department?: string;
   annual_salary?: number;
   hourly_rate?: number;
-  is_active: boolean;
+  business_unit_code?: string;
+  business_unit_name?: string;
+  date_of_birth?: string;
+  date_of_joining?: string;
+  employment_category?: string;
+  grade?: string;
+  designation?: string;
+  continent?: string;
+  /** Employment status from CSV (e.g., 'Active') */
+  employee_status?: string;
   created_at: string;
   updated_at: string;
 }
@@ -58,6 +67,13 @@ export interface PayrollEntry {
   net_pay: number;
   taxes: number;
   deductions: number;
+  basic_salary?: number;
+  allowance?: number;
+  statutory_bonus?: number;
+  total_deductions?: number;
+  net_salary?: number;
+  tax_spend?: number;
+  reimbursement_paid?: number;
   hours?: number;
   status: 'pending' | 'approved' | 'processed' | 'cancelled';
   created_at: string;
@@ -68,9 +84,7 @@ export interface PayrollEntry {
    interfaces stay as-is — clip for brevity */
 
 export interface CreateEmployeeInput
-  extends Omit<Employee, 'id' | 'created_at' | 'updated_at' | 'is_active'> {
-  is_active?: boolean;
-}
+  extends Omit<Employee, 'id' | 'created_at' | 'updated_at'> {}
 
 export interface CreatePayrollRunInput
   extends Pick<
@@ -89,5 +103,12 @@ export interface CreatePayrollEntryInput
   > {
   taxes?: number;
   deductions?: number;
+  basic_salary?: number;
+  allowance?: number;
+  statutory_bonus?: number;
+  total_deductions?: number;
+  net_salary?: number;
+  tax_spend?: number;
+  reimbursement_paid?: number;
   status?: PayrollEntry['status'];
 }

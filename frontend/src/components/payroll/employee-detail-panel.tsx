@@ -27,7 +27,7 @@ export default function EmployeeDetailPanel({
   const [title, setTitle] = useState(employee.title)
   const [department, setDepartment] = useState(employee.department || '')
   const [salary, setSalary] = useState(employee.salary)
-  const [status, setStatus] = useState(employee.status)
+  const [employeeStatus, setEmployeeStatus] = useState(employee.employee_status)
   const [loading, setLoading] = useState(false)
 
   // Refresh employee details when opened so the panel shows latest data
@@ -40,7 +40,7 @@ export default function EmployeeDetailPanel({
         setTitle(e.title)
         setDepartment(e.department || '')
         setSalary(e.salary)
-        setStatus(e.status)
+        setEmployeeStatus(e.employee_status)
       })
       .catch(err => console.error('fetch employee detail failed', err))
   }, [open, employee.id, companyId])
@@ -51,7 +51,7 @@ export default function EmployeeDetailPanel({
     try {
       await api.payroll.updateEmployee(
         employee.id,
-        { title, salary, status, department },
+        { title, salary, employee_status: employeeStatus, department },
         companyId || undefined
       )
       setEditMode(false)
@@ -128,8 +128,8 @@ export default function EmployeeDetailPanel({
               required
             />
             <select
-              value={status}
-              onChange={e => setStatus(e.target.value)}
+              value={employeeStatus}
+              onChange={e => setEmployeeStatus(e.target.value)}
               className="w-full rounded border border-[var(--c-border)] bg-[var(--c-surface-1)] p-2 text-[var(--c-text)]"
             >
               <option value="active">active</option>
@@ -149,7 +149,7 @@ export default function EmployeeDetailPanel({
               <div>{employee.title || '-'}</div>
               <div>{employee.department || '-'}</div>
               <div>Salary: ${employee.salary.toLocaleString()}</div>
-              <div>Status: {employee.status}</div>
+              <div>Status: {employee.employee_status}</div>
             </div>
             <div className="flex gap-2 mt-4">
               <Button size="sm" onClick={() => {console.debug(`[Payroll] EDIT employee ${employee.name}`); setEditMode(true) }}>Edit</Button>

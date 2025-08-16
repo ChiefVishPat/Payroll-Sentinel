@@ -1,7 +1,3 @@
-
-> warp-sentinel-backend@1.0.0 env:backend
-> cross-env DOTENV_CONFIG_PATH=.env NODE_OPTIONS="--require dotenv/config" supabase gen types typescript --schema public --linked
-
 export type Json =
   | string
   | number
@@ -195,8 +191,16 @@ export type Database = {
           first_name: string
           hourly_rate: number | null
           id: string
-          is_active: boolean | null
+          employee_status: string | null
           last_name: string
+          business_unit_code: string | null
+          business_unit_name: string | null
+          date_of_birth: string | null
+          date_of_joining: string | null
+          employment_category: string | null
+          grade: string | null
+          designation: string | null
+          continent: string | null
           title: string | null
           updated_at: string | null
         }
@@ -210,8 +214,16 @@ export type Database = {
           first_name: string
           hourly_rate?: number | null
           id?: string
-          is_active?: boolean | null
+          employee_status?: string | null
           last_name: string
+          business_unit_code?: string | null
+          business_unit_name?: string | null
+          date_of_birth?: string | null
+          date_of_joining?: string | null
+          employment_category?: string | null
+          grade?: string | null
+          designation?: string | null
+          continent?: string | null
           title?: string | null
           updated_at?: string | null
         }
@@ -225,8 +237,16 @@ export type Database = {
           first_name?: string
           hourly_rate?: number | null
           id?: string
-          is_active?: boolean | null
+          employee_status?: string | null
           last_name?: string
+          business_unit_code?: string | null
+          business_unit_name?: string | null
+          date_of_birth?: string | null
+          date_of_joining?: string | null
+          employment_category?: string | null
+          grade?: string | null
+          designation?: string | null
+          continent?: string | null
           title?: string | null
           updated_at?: string | null
         }
@@ -252,6 +272,13 @@ export type Database = {
           payroll_run_id: string | null
           status: string | null
           taxes: number | null
+          basic_salary: number | null
+          allowance: number | null
+          statutory_bonus: number | null
+          total_deductions: number | null
+          net_salary: number | null
+          tax_spend: number | null
+          reimbursement_paid: number | null
           updated_at: string | null
         }
         Insert: {
@@ -265,6 +292,13 @@ export type Database = {
           payroll_run_id?: string | null
           status?: string | null
           taxes?: number | null
+          basic_salary?: number | null
+          allowance?: number | null
+          statutory_bonus?: number | null
+          total_deductions?: number | null
+          net_salary?: number | null
+          tax_spend?: number | null
+          reimbursement_paid?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -278,6 +312,13 @@ export type Database = {
           payroll_run_id?: string | null
           status?: string | null
           taxes?: number | null
+          basic_salary?: number | null
+          allowance?: number | null
+          statutory_bonus?: number | null
+          total_deductions?: number | null
+          net_salary?: number | null
+          tax_spend?: number | null
+          reimbursement_paid?: number | null
           updated_at?: string | null
         }
         Relationships: [

@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS employees (
   department       TEXT,
   annual_salary    NUMERIC(10,2),
   hourly_rate      NUMERIC(8,2),
-  is_active        BOOLEAN DEFAULT TRUE,
+  -- Employment status from source CSV (e.g. 'Active', 'Inactive')
+  employee_status  TEXT DEFAULT 'Active',
   created_at       TIMESTAMPTZ DEFAULT NOW(),
   updated_at       TIMESTAMPTZ DEFAULT NOW()
 );
@@ -117,7 +118,7 @@ CREATE TABLE IF NOT EXISTS alerts (
 /*──────────────────────  INDEXES  ──────────────────────*/
 
 CREATE INDEX IF NOT EXISTS idx_employees_company_id          ON employees(company_id);
-CREATE INDEX IF NOT EXISTS idx_employees_active              ON employees(is_active);
+CREATE INDEX IF NOT EXISTS idx_employees_status             ON employees(employee_status);
 
 CREATE INDEX IF NOT EXISTS idx_payroll_runs_company_id       ON payroll_runs(company_id);
 CREATE INDEX IF NOT EXISTS idx_payroll_runs_status           ON payroll_runs(status);

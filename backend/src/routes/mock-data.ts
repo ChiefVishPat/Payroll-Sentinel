@@ -222,7 +222,7 @@ async function mockDataRoutes(fastify: FastifyInstance) {
           email: 'john.smith@' + companyName.toLowerCase().replace(/\s+/g, '') + '.com',
           department: 'Engineering',
           annual_salary: 75000,
-          is_active: true
+          employee_status: 'Active'
         },
         {
           id: '550e8400-e29b-41d4-a716-446655440002',
@@ -233,7 +233,7 @@ async function mockDataRoutes(fastify: FastifyInstance) {
           email: 'jane.doe@' + companyName.toLowerCase().replace(/\s+/g, '') + '.com',
           department: 'Marketing',
           annual_salary: 65000,
-          is_active: true
+          employee_status: 'Active'
         },
         {
           id: '550e8400-e29b-41d4-a716-446655440003',
@@ -244,7 +244,7 @@ async function mockDataRoutes(fastify: FastifyInstance) {
           email: 'bob.johnson@' + companyName.toLowerCase().replace(/\s+/g, '') + '.com',
           department: 'Operations',
           annual_salary: 70000,
-          is_active: true
+          employee_status: 'Active'
         }
       ];
       
